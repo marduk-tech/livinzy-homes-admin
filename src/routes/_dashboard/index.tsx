@@ -1,18 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Tabs } from "antd";
-import TabPane from "antd/es/tabs/TabPane";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_dashboard/")({
-  component: () => <HomePage />,
+  component: () => <Navigate to={"/projects"} />,
 });
-
-function HomePage() {
-  return (
-    <Tabs defaultActiveKey="1">
-      <TabPane tab="Designers" key="1"></TabPane>
-      <TabPane tab="Projects" key="2"></TabPane>
-      <TabPane tab="Meta" key="3"></TabPane>
-      <TabPane tab="Fixture Materials" key="4"></TabPane>
-    </Tabs>
-  );
-}

@@ -14,7 +14,9 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardImport } from './routes/_dashboard'
 import { Route as DashboardIndexImport } from './routes/_dashboard/index'
 import { Route as AuthLoginImport } from './routes/auth/login'
-import { Route as DashboardSettingsImport } from './routes/_dashboard/settings'
+import { Route as DashboardProjectsIndexImport } from './routes/_dashboard/projects/index'
+import { Route as DashboardProjectsCreateImport } from './routes/_dashboard/projects/create'
+import { Route as DashboardProjectsProjectIdEditImport } from './routes/_dashboard/projects/$projectId/edit'
 
 // Create/Update Routes
 
@@ -33,10 +35,21 @@ const AuthLoginRoute = AuthLoginImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const DashboardSettingsRoute = DashboardSettingsImport.update({
-  path: '/settings',
+const DashboardProjectsIndexRoute = DashboardProjectsIndexImport.update({
+  path: '/projects/',
   getParentRoute: () => DashboardRoute,
 } as any)
+
+const DashboardProjectsCreateRoute = DashboardProjectsCreateImport.update({
+  path: '/projects/create',
+  getParentRoute: () => DashboardRoute,
+} as any)
+
+const DashboardProjectsProjectIdEditRoute =
+  DashboardProjectsProjectIdEditImport.update({
+    path: '/projects/$projectId/edit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -48,13 +61,6 @@ declare module '@tanstack/react-router' {
       fullPath: ''
       preLoaderRoute: typeof DashboardImport
       parentRoute: typeof rootRoute
-    }
-    '/_dashboard/settings': {
-      id: '/_dashboard/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof DashboardSettingsImport
-      parentRoute: typeof DashboardImport
     }
     '/auth/login': {
       id: '/auth/login'
@@ -70,19 +76,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexImport
       parentRoute: typeof DashboardImport
     }
+    '/_dashboard/projects/create': {
+      id: '/_dashboard/projects/create'
+      path: '/projects/create'
+      fullPath: '/projects/create'
+      preLoaderRoute: typeof DashboardProjectsCreateImport
+      parentRoute: typeof DashboardImport
+    }
+    '/_dashboard/projects/': {
+      id: '/_dashboard/projects/'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof DashboardProjectsIndexImport
+      parentRoute: typeof DashboardImport
+    }
+    '/_dashboard/projects/$projectId/edit': {
+      id: '/_dashboard/projects/$projectId/edit'
+      path: '/projects/$projectId/edit'
+      fullPath: '/projects/$projectId/edit'
+      preLoaderRoute: typeof DashboardProjectsProjectIdEditImport
+      parentRoute: typeof DashboardImport
+    }
   }
 }
 
 // Create and export the route tree
 
 interface DashboardRouteChildren {
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardProjectsCreateRoute: typeof DashboardProjectsCreateRoute
+  DashboardProjectsIndexRoute: typeof DashboardProjectsIndexRoute
+  DashboardProjectsProjectIdEditRoute: typeof DashboardProjectsProjectIdEditRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardProjectsCreateRoute: DashboardProjectsCreateRoute,
+  DashboardProjectsIndexRoute: DashboardProjectsIndexRoute,
+  DashboardProjectsProjectIdEditRoute: DashboardProjectsProjectIdEditRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -91,36 +122,55 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 export interface FileRoutesByFullPath {
   '': typeof DashboardRouteWithChildren
-  '/settings': typeof DashboardSettingsRoute
   '/auth/login': typeof AuthLoginRoute
   '/': typeof DashboardIndexRoute
+  '/projects/create': typeof DashboardProjectsCreateRoute
+  '/projects': typeof DashboardProjectsIndexRoute
+  '/projects/$projectId/edit': typeof DashboardProjectsProjectIdEditRoute
 }
 
 export interface FileRoutesByTo {
-  '/settings': typeof DashboardSettingsRoute
   '/auth/login': typeof AuthLoginRoute
   '/': typeof DashboardIndexRoute
+  '/projects/create': typeof DashboardProjectsCreateRoute
+  '/projects': typeof DashboardProjectsIndexRoute
+  '/projects/$projectId/edit': typeof DashboardProjectsProjectIdEditRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/_dashboard': typeof DashboardRouteWithChildren
-  '/_dashboard/settings': typeof DashboardSettingsRoute
   '/auth/login': typeof AuthLoginRoute
   '/_dashboard/': typeof DashboardIndexRoute
+  '/_dashboard/projects/create': typeof DashboardProjectsCreateRoute
+  '/_dashboard/projects/': typeof DashboardProjectsIndexRoute
+  '/_dashboard/projects/$projectId/edit': typeof DashboardProjectsProjectIdEditRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/settings' | '/auth/login' | '/'
+  fullPaths:
+    | ''
+    | '/auth/login'
+    | '/'
+    | '/projects/create'
+    | '/projects'
+    | '/projects/$projectId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/settings' | '/auth/login' | '/'
+  to:
+    | '/auth/login'
+    | '/'
+    | '/projects/create'
+    | '/projects'
+    | '/projects/$projectId/edit'
   id:
     | '__root__'
     | '/_dashboard'
-    | '/_dashboard/settings'
     | '/auth/login'
     | '/_dashboard/'
+    | '/_dashboard/projects/create'
+    | '/_dashboard/projects/'
+    | '/_dashboard/projects/$projectId/edit'
   fileRoutesById: FileRoutesById
 }
 
@@ -153,19 +203,29 @@ export const routeTree = rootRoute
     "/_dashboard": {
       "filePath": "_dashboard.tsx",
       "children": [
-        "/_dashboard/settings",
-        "/_dashboard/"
+        "/_dashboard/",
+        "/_dashboard/projects/create",
+        "/_dashboard/projects/",
+        "/_dashboard/projects/$projectId/edit"
       ]
-    },
-    "/_dashboard/settings": {
-      "filePath": "_dashboard/settings.tsx",
-      "parent": "/_dashboard"
     },
     "/auth/login": {
       "filePath": "auth/login.tsx"
     },
     "/_dashboard/": {
       "filePath": "_dashboard/index.tsx",
+      "parent": "/_dashboard"
+    },
+    "/_dashboard/projects/create": {
+      "filePath": "_dashboard/projects/create.tsx",
+      "parent": "/_dashboard"
+    },
+    "/_dashboard/projects/": {
+      "filePath": "_dashboard/projects/index.tsx",
+      "parent": "/_dashboard"
+    },
+    "/_dashboard/projects/$projectId/edit": {
+      "filePath": "_dashboard/projects/$projectId/edit.tsx",
       "parent": "/_dashboard"
     }
   }

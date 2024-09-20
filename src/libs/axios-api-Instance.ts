@@ -4,7 +4,7 @@ import { baseApiUrl } from "../libs/constants";
 
 const config: AxiosRequestConfig = {
   baseURL: baseApiUrl,
-  withCredentials: true,
+  // withCredentials: true,
 };
 
 const api = axios.create(config);
