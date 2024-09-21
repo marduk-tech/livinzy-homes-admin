@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader } from "../../../components/loader";
+import { Loader } from "../../../components/common/loader";
 import { ProjectsList } from "../../../components/projects-list";
 import { queries } from "../../../libs/queries";
 

@@ -19,8 +19,8 @@ import { useDeleteProjectMutation } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { Project } from "../types/Project";
-import { ColumnSearch } from "./column-search";
-import { DeletePopconfirm } from "./delete-popconfirm";
+import { ColumnSearch } from "./common/column-search";
+import { DeletePopconfirm } from "./common/delete-popconfirm";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
@@ -47,6 +47,7 @@ export const ProjectsList: React.FC = () => {
       title: "Date Added",
       dataIndex: "createdAt",
       key: "createdAt",
+      responsive: ['lg','md','xl'],
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
