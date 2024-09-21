@@ -1,10 +1,20 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Button, Col, Form, Input, notification, Row, Tabs } from "antd";
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  notification,
+  Row,
+  Tabs,
+  Typography,
+} from "antd";
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
+import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { Project } from "../types/Project";
 
@@ -74,10 +84,14 @@ const fieldRules = {
   land: {},
 };
 
-const renderFields = (fields: string[], category: string) => (
+const renderFields = (
+  fields: string[],
+  category: string,
+  isMobile: boolean
+) => (
   <Row gutter={16}>
     {fields.map((key) => (
-      <Col span={12} key={key}>
+      <Col span={isMobile ? 24 : 12} key={key}>
         <Form.Item
           name={[category, key]}
           label={key
@@ -99,6 +113,8 @@ const renderFields = (fields: string[], category: string) => (
 export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  const { isMobile } = useDevice();
 
   const { data: project } = useQuery({
     ...queries.getProjectById(projectId as string),
@@ -132,6 +148,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   return (
     <Form form={form} layout="vertical" initialValues={project}>
+      {project && (
+        <Typography.Title style={{ marginBottom: 20 }} level={3}>
+          {project?.metadata.name}
+        </Typography.Title>
+      )}
+
       <Tabs defaultActiveKey="metadata">
         {Object.entries(projectStructure).map(([key, fields]) => (
           <TabPane
@@ -140,7 +162,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               .replace(/\b\w/g, (l) => l.toUpperCase())}
             key={key}
           >
-            {renderFields(fields, key)}
+            {renderFields(fields, key, isMobile)}
           </TabPane>
         ))}
       </Tabs>
