@@ -96,7 +96,7 @@ const renderFields = (fields: string[], category: string) => (
   </Row>
 );
 
-export function AddOrCreateProject({ projectId }: ProjectFormProps) {
+export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AddOrCreateProject } from "../../../../components/add-or-edit-project";
+import { ProjectDetails } from "../../../../components/project-details";
 import { queries } from "../../../../libs/queries";
 
 export const Route = createFileRoute("/_dashboard/projects/$projectId/edit")({
@@ -13,5 +13,5 @@ export const Route = createFileRoute("/_dashboard/projects/$projectId/edit")({
 function EditProjectPage() {
   const { projectId } = Route.useParams();
 
-  return <AddOrCreateProject projectId={projectId} />;
+  return <ProjectDetails projectId={projectId} />;
 }

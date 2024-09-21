@@ -1,7 +1,7 @@
 import { SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Space } from "antd";
 import { FilterDropdownProps } from "antd/es/table/interface";
-import { nestedPropertyAccessor } from "../libs/lvnzy-helper";
+import { nestedPropertyAccessor } from "../../libs/lvnzy-helper";
 
 export const handleReset = (
   clearFilters: () => void,

@@ -1,11 +1,14 @@
 import { Link, Outlet } from "@tanstack/react-router";
 import { Flex, Image, Layout } from "antd";
 import React from "react";
-import { CustomErrorBoundary } from "../components/custom-error-boundary";
+import { CustomErrorBoundary } from "../components/common/custom-error-boundary";
+import { useDevice } from "../hooks/use-device";
 
 const { Header, Content } = Layout;
 
 export const DashboardLayout: React.FC = () => {
+  const { isMobile } = useDevice();
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Layout>
@@ -22,7 +25,7 @@ export const DashboardLayout: React.FC = () => {
             {/* <UserDropDown /> */}
           </Flex>
         </Header>
-        <Content style={{ margin: "60px 60px" }}>
+        <Content style={{ margin: isMobile ? 24 : 48 }}>
           {/* <Menu mode="horizontal" items={menuItems} /> */}
           <CustomErrorBoundary>
             <Outlet />
