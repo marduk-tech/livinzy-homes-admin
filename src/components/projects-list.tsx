@@ -25,7 +25,9 @@ import { DeletePopconfirm } from "./common/delete-popconfirm";
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
 
-  const { data: projects } = useQuery(queries.getAllProjects());
+  const { data: projects, isLoading: projectIsLoading } = useQuery(
+    queries.getAllProjects()
+  );
   const deleteProjectMutation = useDeleteProjectMutation();
 
   const handleDelete = async ({
@@ -110,7 +112,12 @@ export const ProjectsList: React.FC = () => {
         </Col>
       </Row>
 
-      <Table dataSource={projects} columns={columns} rowKey="_id" />
+      <Table
+        dataSource={projects}
+        columns={columns}
+        rowKey="_id"
+        loading={projectIsLoading}
+      />
     </>
   );
 };
