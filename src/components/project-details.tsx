@@ -1,5 +1,5 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+
 import {
   Button,
   Col,
@@ -10,6 +10,7 @@ import {
   Tabs,
   Typography,
 } from "antd";
+import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
@@ -17,6 +18,7 @@ import {
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { Project } from "../types/Project";
+import { Loader } from "./common/loader";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -116,9 +118,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const { isMobile } = useDevice();
 
-  const { data: project } = useQuery({
+  const { data: project, isLoading: projectIsLoading } = useQuery({
     ...queries.getProjectById(projectId as string),
     enabled: !!projectId,
+    throwOnError: true,
   });
 
   const createProject = useCreateProjectMutation();
@@ -134,7 +137,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         updateProject.mutate({ projectData: values });
       } else {
         await createProject.mutateAsync(values).then(() => {
-          navigate({ to: "/projects" });
+          navigate("/projects");
         });
       }
     } catch (error) {
@@ -145,6 +148,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       console.error("Validation failed:", error);
     }
   };
+
+  if (projectIsLoading) {
+    return <Loader />;
+  }
 
   return (
     <Form form={form} layout="vertical" initialValues={project}>

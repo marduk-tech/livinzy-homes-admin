@@ -13,8 +13,8 @@ import {
 } from "antd";
 import React from "react";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useDeleteProjectMutation } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
@@ -25,7 +25,7 @@ import { DeletePopconfirm } from "./common/delete-popconfirm";
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
 
-  const { data: projects } = useSuspenseQuery(queries.getAllProjects());
+  const { data: projects } = useQuery(queries.getAllProjects());
   const deleteProjectMutation = useDeleteProjectMutation();
 
   const handleDelete = async ({
@@ -47,7 +47,7 @@ export const ProjectsList: React.FC = () => {
       title: "Date Added",
       dataIndex: "createdAt",
       key: "createdAt",
-      responsive: ['lg','md','xl'],
+      responsive: ["lg", "md", "xl"],
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
@@ -65,12 +65,7 @@ export const ProjectsList: React.FC = () => {
       render: (id: string, record) => {
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
-            <Link
-              to="/projects/$projectId/edit"
-              params={{
-                projectId: id,
-              }}
-            >
+            <Link to={`/projects/${id}/edit`}>
               <Button
                 type="default"
                 shape="default"
