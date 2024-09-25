@@ -1,12 +1,24 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { Button, Col, Form, Input, notification, Row, Tabs } from "antd";
+
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  notification,
+  Row,
+  Tabs,
+  Typography,
+} from "antd";
+import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
+import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { Project } from "../types/Project";
+import { Loader } from "./common/loader";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -74,10 +86,14 @@ const fieldRules = {
   land: {},
 };
 
-const renderFields = (fields: string[], category: string) => (
+const renderFields = (
+  fields: string[],
+  category: string,
+  isMobile: boolean
+) => (
   <Row gutter={16}>
     {fields.map((key) => (
-      <Col span={12} key={key}>
+      <Col span={isMobile ? 24 : 12} key={key}>
         <Form.Item
           name={[category, key]}
           label={key
@@ -100,9 +116,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const { data: project } = useQuery({
+  const { isMobile } = useDevice();
+
+  const { data: project, isLoading: projectIsLoading } = useQuery({
     ...queries.getProjectById(projectId as string),
     enabled: !!projectId,
+    throwOnError: true,
   });
 
   const createProject = useCreateProjectMutation();
@@ -118,7 +137,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         updateProject.mutate({ projectData: values });
       } else {
         await createProject.mutateAsync(values).then(() => {
-          navigate({ to: "/projects" });
+          navigate("/projects");
         });
       }
     } catch (error) {
@@ -130,8 +149,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  if (projectIsLoading) {
+    return <Loader />;
+  }
+
   return (
     <Form form={form} layout="vertical" initialValues={project}>
+      {project && (
+        <Typography.Title style={{ marginBottom: 20 }} level={3}>
+          {project?.metadata.name}
+        </Typography.Title>
+      )}
+
       <Tabs defaultActiveKey="metadata">
         {Object.entries(projectStructure).map(([key, fields]) => (
           <TabPane
@@ -140,7 +169,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               .replace(/\b\w/g, (l) => l.toUpperCase())}
             key={key}
           >
-            {renderFields(fields, key)}
+            {renderFields(fields, key, isMobile)}
           </TabPane>
         ))}
       </Tabs>
