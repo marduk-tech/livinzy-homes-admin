@@ -1,3 +1,9 @@
+export interface IMedia {
+  _id: string;
+  url: string;
+  tags: string[];
+}
+
 export interface Project {
   _id: string;
   metadata: {
@@ -24,16 +30,7 @@ export interface Project {
     cost_range: string;
     others: string;
   };
-  media: {
-    _id: string;
-    aerial: string;
-    plot: string;
-    construction: string;
-    video: string;
-    walkthrough: string;
-    amenities: string;
-    others: string;
-  };
+  media: IMedia[];
   connectivity: {
     _id: string;
     roads: string;
