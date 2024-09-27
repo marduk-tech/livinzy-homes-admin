@@ -216,7 +216,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           media.tags?.forEach((tag: string) => tags.add(tag));
         });
       });
-      setAllTags(Array.from(tags));
+
+      const dummyTags = [
+        "aerial",
+        "video",
+        "construction",
+        "amenities",
+        "walkthrough",
+        "plot",
+        "house",
+      ];
+
+      setAllTags(Array.from(dummyTags));
     }
   }, [allProjects]);
 
