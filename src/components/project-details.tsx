@@ -46,6 +46,7 @@ const projectStructure = {
     "address",
     "oneLiner",
     "description",
+    "summary"
   ],
   land: ["total_area", "plantation", "irrigation", "water_bodies", "others"],
   plots: [
