@@ -44,7 +44,7 @@ const RenderFields: React.FC<{
     dbField: string;
     fieldDisplayName: string;
     fieldDescription: string;
-    mustHave: string;
+    mustHave: boolean;
   }[];
   category: string;
   isMobile: boolean;
