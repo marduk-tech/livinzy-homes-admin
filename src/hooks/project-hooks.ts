@@ -102,17 +102,22 @@ export function useProjectForm() {
         dbField: "location",
         fieldDisplayName: "Location",
         fieldDescription:
-          "The location of the project identified by Google maps url",
+          "The location of the project identified by Google maps url.",
       },
       {
         dbField: "website",
         fieldDisplayName: "Website",
-        fieldDescription: "Website for the project",
+        fieldDescription: "Website for the project.",
+      },
+      {
+        dbField: "company",
+        fieldDisplayName: "Company",
+        fieldDescription: "Provide relevant details.",
       },
       {
         dbField: "address",
         fieldDisplayName: "Address",
-        fieldDescription: "The physical address of the project",
+        fieldDescription: "The physical address of the project.",
       },
       {
         dbField: "oneLiner",
@@ -142,17 +147,18 @@ export function useProjectForm() {
         dbField: "plantation",
         fieldDisplayName: "Plantation",
         fieldDescription:
-          "Information about plantation on the project i.e trees, plants etc that can be grown",
+          "Information about plantation on the project i.e trees, plants etc that can be grown.",
       },
       {
         dbField: "irrigation",
         fieldDisplayName: "Irrigation",
-        fieldDescription: "Irrigation facilities at the project",
+        fieldDescription: "Irrigation facilities at the project.",
       },
       {
         dbField: "water_bodies",
         fieldDisplayName: "Water bodies",
-        fieldDescription: "Any natural or man made water bodies in the project",
+        fieldDescription:
+          "Any natural or man made water bodies in the project.",
       },
       {
         dbField: "others",
@@ -169,34 +175,34 @@ export function useProjectForm() {
       {
         dbField: "facing_mix",
         fieldDisplayName: "Facing mix",
-        fieldDescription: "Direction wise distribution of the plots",
+        fieldDescription: "Direction wise distribution of the plots.",
       },
       {
         dbField: "shape_mix",
         fieldDisplayName: "Shape mix",
-        fieldDescription: "Shape wise distribution of the plots",
+        fieldDescription: "Shape wise distribution of the plots.",
       },
       {
         dbField: "plots_list",
         fieldDisplayName: "Plots list",
         fieldDescription:
-          "List of plots in as detailed manner as possible (if available)",
+          "List of plots in as detailed manner as possible (if available).",
       },
       {
         dbField: "villa",
         fieldDisplayName: "Villa",
         fieldDescription:
-          "Information about the villa that can be constructed on the plot",
+          "Information about the villa that can be constructed on the plot.",
       },
       {
         dbField: "cost_range",
         fieldDisplayName: "Cost range",
-        fieldDescription: "Costing information of the plots",
+        fieldDescription: "Costing information of the plots.",
       },
       {
         dbField: "others",
         fieldDisplayName: "Others",
-        fieldDescription: "Any other relevant information about the plots",
+        fieldDescription: "Any other relevant information about the plots.",
       },
     ],
 
@@ -204,7 +210,7 @@ export function useProjectForm() {
       {
         dbField: "roads",
         fieldDisplayName: "Roads",
-        fieldDescription: "Road connectivity for the project",
+        fieldDescription: "Road connectivity for the project.",
       },
       {
         dbField: "towns",
@@ -219,7 +225,7 @@ export function useProjectForm() {
       {
         dbField: "hospital",
         fieldDisplayName: "Hospital",
-        fieldDescription: "Nearby hospitals",
+        fieldDescription: "Nearby hospitals.",
       },
       {
         dbField: "airport",
