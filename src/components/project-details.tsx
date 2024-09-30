@@ -13,6 +13,7 @@ import {
   Row,
   Select,
   Tabs,
+  Tag,
   Typography,
 } from "antd";
 
@@ -43,17 +44,23 @@ const RenderFields: React.FC<{
     dbField: string;
     fieldDisplayName: string;
     fieldDescription: string;
+    mustHave: string;
   }[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
 }> = ({ fields, category, isMobile, fieldRules }) => (
   <Row gutter={16}>
-    {fields.map(({ dbField, fieldDisplayName, fieldDescription }) => (
+    {fields.map(({ dbField, fieldDisplayName, fieldDescription, mustHave }) => (
       <Col span={isMobile ? 24 : 12} key={dbField}>
         <Form.Item
           name={[category, dbField]}
-          label={fieldDisplayName}
+          label={
+            <Flex gap={8}>
+              <Typography.Text>{fieldDisplayName}</Typography.Text>
+              {mustHave ? <Tag color="volcano">Must Have</Tag>: null}
+            </Flex>
+          }
           rules={
             fieldRules[category as keyof typeof fieldRules]?.[
               dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
@@ -207,6 +214,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   dbField: string;
                   fieldDisplayName: string;
                   fieldDescription: string;
+                  mustHave: boolean;
                 }[]
               }
               category={key}
