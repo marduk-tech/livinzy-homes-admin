@@ -13,6 +13,7 @@ import {
   Row,
   Select,
   Tabs,
+  Tag,
   Typography,
 } from "antd";
 
@@ -20,6 +21,7 @@ import { DeleteOutlined, RedoOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
+  useProjectForm,
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
@@ -37,86 +39,35 @@ interface ProjectFormProps {
   projectId?: string;
 }
 
-const projectStructure = {
-  metadata: [
-    "name",
-    "location",
-    "website",
-    "company",
-    "address",
-    "oneLiner",
-    "description",
-    "summary"
-  ],
-  land: ["total_area", "plantation", "irrigation", "water_bodies", "others"],
-  plots: [
-    "size_mix",
-    "facing_mix",
-    "shape_mix",
-    "plots_list",
-    "villa",
-    "cost_range",
-    "others",
-  ],
-
-  connectivity: ["roads", "towns", "schools", "hospital", "airport", "others"],
-  climate: ["rainfall", "temperature", "humidity", "others"],
-  basic_infra: [
-    "electricity",
-    "water_supply",
-    "pathways",
-    "security",
-    "others",
-  ],
-  amenities: [
-    "sports_external",
-    "swimming_pool",
-    "clubhouse",
-    "kids",
-    "parks",
-    "parking",
-    "others",
-  ],
-  team: ["partners", "experience", "others"],
-};
-
-const fieldRules = {
-  metadata: {
-    name: [
-      { required: true, message: "Please input the project name!" },
-      { max: 100, message: "Name cannot be longer than 100 characters" },
-    ],
-    location: [
-      { required: true, message: "Please input the project location!" },
-    ],
-    website: [
-      { required: true, message: "Please input the project location!" },
-      { type: "url", message: "Please enter a valid URL" },
-    ],
-  },
-  land: {},
-};
-
-const renderFields = (
-  fields: string[],
-  category: string,
-  isMobile: boolean
-) => (
+const RenderFields: React.FC<{
+  fields: {
+    dbField: string;
+    fieldDisplayName: string;
+    fieldDescription: string;
+    mustHave: string;
+  }[];
+  category: string;
+  isMobile: boolean;
+  fieldRules: Record<string, any>;
+}> = ({ fields, category, isMobile, fieldRules }) => (
   <Row gutter={16}>
-    {fields.map((key) => (
-      <Col span={isMobile ? 24 : 12} key={key}>
+    {fields.map(({ dbField, fieldDisplayName, fieldDescription, mustHave }) => (
+      <Col span={isMobile ? 24 : 12} key={dbField}>
         <Form.Item
-          name={[category, key]}
-          label={key
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase())}
+          name={[category, dbField]}
+          label={
+            <Flex gap={8}>
+              <Typography.Text>{fieldDisplayName}</Typography.Text>
+              {mustHave ? <Tag color="volcano">Must Have</Tag>: null}
+            </Flex>
+          }
           rules={
             fieldRules[category as keyof typeof fieldRules]?.[
-              key as keyof (typeof fieldRules)[keyof typeof fieldRules]
+              dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
             ] || []
           }
         >
-          <TextArea autoSize={{ minRows: 2 }} />
+          <TextArea autoSize={{ minRows: 2 }} placeholder={fieldDescription} />
         </Form.Item>
       </Col>
     ))}
@@ -128,6 +79,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const navigate = useNavigate();
   const { isMobile } = useDevice();
   const [allTags, setAllTags] = useState<string[]>([]);
+
+  const { fieldRules, projectFields } = useProjectForm();
 
   const { data: project, isLoading: projectIsLoading } = useQuery({
     ...queries.getProjectById(projectId as string),
@@ -247,7 +200,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       )}
 
       <Tabs defaultActiveKey="metadata">
-        {Object.entries(projectStructure).map(([key, fields], index) => (
+        {Object.entries(projectFields).map(([key, fields], index) => (
           <TabPane
             tab={key
               .replace(/_/g, " ")
@@ -255,7 +208,19 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             key={key}
             disabled={!projectId && index !== 0}
           >
-            {renderFields(fields, key, isMobile)}
+            <RenderFields
+              fields={
+                fields as {
+                  dbField: string;
+                  fieldDisplayName: string;
+                  fieldDescription: string;
+                  mustHave: boolean;
+                }[]
+              }
+              category={key}
+              isMobile={isMobile}
+              fieldRules={fieldRules}
+            />
           </TabPane>
         ))}
 
