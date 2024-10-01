@@ -58,7 +58,7 @@ const RenderFields: React.FC<{
           label={
             <Flex gap={8}>
               <Typography.Text>{fieldDisplayName}</Typography.Text>
-              {mustHave ? <Tag color="volcano">Must Have</Tag>: null}
+              {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
             </Flex>
           }
           rules={
@@ -276,6 +276,20 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                           value: tag,
                           label: tag,
                         }))}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name={["media", index, "caption"]}
+                      label="Caption"
+                      style={{ width: "100%" }}
+                    >
+                      <Input
+                        style={{
+                          width: "100%",
+                          maxWidth: screens.lg ? "600px" : "100%",
+                        }}
+                        placeholder="Enter caption"
                       />
                     </Form.Item>
 
