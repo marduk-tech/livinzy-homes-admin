@@ -331,13 +331,14 @@ export function useProjectForm() {
       },
       {
         dbField: "parks",
-        fieldDisplayName: "Parks",
-        fieldDescription: "Provide relevant details.",
+        fieldDisplayName: "Open area & parks",
+        fieldDescription: "Information about open area, landscaping, parks or pathways",
       },
       {
         dbField: "parking",
         fieldDisplayName: "Parking",
         fieldDescription: "Provide relevant details.",
+        hide: true,
       },
       {
         dbField: "others",

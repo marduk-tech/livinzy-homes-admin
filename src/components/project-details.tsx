@@ -45,32 +45,43 @@ const RenderFields: React.FC<{
     fieldDisplayName: string;
     fieldDescription: string;
     mustHave: boolean;
+    hide: boolean;
   }[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
 }> = ({ fields, category, isMobile, fieldRules }) => (
   <Row gutter={16}>
-    {fields.map(({ dbField, fieldDisplayName, fieldDescription, mustHave }) => (
-      <Col span={isMobile ? 24 : 12} key={dbField}>
-        <Form.Item
-          name={[category, dbField]}
-          label={
-            <Flex gap={8}>
-              <Typography.Text>{fieldDisplayName}</Typography.Text>
-              {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
-            </Flex>
-          }
-          rules={
-            fieldRules[category as keyof typeof fieldRules]?.[
-              dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
-            ] || []
-          }
-        >
-          <TextArea autoSize={{ minRows: 2 }} placeholder={fieldDescription} />
-        </Form.Item>
-      </Col>
-    ))}
+    {fields.map(
+      ({ dbField, fieldDisplayName, fieldDescription, mustHave, hide }) => {
+        if (hide) {
+          return null;
+        } else
+          return (
+            <Col span={isMobile ? 24 : 12} key={dbField}>
+              <Form.Item
+                name={[category, dbField]}
+                label={
+                  <Flex gap={8}>
+                    <Typography.Text>{fieldDisplayName}</Typography.Text>
+                    {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
+                  </Flex>
+                }
+                rules={
+                  fieldRules[category as keyof typeof fieldRules]?.[
+                    dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
+                  ] || []
+                }
+              >
+                <TextArea
+                  autoSize={{ minRows: 2 }}
+                  placeholder={fieldDescription}
+                />
+              </Form.Item>
+            </Col>
+          );
+      }
+    )}
   </Row>
 );
 
@@ -172,6 +183,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       });
 
       const dummyTags = [
+        "property",
+        "layout",
         "aerial",
         "video",
         "construction",
@@ -215,6 +228,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   fieldDisplayName: string;
                   fieldDescription: string;
                   mustHave: boolean;
+                  hide: boolean;
                 }[]
               }
               category={key}

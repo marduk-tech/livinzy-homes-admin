@@ -108,6 +108,7 @@ export interface ProjectField {
   fieldDisplayName: string;
   fieldDescription: string;
   mustHave?: boolean;
+  hide?: boolean;
 }
 
 export interface ProjectStructure {
