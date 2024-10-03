@@ -5,6 +5,7 @@ import { AuthenticationGuard } from "../components/auth/authentication-guard";
 import { DashboardLayout } from "../layouts/dashboard-layout";
 
 // Pages
+import AskPage from "../pages/ask-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -19,6 +20,8 @@ export const Router = () => {
         <Route path="/projects/:projectId/edit" element={<EditProjectPage />} />
 
         <Route path="/projects/create" element={<CreateProjectPage />} />
+
+        <Route path="/ask" element={<AskPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />

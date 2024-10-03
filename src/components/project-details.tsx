@@ -28,8 +28,8 @@ import { useDevice } from "../hooks/use-device";
 import { baseApiUrl } from "../libs/constants";
 import { queries } from "../libs/queries";
 import { IMedia, Project } from "../types/Project";
+import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
-import { ImgUpload } from "./img-upload";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
