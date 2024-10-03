@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 import { api } from "../libs/api";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
-import { Project } from "../types/Project";
+import { Project, ProjectStructure } from "../types/Project";
 
 export function useDeleteProjectMutation() {
   return useMutation({
@@ -91,7 +91,7 @@ export function useUpdateProjectMutation(projectId: string) {
 }
 
 export function useProjectForm() {
-  const projectStructure = {
+  const projectStructure: ProjectStructure = {
     metadata: [
       {
         dbField: "name",

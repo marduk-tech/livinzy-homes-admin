@@ -93,3 +93,23 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ProjectField {
+  dbField: string;
+  fieldDisplayName: string;
+  fieldDescription: string;
+  mustHave?: boolean;
+}
+
+export interface ProjectStructure {
+  metadata: ProjectField[];
+  ui: ProjectField[];
+  land: ProjectField[];
+  plots: ProjectField[];
+  connectivity: ProjectField[];
+  status: ProjectField[];
+  basic_infra: ProjectField[];
+  amenities: ProjectField[];
+  clickToAction: ProjectField[];
+  team: ProjectField[];
+}
