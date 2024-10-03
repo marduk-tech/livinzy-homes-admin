@@ -60,7 +60,6 @@ export function UserDropDown() {
     >
       <Button
         shape="circle"
-        size="small"
         icon={<UserOutlined />}
         style={{
           marginRight: 16,

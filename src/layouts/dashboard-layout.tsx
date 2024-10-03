@@ -1,4 +1,5 @@
-import { Flex, Image, Layout } from "antd";
+import { RobotOutlined } from "@ant-design/icons";
+import { Button, Flex, Image, Layout } from "antd";
 import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { CustomErrorBoundary } from "../components/common/custom-error-boundary";
@@ -24,7 +25,13 @@ export const DashboardLayout: React.FC = () => {
                 ></Image>
               </Link>
 
-              <UserDropDown />
+              <Flex justify="center" align="center" gap={15}>
+                <Link to="/ask">
+                  <Button icon={<RobotOutlined />}>Ask Liv</Button>
+                </Link>
+
+                <UserDropDown />
+              </Flex>
             </Flex>
           </Header>
           <Content style={{ margin: isMobile ? 24 : 48 }}>

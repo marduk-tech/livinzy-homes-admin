@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 import { api } from "../libs/api";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
-import { Project } from "../types/Project";
+import { Project, ProjectStructure } from "../types/Project";
 
 export function useDeleteProjectMutation() {
   return useMutation({
@@ -91,7 +91,7 @@ export function useUpdateProjectMutation(projectId: string) {
 }
 
 export function useProjectForm() {
-  const projectStructure = {
+  const projectStructure: ProjectStructure = {
     metadata: [
       {
         dbField: "name",
@@ -135,6 +135,16 @@ export function useProjectForm() {
       {
         dbField: "summary",
         fieldDisplayName: "Summary",
+        fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "highlights",
+        fieldDisplayName: "Highlights",
+        fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "costSummary",
+        fieldDisplayName: "Cost Summary",
         fieldDescription: "Provide relevant details",
       },
     ],
@@ -321,13 +331,14 @@ export function useProjectForm() {
       },
       {
         dbField: "parks",
-        fieldDisplayName: "Parks",
-        fieldDescription: "Provide relevant details.",
+        fieldDisplayName: "Open area & parks",
+        fieldDescription: "Information about open area, landscaping, parks or pathways",
       },
       {
         dbField: "parking",
         fieldDisplayName: "Parking",
         fieldDescription: "Provide relevant details.",
+        hide: true,
       },
       {
         dbField: "others",

@@ -1,7 +1,7 @@
 import { Button, message, Upload, UploadFile } from "antd";
 import { UploadChangeParam, UploadProps } from "antd/es/upload";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
-import { baseApiUrl } from "../libs/constants";
+import { baseApiUrl } from "../../libs/constants";
 
 const MAX_IMAGE_SIZE_MB = 5;
 

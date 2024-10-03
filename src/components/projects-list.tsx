@@ -5,6 +5,7 @@ import {
   Col,
   Flex,
   notification,
+  Progress,
   Row,
   Table,
   TableColumnType,
@@ -15,10 +16,14 @@ import React from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { useDeleteProjectMutation } from "../hooks/project-hooks";
+import {
+  useDeleteProjectMutation,
+  useProjectForm,
+} from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
-import { Project } from "../types/Project";
+import { calculateProgress } from "../libs/utils";
+import { Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 
@@ -29,6 +34,8 @@ export const ProjectsList: React.FC = () => {
     queries.getAllProjects()
   );
   const deleteProjectMutation = useDeleteProjectMutation();
+
+  const { projectFields } = useProjectForm();
 
   const handleDelete = async ({
     projectId,
@@ -57,6 +64,38 @@ export const ProjectsList: React.FC = () => {
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+
+    {
+      title: "Must Have",
+      dataIndex: "_id",
+      key: "mustHave",
+      width: "200px",
+      responsive: ["lg", "xl"],
+      render: (_id: any, record: any) => {
+        return (
+          <Progress
+            percent={calculateProgress(projectFields, record, true)}
+            size="small"
+          />
+        );
+      },
+    },
+
+    {
+      title: "Good To Have",
+      dataIndex: "_id",
+      key: "goodToHave",
+      width: "200px",
+      responsive: ["lg", "xl"],
+      render: (_id: any, record: any) => {
+        return (
+          <Progress
+            percent={calculateProgress(projectFields, record, false)}
+            size="small"
+          />
+        );
+      },
     },
     {
       title: "",

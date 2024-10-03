@@ -79,6 +79,14 @@ export interface ITeam {
   others: string;
 }
 
+export interface IUI {
+  summary: string;
+  description: string;
+  oneLiner: string;
+  highlights: string;
+  costSummary: string;
+}
+
 export interface Project {
   _id: string;
   metadata: IMetadata;
@@ -90,6 +98,28 @@ export interface Project {
   basic_infra: IBasicInfra;
   amenities: IAmenities;
   team: ITeam;
+  ui: IUI;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProjectField {
+  dbField: string;
+  fieldDisplayName: string;
+  fieldDescription: string;
+  mustHave?: boolean;
+  hide?: boolean;
+}
+
+export interface ProjectStructure {
+  metadata: ProjectField[];
+  ui: ProjectField[];
+  land: ProjectField[];
+  plots: ProjectField[];
+  connectivity: ProjectField[];
+  status: ProjectField[];
+  basic_infra: ProjectField[];
+  amenities: ProjectField[];
+  clickToAction: ProjectField[];
+  team: ProjectField[];
 }
