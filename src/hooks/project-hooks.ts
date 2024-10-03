@@ -137,6 +137,16 @@ export function useProjectForm() {
         fieldDisplayName: "Summary",
         fieldDescription: "Provide relevant details",
       },
+      {
+        dbField: "highlights",
+        fieldDisplayName: "Highlights",
+        fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "costSummary",
+        fieldDisplayName: "Cost Summary",
+        fieldDescription: "Provide relevant details",
+      },
     ],
     land: [
       {
