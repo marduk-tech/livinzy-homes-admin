@@ -218,6 +218,12 @@ export function useProjectForm() {
           "List of plots in as detailed manner as possible (if available).",
       },
       {
+        dbField: "payment_plan",
+        fieldDisplayName: "Payment plan",
+        fieldDescription:
+          "Payment plan if available.",
+      },
+      {
         dbField: "others",
         fieldDisplayName: "Others",
         fieldDescription: "Any other relevant information about the plots.",
@@ -273,6 +279,12 @@ export function useProjectForm() {
         fieldDisplayName: "Construction Status",
         fieldDescription:
           "Any relevant details about current construction status",
+      },
+      {
+        dbField: "traction",
+        fieldDisplayName: "Traction",
+        fieldDescription:
+          "Details about plot sold, left or anything else",
       },
     ],
     basic_infra: [
