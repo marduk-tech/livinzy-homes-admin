@@ -224,6 +224,12 @@ export function useProjectForm() {
           "Payment plan if available.",
       },
       {
+        dbField: "rental_income",
+        fieldDisplayName: "Rental income",
+        fieldDescription:
+          "Rental income option if available.",
+      },
+      {
         dbField: "others",
         fieldDisplayName: "Others",
         fieldDescription: "Any other relevant information about the plots.",
