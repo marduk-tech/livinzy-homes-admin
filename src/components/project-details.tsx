@@ -183,7 +183,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       });
 
       const dummyTags = [
-        "property",
+        "exterior",
         "layout",
         "aerial",
         "video",
@@ -280,7 +280,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       style={{ width: "100%" }}
                     >
                       <Select
-                        mode="tags"
                         style={{
                           width: "100%",
                           maxWidth: screens.lg ? "600px" : "100%",
