@@ -119,6 +119,11 @@ export function useProjectForm() {
         fieldDisplayName: "Address",
         fieldDescription: "The physical address of the project.",
       },
+      {
+        dbField: "marketing_copy",
+        fieldDisplayName: "Marketing Copy",
+        fieldDescription: "Any raw marketing copy provided",
+      }
     ],
     ui: [
       {
