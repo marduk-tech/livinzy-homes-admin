@@ -72,6 +72,9 @@ export const ProjectsList: React.FC = () => {
       key: "mustHave",
       width: "200px",
       responsive: ["lg", "xl"],
+      sorter: (a: any, b: any) =>
+        calculateProgress(projectFields, a, true) -
+        calculateProgress(projectFields, b, true),
       render: (_id: any, record: any) => {
         return (
           <Progress
