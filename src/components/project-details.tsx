@@ -30,9 +30,9 @@ import { queries } from "../libs/queries";
 import { IMedia, Project } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
+import TextArea from "antd/es/input/TextArea";
 
 const { TabPane } = Tabs;
-const { TextArea } = Input;
 const { useBreakpoint } = Grid;
 
 interface ProjectFormProps {
@@ -74,7 +74,7 @@ const RenderFields: React.FC<{
                 }
               >
                 <TextArea
-                  autoSize={{ minRows: 2 }}
+                  rows={5}
                   placeholder={fieldDescription}
                 />
               </Form.Item>
