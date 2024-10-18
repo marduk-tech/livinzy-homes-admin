@@ -21,6 +21,7 @@ import { DeleteOutlined, RedoOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
+  useGenerateProjectUI,
   useProjectForm,
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
@@ -73,10 +74,7 @@ const RenderFields: React.FC<{
                   ] || []
                 }
               >
-                <TextArea
-                  rows={5}
-                  placeholder={fieldDescription}
-                />
+                <TextArea rows={5} placeholder={fieldDescription} />
               </Form.Item>
             </Col>
           );
@@ -90,6 +88,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const navigate = useNavigate();
   const { isMobile } = useDevice();
   const [allTags, setAllTags] = useState<string[]>([]);
+
+  const [projectData, setProjectData] = useState<Project>();
 
   const { fieldRules, projectFields } = useProjectForm();
 
@@ -106,6 +106,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const createProject = useCreateProjectMutation();
   const updateProject = useUpdateProjectMutation(projectId || "");
+
+  const generateProjectUI = useGenerateProjectUI();
 
   const handleSave = async () => {
     try {
@@ -159,6 +161,55 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const renderTabActions = (key: string) => {
+    if (key == "ui") {
+      return (
+        <Flex style={{ width: "100%" }}>
+          <Button
+            style={{ marginLeft: "auto" }}
+            loading={generateProjectUI.isPending}
+            onClick={async () => {
+              const uiData = await generateProjectUI.mutate(projectId || "", {
+                onSuccess: (data) => {
+                  const uiData = data.data;
+                  if (uiData) {
+                    form.setFields([
+                      {
+                        name: ["ui", "costSummary"],
+                        value: uiData.costSummary,
+                      },
+                      {
+                        name: ["ui", "description"],
+                        value: uiData.description,
+                      },
+                      {
+                        name: ["ui", "highlights"],
+                        value: uiData.highlights,
+                      },
+                      {
+                        name: ["ui", "oneLiner"],
+                        value: uiData.oneLiner,
+                      },
+                      {
+                        name: ["ui", "summary"],
+                        value: uiData.summary,
+                      },
+
+                    ]);
+                  }
+                },
+              });
+              console.log(uiData);
+            }}
+          >
+            Generate UI
+          </Button>
+        </Flex>
+      );
+    }
+    return null;
+  };
+
   const handleDeleteMedia = (index: number) => {
     const currentMedia = form.getFieldValue("media") || [];
     const updatedMedia = currentMedia.filter((_: any, i: any) => i !== index);
@@ -198,6 +249,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   }, [allProjects]);
 
+  useEffect(() => {
+    if (!projectData && project) {
+      setProjectData(project);
+    }
+  }, [project]);
+
   const screens = useBreakpoint();
 
   if (projectIsLoading || allProjectsLoading) {
@@ -221,6 +278,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             key={key}
             disabled={!projectId && index !== 0}
           >
+            {renderTabActions(key)}
             <RenderFields
               fields={
                 fields as {
