@@ -43,3 +43,12 @@ export const deleteProject = async (id: string) => {
     return response.data as Project;
   });
 };
+
+
+// Delete a project by ID
+export const generateProjectUI = async (id: string) => {
+  const endpoint = `/ai/project/ui`;
+  return axiosApiInstance.post(endpoint, {projectId: id}).then((response) => {
+    return response.data as any;
+  });
+};

@@ -62,6 +62,28 @@ export function useCreateProjectMutation() {
   });
 }
 
+export function useGenerateProjectUI() {
+  return useMutation({
+    mutationFn: (projectId: string) => {
+      return api.generateProjectUI(projectId);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: `Project created successfully!`,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `An unexpected error occurred. Please try again later.`,
+      });
+
+      console.log(error);
+    },
+  });
+}
+
 export function useUpdateProjectMutation(projectId: string) {
   return useMutation({
     mutationFn: ({ projectData }: { projectData: Partial<Project> }) => {
