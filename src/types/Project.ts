@@ -104,7 +104,7 @@ export interface Project {
 }
 
 export interface ProjectField {
-  dbField: string;
+  dbField: string | string[];
   fieldDisplayName: string;
   fieldDescription: string;
   mustHave?: boolean;

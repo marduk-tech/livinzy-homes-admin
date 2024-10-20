@@ -17,7 +17,7 @@ import {
   Typography,
 } from "antd";
 
-import { DeleteOutlined, RedoOutlined } from "@ant-design/icons";
+import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
@@ -31,7 +31,6 @@ import { queries } from "../libs/queries";
 import { IMedia, Project } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
-import TextArea from "antd/es/input/TextArea";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -42,7 +41,7 @@ interface ProjectFormProps {
 
 const RenderFields: React.FC<{
   fields: {
-    dbField: string;
+    dbField: string | string[];
     fieldDisplayName: string;
     fieldDescription: string;
     mustHave: boolean;
@@ -59,9 +58,16 @@ const RenderFields: React.FC<{
           return null;
         } else
           return (
-            <Col span={isMobile ? 24 : 12} key={dbField}>
+            <Col
+              span={isMobile ? 24 : 12}
+              key={Array.isArray(dbField) ? dbField.join(".") : dbField}
+            >
               <Form.Item
-                name={[category, dbField]}
+                name={
+                  Array.isArray(dbField)
+                    ? [category, ...dbField]
+                    : [category, dbField]
+                }
                 label={
                   <Flex gap={8}>
                     <Typography.Text>{fieldDisplayName}</Typography.Text>
@@ -70,7 +76,9 @@ const RenderFields: React.FC<{
                 }
                 rules={
                   fieldRules[category as keyof typeof fieldRules]?.[
-                    dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
+                    (Array.isArray(dbField)
+                      ? dbField.join(".")
+                      : dbField) as keyof (typeof fieldRules)[keyof typeof fieldRules]
                   ] || []
                 }
               >
@@ -194,7 +202,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         name: ["ui", "summary"],
                         value: uiData.summary,
                       },
-
                     ]);
                   }
                 },
