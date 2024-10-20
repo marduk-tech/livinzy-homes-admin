@@ -146,6 +146,17 @@ export function useProjectForm() {
         fieldDisplayName: "Marketing Copy",
         fieldDescription: "Any raw marketing copy provided",
       },
+      {
+        dbField: "status",
+        fieldDisplayName: "Status",
+        fieldDescription: "Current status of the project",
+
+        type: "single_select",
+        options: [
+          { label: "New", value: "new" },
+          { label: "Active", value: "active" },
+        ],
+      },
     ],
     ui: [
       {

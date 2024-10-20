@@ -28,7 +28,7 @@ import {
 import { useDevice } from "../hooks/use-device";
 import { baseApiUrl } from "../libs/constants";
 import { queries } from "../libs/queries";
-import { IMedia, Project } from "../types/Project";
+import { IMedia, Project, ProjectField } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 
@@ -39,21 +39,25 @@ interface ProjectFormProps {
   projectId?: string;
 }
 
+interface FieldType extends ProjectField {}
+
 const RenderFields: React.FC<{
-  fields: {
-    dbField: string | string[];
-    fieldDisplayName: string;
-    fieldDescription: string;
-    mustHave: boolean;
-    hide: boolean;
-  }[];
+  fields: FieldType[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
 }> = ({ fields, category, isMobile, fieldRules }) => (
   <Row gutter={16}>
     {fields.map(
-      ({ dbField, fieldDisplayName, fieldDescription, mustHave, hide }) => {
+      ({
+        dbField,
+        fieldDisplayName,
+        fieldDescription,
+        mustHave,
+        hide,
+        type,
+        options,
+      }) => {
         if (hide) {
           return null;
         } else
@@ -82,7 +86,19 @@ const RenderFields: React.FC<{
                   ] || []
                 }
               >
-                <TextArea rows={5} placeholder={fieldDescription} />
+                {type === "single_select" ? (
+                  <Select
+                    placeholder={fieldDescription}
+                    options={options}
+                    defaultValue={
+                      options && options.length > 0
+                        ? options[0].value
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <TextArea rows={5} placeholder={fieldDescription} />
+                )}
               </Form.Item>
             </Col>
           );
@@ -287,15 +303,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           >
             {renderTabActions(key)}
             <RenderFields
-              fields={
-                fields as {
-                  dbField: string;
-                  fieldDisplayName: string;
-                  fieldDescription: string;
-                  mustHave: boolean;
-                  hide: boolean;
-                }[]
-              }
+              fields={fields as FieldType[]}
               category={key}
               isMobile={isMobile}
               fieldRules={fieldRules}

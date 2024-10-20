@@ -109,6 +109,8 @@ export interface ProjectField {
   fieldDescription: string;
   mustHave?: boolean;
   hide?: boolean;
+  type?: "single_select" | "text";
+  options?: { label: string; value: string }[];
 }
 
 export interface ProjectStructure {
