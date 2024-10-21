@@ -17,7 +17,7 @@ import {
   Typography,
 } from "antd";
 
-import { DeleteOutlined, RedoOutlined } from "@ant-design/icons";
+import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import {
   useCreateProjectMutation,
@@ -28,10 +28,9 @@ import {
 import { useDevice } from "../hooks/use-device";
 import { baseApiUrl } from "../libs/constants";
 import { queries } from "../libs/queries";
-import { IMedia, Project } from "../types/Project";
+import { IMedia, Project, ProjectField } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
-import TextArea from "antd/es/input/TextArea";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -40,28 +39,39 @@ interface ProjectFormProps {
   projectId?: string;
 }
 
+interface FieldType extends ProjectField {}
+
 const RenderFields: React.FC<{
-  fields: {
-    dbField: string;
-    fieldDisplayName: string;
-    fieldDescription: string;
-    mustHave: boolean;
-    hide: boolean;
-  }[];
+  fields: FieldType[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
 }> = ({ fields, category, isMobile, fieldRules }) => (
   <Row gutter={16}>
     {fields.map(
-      ({ dbField, fieldDisplayName, fieldDescription, mustHave, hide }) => {
+      ({
+        dbField,
+        fieldDisplayName,
+        fieldDescription,
+        mustHave,
+        hide,
+        type,
+        options,
+      }) => {
         if (hide) {
           return null;
         } else
           return (
-            <Col span={isMobile ? 24 : 12} key={dbField}>
+            <Col
+              span={isMobile ? 24 : 12}
+              key={Array.isArray(dbField) ? dbField.join(".") : dbField}
+            >
               <Form.Item
-                name={[category, dbField]}
+                name={
+                  Array.isArray(dbField)
+                    ? [category, ...dbField]
+                    : [category, dbField]
+                }
                 label={
                   <Flex gap={8}>
                     <Typography.Text>{fieldDisplayName}</Typography.Text>
@@ -70,11 +80,25 @@ const RenderFields: React.FC<{
                 }
                 rules={
                   fieldRules[category as keyof typeof fieldRules]?.[
-                    dbField as keyof (typeof fieldRules)[keyof typeof fieldRules]
+                    (Array.isArray(dbField)
+                      ? dbField.join(".")
+                      : dbField) as keyof (typeof fieldRules)[keyof typeof fieldRules]
                   ] || []
                 }
               >
-                <TextArea rows={5} placeholder={fieldDescription} />
+                {type === "single_select" ? (
+                  <Select
+                    placeholder={fieldDescription}
+                    options={options}
+                    defaultValue={
+                      options && options.length > 0
+                        ? options[0].value
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <TextArea rows={5} placeholder={fieldDescription} />
+                )}
               </Form.Item>
             </Col>
           );
@@ -194,7 +218,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         name: ["ui", "summary"],
                         value: uiData.summary,
                       },
-
                     ]);
                   }
                 },
@@ -280,15 +303,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           >
             {renderTabActions(key)}
             <RenderFields
-              fields={
-                fields as {
-                  dbField: string;
-                  fieldDisplayName: string;
-                  fieldDescription: string;
-                  mustHave: boolean;
-                  hide: boolean;
-                }[]
-              }
+              fields={fields as FieldType[]}
               category={key}
               isMobile={isMobile}
               fieldRules={fieldRules}

@@ -104,11 +104,13 @@ export interface Project {
 }
 
 export interface ProjectField {
-  dbField: string;
+  dbField: string | string[];
   fieldDisplayName: string;
   fieldDescription: string;
   mustHave?: boolean;
   hide?: boolean;
+  type?: "single_select" | "text";
+  options?: { label: string; value: string }[];
 }
 
 export interface ProjectStructure {

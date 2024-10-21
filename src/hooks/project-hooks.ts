@@ -121,7 +121,7 @@ export function useProjectForm() {
         fieldDescription: "The name of the project.",
       },
       {
-        dbField: "location",
+        dbField: ["location", "mapLink"],
         fieldDisplayName: "Location (Google maps url)",
         fieldDescription:
           "The location of the project identified by Google maps url.",
@@ -145,7 +145,18 @@ export function useProjectForm() {
         dbField: "marketing_copy",
         fieldDisplayName: "Marketing Copy",
         fieldDescription: "Any raw marketing copy provided",
-      }
+      },
+      {
+        dbField: "status",
+        fieldDisplayName: "Status",
+        fieldDescription: "Current status of the project",
+
+        type: "single_select",
+        options: [
+          { label: "New", value: "new" },
+          { label: "Active", value: "active" },
+        ],
+      },
     ],
     ui: [
       {
@@ -247,14 +258,12 @@ export function useProjectForm() {
       {
         dbField: "payment_plan",
         fieldDisplayName: "Payment plan",
-        fieldDescription:
-          "Payment plan if available.",
+        fieldDescription: "Payment plan if available.",
       },
       {
         dbField: "rental_income",
         fieldDisplayName: "Rental income",
-        fieldDescription:
-          "Rental income option if available.",
+        fieldDescription: "Rental income option if available.",
       },
       {
         dbField: "others",
@@ -316,8 +325,7 @@ export function useProjectForm() {
       {
         dbField: "traction",
         fieldDisplayName: "Traction",
-        fieldDescription:
-          "Details about plot sold, left or anything else",
+        fieldDescription: "Details about plot sold, left or anything else",
       },
     ],
     basic_infra: [
@@ -377,7 +385,8 @@ export function useProjectForm() {
       {
         dbField: "parks",
         fieldDisplayName: "Open area & parks",
-        fieldDescription: "Information about open area, landscaping, parks or pathways",
+        fieldDescription:
+          "Information about open area, landscaping, parks or pathways",
       },
       {
         dbField: "parking",
