@@ -1,7 +1,23 @@
 export interface IMedia {
   _id: string;
-  url: string;
-  tags: string[];
+  type: "image" | "video";
+  image?: {
+    url: string;
+    tags: string[];
+    caption?: string;
+  };
+  video?: {
+    url: string;
+    tags: string[];
+    caption?: string;
+    bunnyVideoId?: string;
+    bunnyTitle?: string;
+    status?: string;
+    directPlayUrl?: string;
+    hlsUrl?: string;
+    thumbnailUrl?: string;
+    previewUrl?: string;
+  };
 }
 
 export interface IMetadata {
