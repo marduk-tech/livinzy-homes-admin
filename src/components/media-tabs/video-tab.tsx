@@ -36,8 +36,9 @@ interface VideoUploadProps {
 function generateVideoUrls(videoId: string, libraryId: number) {
   return {
     directPlayUrl: `https://iframe.mediadelivery.net/play/${libraryId}/${videoId}`,
-    thumbnailUrl: `https://vz-611162ea-cb9.b-cdn.net/${videoId}/thumbnail.jpg`,
-    previewUrl: `https://vz-611162ea-cb9.b-cdn.net/${videoId}/preview.webp`,
+    thumbnailUrl: `https://vz-ca10988b-4d6.b-cdn.net/${videoId}/thumbnail.jpg`,
+    previewUrl: `https://vz-ca10988b-4d6.b-cdn.net/${videoId}/preview.webp`,
+
     embedUrl: `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?autoplay=true&loop=false&muted=false&preload=true&responsive=true`,
   };
 }
