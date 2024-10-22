@@ -84,16 +84,24 @@ export function useGenerateProjectUI() {
   });
 }
 
-export function useUpdateProjectMutation(projectId: string) {
+export function useUpdateProjectMutation({
+  projectId,
+  enableToasts = true,
+}: {
+  projectId: string;
+  enableToasts?: boolean;
+}) {
   return useMutation({
     mutationFn: ({ projectData }: { projectData: Partial<Project> }) => {
       return api.updateProject(projectId, projectData);
     },
 
     onSuccess: () => {
-      notification.success({
-        message: `Project updated successfully!`,
-      });
+      if (enableToasts) {
+        notification.success({
+          message: `Project updated successfully!`,
+        });
+      }
     },
 
     onError: (error: AxiosError<any>) => {

@@ -31,7 +31,7 @@ import { queries } from "../libs/queries";
 import { IMedia, Project, ProjectField } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
-import { VideoUpload } from "./video-upload";
+import { VideoUpload } from "./media-tabs/video-tab";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -130,7 +130,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   });
 
   const createProject = useCreateProjectMutation();
-  const updateProject = useUpdateProjectMutation(projectId || "");
+  const updateProject = useUpdateProjectMutation({
+    projectId: projectId || "",
+  });
 
   const generateProjectUI = useGenerateProjectUI();
 
@@ -255,10 +257,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       const tags = new Set<string>();
       allProjects.forEach((project: Project) => {
         project.media.forEach((media: IMedia) => {
-          if (media.type === "image" && media.image?.tags) {
+          if (media?.type === "image" && media?.image?.tags) {
             media.image.tags.forEach((tag: string) => tags.add(tag));
-          } else if (media.type === "video" && media.video?.tags) {
-            media.video.tags.forEach((tag: string) => tags.add(tag));
+          } else if (media?.type === "video" && media?.video?.tags) {
+            media?.video?.tags.forEach((tag: string) => tags.add(tag));
           }
         });
       });
@@ -319,101 +321,124 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         ))}
 
         <TabPane tab={"Media"} key={"media"} disabled={!projectId}>
-          <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>
-            <VideoUpload />
-            <ImgUpload onUploadComplete={onUploadComplete} />
-          </Flex>
-
-          {project?.media
-            .filter((item: IMedia) => item.type === "image")
-            .map((item: IMedia, index) => {
-              return (
-                <Row
-                  gutter={[16, 16]}
-                  key={item._id}
-                  style={{
-                    marginBottom: 24,
-                    alignItems: "stretch",
-                    borderBottom: "1px solid #f0f0f0",
-                    paddingBottom: 24,
+          <Tabs defaultActiveKey="images">
+            <TabPane tab={"Images"} key={"images"}>
+              <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>
+                <ImgUpload
+                  onUploadComplete={onUploadComplete}
+                  button={{
+                    label: "Upload Images",
+                    type: "primary",
                   }}
-                >
-                  <Col xs={24} sm={24} md={6} lg={4} xl={3}>
-                    <Image
-                      width="100%"
-                      src={item.image?.url}
-                      alt={item._id}
+                />
+              </Flex>
+
+              {project?.media?.map((item: IMedia, index) => {
+                if (item?.type === "image") {
+                  return (
+                    <Row
+                      gutter={[16, 16]}
+                      key={item._id}
                       style={{
-                        borderRadius: 10,
-                        objectFit: "cover",
-                        aspectRatio: "1 / 1",
+                        marginBottom: 24,
+                        alignItems: "stretch",
+                        borderBottom: "1px solid #f0f0f0",
+                        paddingBottom: 24,
                       }}
-                    />
-                  </Col>
-                  <Col xs={24} sm={24} md={18} lg={20} xl={21}>
-                    <Flex vertical justify="center" style={{ height: "100%" }}>
-                      <Form.Item
-                        name={["media", index, "type"]}
-                        label="Tags"
-                        hidden
-                      ></Form.Item>
-                      <Form.Item
-                        name={["media", index, "image", "url"]}
-                        label="Tags"
-                        hidden
-                      ></Form.Item>
-                      <Form.Item
-                        name={["media", index, "image", "tags"]}
-                        label="Tags"
-                        style={{ width: "100%" }}
-                      >
-                        <Select
+                    >
+                      <Col xs={24} sm={24} md={6} lg={4} xl={3}>
+                        <Image
+                          width="100%"
+                          src={item.image?.url}
+                          alt={item._id}
                           style={{
-                            width: "100%",
-                            maxWidth: screens.lg ? "600px" : "100%",
-                          }}
-                          placeholder="Enter tags"
-                          options={allTags.map((tag) => ({
-                            value: tag,
-                            label: tag,
-                          }))}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name={["media", index, "image", "caption"]}
-                        label="Caption"
-                        style={{ width: "100%" }}
-                      >
-                        <Input
-                          style={{
-                            width: "100%",
-                            maxWidth: screens.lg ? "600px" : "100%",
-                          }}
-                          placeholder="Enter caption"
-                        />
-                      </Form.Item>
-
-                      <Flex wrap="wrap">
-                        <ImgUpload
-                          onUploadComplete={(urls) =>
-                            onUploadComplete(urls, index)
-                          }
-                          isMultiple={false}
-                          button={{
-                            label: "Update Image",
+                            borderRadius: 10,
+                            objectFit: "cover",
+                            aspectRatio: "1 / 1",
                           }}
                         />
+                      </Col>
+                      <Col xs={24} sm={24} md={18} lg={20} xl={21}>
+                        <Flex
+                          vertical
+                          justify="center"
+                          style={{ height: "100%" }}
+                        >
+                          <Form.Item
+                            name={["media", index, "type"]}
+                            label="Tags"
+                            hidden
+                          ></Form.Item>
 
-                        <Button onClick={() => handleDeleteMedia(index)}>
-                          Delete Image
-                        </Button>
-                      </Flex>
-                    </Flex>
-                  </Col>
-                </Row>
-              );
-            })}
+                          <Form.Item
+                            name={["media", index, "image", "url"]}
+                            label="Tags"
+                            hidden
+                          ></Form.Item>
+                          <Form.Item
+                            name={["media", index, "image", "tags"]}
+                            label="Tags"
+                            style={{ width: "100%" }}
+                          >
+                            <Select
+                              style={{
+                                width: "100%",
+                                maxWidth: screens.lg ? "600px" : "100%",
+                              }}
+                              placeholder="Enter tags"
+                              options={allTags.map((tag) => ({
+                                value: tag,
+                                label: tag,
+                              }))}
+                            />
+                          </Form.Item>
+
+                          <Form.Item
+                            name={["media", index, "image", "caption"]}
+                            label="Caption"
+                            style={{ width: "100%" }}
+                          >
+                            <Input
+                              style={{
+                                width: "100%",
+                                maxWidth: screens.lg ? "600px" : "100%",
+                              }}
+                              placeholder="Enter caption"
+                            />
+                          </Form.Item>
+
+                          <Flex wrap="wrap">
+                            <ImgUpload
+                              onUploadComplete={(urls) =>
+                                onUploadComplete(urls, index)
+                              }
+                              isMultiple={false}
+                              button={{
+                                label: "Update Image",
+                              }}
+                            />
+
+                            <Button onClick={() => handleDeleteMedia(index)}>
+                              Delete Image
+                            </Button>
+                          </Flex>
+                        </Flex>
+                      </Col>
+                    </Row>
+                  );
+                }
+              })}
+            </TabPane>
+
+            <TabPane tab={"Videos"} key={"videos"}>
+              <VideoUpload
+                form={form}
+                projectId={projectId}
+                project={project!}
+                allTags={allTags}
+              />
+            </TabPane>
+          </Tabs>
         </TabPane>
       </Tabs>
 

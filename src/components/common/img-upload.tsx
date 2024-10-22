@@ -1,3 +1,4 @@
+import { UploadOutlined } from "@ant-design/icons";
 import { Button, message, Upload, UploadFile } from "antd";
 import { UploadChangeParam, UploadProps } from "antd/es/upload";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
@@ -74,6 +75,7 @@ export const ImgUpload: React.FC<MediaTabProps> = ({
         maxCount={!isMultiple ? 1 : undefined}
       >
         <Button
+          icon={<UploadOutlined />}
           loading={uploadPending}
           type={button.type}
           style={{ marginRight: 16 }}
