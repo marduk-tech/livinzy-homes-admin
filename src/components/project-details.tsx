@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import {
   Button,
+  Checkbox,
   Col,
   Flex,
   Form,
@@ -136,16 +137,37 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const generateProjectUI = useGenerateProjectUI();
 
+  const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
+    null
+  );
+
+  const handlePreviewImageChange = (index: number, checked: boolean) => {
+    if (checked) {
+      setPreviewImageIndex(index);
+    } else {
+      setPreviewImageIndex(null);
+    }
+  };
+
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
 
+      const updatedMedia = values.media.map((item: IMedia, index: number) => ({
+        ...item,
+        isPreview: index === previewImageIndex,
+      }));
+
       if (projectId) {
-        updateProject.mutate({ projectData: values });
-      } else {
-        await createProject.mutateAsync(values).then((data) => {
-          navigate(`/projects/${data._id}/edit`);
+        updateProject.mutate({
+          projectData: { ...values, media: updatedMedia },
         });
+      } else {
+        await createProject
+          .mutateAsync({ ...values, media: updatedMedia })
+          .then((data) => {
+            navigate(`/projects/${data._id}/edit`);
+          });
       }
     } catch (error) {
       notification.error({
@@ -284,6 +306,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   useEffect(() => {
     if (!projectData && project) {
       setProjectData(project);
+
+      const initialPreviewIndex = project.media.findIndex(
+        (item: IMedia) => item.isPreview
+      );
+      setPreviewImageIndex(
+        initialPreviewIndex >= 0 ? initialPreviewIndex : null
+      );
     }
   }, [project]);
 
@@ -346,7 +375,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         paddingBottom: 24,
                       }}
                     >
-                      <Col xs={24} sm={24} md={6} lg={4} xl={3}>
+                      <Col xs={24} sm={24} md={6} lg={4} xl={4}>
                         <Image
                           width="100%"
                           src={item.image?.url}
@@ -358,7 +387,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                           }}
                         />
                       </Col>
-                      <Col xs={24} sm={24} md={18} lg={20} xl={21}>
+                      <Col xs={24} sm={24} md={18} lg={20} xl={20}>
                         <Flex
                           vertical
                           justify="center"
@@ -366,10 +395,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         >
                           <Form.Item
                             name={["media", index, "type"]}
-                            label="Tags"
+                            label="Type"
                             hidden
                           ></Form.Item>
-
                           <Form.Item
                             name={["media", index, "image", "url"]}
                             label="Tags"
@@ -405,6 +433,20 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               }}
                               placeholder="Enter caption"
                             />
+                          </Form.Item>
+
+                          <Form.Item name={["media", index, "isPreview"]}>
+                            <Checkbox
+                              checked={index === previewImageIndex}
+                              onChange={(e) =>
+                                handlePreviewImageChange(
+                                  index,
+                                  e.target.checked
+                                )
+                              }
+                            >
+                              Preview Image
+                            </Checkbox>
                           </Form.Item>
 
                           <Flex wrap="wrap">

@@ -6,6 +6,7 @@ export interface IMedia {
     tags: string[];
     caption?: string;
   };
+  isPreview: boolean;
   video?: {
     url: string;
     tags: string[];
