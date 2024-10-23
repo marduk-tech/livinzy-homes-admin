@@ -159,6 +159,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       }));
 
       if (projectId) {
+        console.log(updatedMedia);
+
         updateProject.mutate({
           projectData: { ...values, media: updatedMedia },
         });
@@ -470,6 +472,24 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   );
                 }
               })}
+
+              {/* Hot fix for video getting deleted on image save  */}
+              <div
+                style={{
+                  visibility: "hidden",
+                  position: "absolute",
+                  width: 0,
+                  height: 0,
+                  overflow: "hidden",
+                }}
+              >
+                <VideoUpload
+                  form={form}
+                  projectId={projectId}
+                  project={project!}
+                  allTags={allTags}
+                />
+              </div>
             </TabPane>
 
             <TabPane tab={"Videos"} key={"videos"}>
