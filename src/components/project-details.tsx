@@ -153,17 +153,26 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     try {
       const values = await form.validateFields();
 
-      const updatedMedia = values.media.map((item: IMedia, index: number) => ({
-        ...item,
-        isPreview: index === previewImageIndex,
-      }));
+      let updatedMedia;
+      if (values.media) {
+        updatedMedia = values.media.map((item: IMedia, index: number) => ({
+          ...item,
+          isPreview: index === previewImageIndex,
+        }));
+      }
 
       if (projectId) {
         console.log(updatedMedia);
 
-        updateProject.mutate({
-          projectData: { ...values, media: updatedMedia },
-        });
+        if (updatedMedia) {
+          updateProject.mutate({
+            projectData: { ...values, media: updatedMedia },
+          });
+        } else {
+          updateProject.mutate({
+            projectData: { ...values },
+          });
+        }
       } else {
         await createProject
           .mutateAsync({ ...values, media: updatedMedia })
@@ -204,6 +213,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       {
                         name: ["ui", "highlights"],
                         value: uiData.highlights,
+                      },
+                      {
+                        name: ["ui", "amenitiesSummary"],
+                        value: uiData.amenitiesSummary,
                       },
                       {
                         name: ["ui", "oneLiner"],

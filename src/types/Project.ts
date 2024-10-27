@@ -102,6 +102,7 @@ export interface IUI {
   oneLiner: string;
   highlights: string;
   costSummary: string;
+  amenitiesSummary: string;
 }
 
 export interface Project {

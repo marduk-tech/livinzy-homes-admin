@@ -158,7 +158,6 @@ export function useProjectForm() {
         dbField: "status",
         fieldDisplayName: "Status",
         fieldDescription: "Current status of the project",
-
         type: "single_select",
         options: [
           { label: "New", value: "new" },
@@ -191,6 +190,11 @@ export function useProjectForm() {
       {
         dbField: "costSummary",
         fieldDisplayName: "Cost Summary",
+        fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "amenitiesSummary",
+        fieldDisplayName: "Amenities Summary",
         fieldDescription: "Provide relevant details",
       },
     ],
