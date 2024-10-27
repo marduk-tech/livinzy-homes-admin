@@ -84,16 +84,24 @@ export function useGenerateProjectUI() {
   });
 }
 
-export function useUpdateProjectMutation(projectId: string) {
+export function useUpdateProjectMutation({
+  projectId,
+  enableToasts = true,
+}: {
+  projectId: string;
+  enableToasts?: boolean;
+}) {
   return useMutation({
     mutationFn: ({ projectData }: { projectData: Partial<Project> }) => {
       return api.updateProject(projectId, projectData);
     },
 
     onSuccess: () => {
-      notification.success({
-        message: `Project updated successfully!`,
-      });
+      if (enableToasts) {
+        notification.success({
+          message: `Project updated successfully!`,
+        });
+      }
     },
 
     onError: (error: AxiosError<any>) => {
@@ -150,7 +158,6 @@ export function useProjectForm() {
         dbField: "status",
         fieldDisplayName: "Status",
         fieldDescription: "Current status of the project",
-
         type: "single_select",
         options: [
           { label: "New", value: "new" },
@@ -183,6 +190,11 @@ export function useProjectForm() {
       {
         dbField: "costSummary",
         fieldDisplayName: "Cost Summary",
+        fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "amenitiesSummary",
+        fieldDisplayName: "Amenities Summary",
         fieldDescription: "Provide relevant details",
       },
     ],
