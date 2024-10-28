@@ -109,12 +109,13 @@ const RenderFields: React.FC<{
                   ] || []
                 }
               >
-                {type === "single_select" ? (
+                {type === "single_select" || type == "multi_select" ? (
                   <Select
                     placeholder={fieldDescription}
                     options={options}
+                    mode={type == "multi_select" ? "tags" : undefined}
                     defaultValue={
-                      options && options.length > 0
+                      options && options.length > 0 && type == "single_select"
                         ? options[0].value
                         : undefined
                     }

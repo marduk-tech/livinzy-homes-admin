@@ -103,6 +103,7 @@ export interface IUI {
   highlights: string;
   costSummary: string;
   amenitiesSummary: string;
+  categories: string[];
 }
 
 export interface Project {
@@ -127,7 +128,9 @@ export interface ProjectField {
   fieldDescription: string;
   mustHave?: boolean;
   hide?: boolean;
-  type?: "single_select" | "text" | "json";
+
+  type?: "single_select" | "text" | "multi_select" | "json";
+
   options?: { label: string; value: string }[];
 }
 
