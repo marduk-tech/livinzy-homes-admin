@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
-import { queryKeys } from "../libs/constants";
+import { ProjectCategories, queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
 
@@ -196,6 +196,13 @@ export function useProjectForm() {
         dbField: "amenitiesSummary",
         fieldDisplayName: "Amenities Summary",
         fieldDescription: "Provide relevant details",
+      },
+      {
+        dbField: "categories",
+        fieldDisplayName: "Categories",
+        fieldDescription: "Categories project belongs to",
+        type: "multi_select",
+        options: ProjectCategories,
       },
     ],
     land: [
