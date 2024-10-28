@@ -181,16 +181,19 @@ export function useProjectForm() {
         dbField: "summary",
         fieldDisplayName: "Summary",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "highlights",
         fieldDisplayName: "Highlights",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "costSummary",
         fieldDisplayName: "Cost Summary",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "amenitiesSummary",

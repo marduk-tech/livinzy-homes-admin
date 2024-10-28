@@ -7,6 +7,7 @@ import {
   Col,
   Flex,
   Form,
+  FormInstance,
   Grid,
   Image,
   Input,
@@ -33,6 +34,7 @@ import { IMedia, Project, ProjectField } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 import { VideoUpload } from "./media-tabs/video-tab";
+import { JsonEditor } from "./update-json-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -44,11 +46,12 @@ interface ProjectFormProps {
 interface FieldType extends ProjectField {}
 
 const RenderFields: React.FC<{
+  form: FormInstance;
   fields: FieldType[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
-}> = ({ fields, category, isMobile, fieldRules }) => (
+}> = ({ fields, category, isMobile, fieldRules, form }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -75,9 +78,27 @@ const RenderFields: React.FC<{
                     : [category, dbField]
                 }
                 label={
-                  <Flex gap={8}>
+                  <Flex gap={8} align="center">
                     <Typography.Text>{fieldDisplayName}</Typography.Text>
                     {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
+                    {type === "json" && (
+                      <JsonEditor
+                        title={`Edit ${fieldDisplayName}`}
+                        initialJson={form.getFieldValue(
+                          Array.isArray(dbField)
+                            ? [category, ...dbField]
+                            : [category, dbField]
+                        )}
+                        onJsonChange={(data) => {
+                          form.setFieldValue(
+                            Array.isArray(dbField)
+                              ? [category, ...dbField]
+                              : [category, dbField],
+                            JSON.stringify(data)
+                          );
+                        }}
+                      />
+                    )}
                   </Flex>
                 }
                 rules={
@@ -356,6 +377,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           >
             {renderTabActions(key)}
             <RenderFields
+              form={form}
               fields={fields as FieldType[]}
               category={key}
               isMobile={isMobile}
