@@ -64,8 +64,8 @@ export function useCreateProjectMutation() {
 
 export function useGenerateProjectUI() {
   return useMutation({
-    mutationFn: (projectId: string) => {
-      return api.generateProjectUI(projectId);
+    mutationFn: ({projectId, instructions}: {projectId: string, instructions: string}) => {
+      return api.generateProjectUI(projectId, instructions || "");
     },
 
     onSuccess: () => {

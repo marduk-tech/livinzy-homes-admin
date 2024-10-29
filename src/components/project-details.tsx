@@ -11,6 +11,7 @@ import {
   Grid,
   Image,
   Input,
+  Modal,
   notification,
   Row,
   Select,
@@ -138,6 +139,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [allTags, setAllTags] = useState<string[]>([]);
 
   const [projectData, setProjectData] = useState<Project>();
+  const [uiInstructionsModalOpen, setUiInstructionsModalOpen] = useState(false);
+  const [uiInstructions, setUiInstructions] = useState<string>();
 
   const { fieldRules, projectFields } = useProjectForm();
 
@@ -219,44 +222,69 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             style={{ marginLeft: "auto" }}
             loading={generateProjectUI.isPending}
             onClick={async () => {
-              const uiData = await generateProjectUI.mutate(projectId || "", {
-                onSuccess: (data) => {
-                  const uiData = data.data;
-                  if (uiData) {
-                    form.setFields([
-                      {
-                        name: ["ui", "costSummary"],
-                        value: uiData.costSummary,
-                      },
-                      {
-                        name: ["ui", "description"],
-                        value: uiData.description,
-                      },
-                      {
-                        name: ["ui", "highlights"],
-                        value: uiData.highlights,
-                      },
-                      {
-                        name: ["ui", "amenitiesSummary"],
-                        value: uiData.amenitiesSummary,
-                      },
-                      {
-                        name: ["ui", "oneLiner"],
-                        value: uiData.oneLiner,
-                      },
-                      {
-                        name: ["ui", "summary"],
-                        value: uiData.summary,
-                      },
-                    ]);
-                  }
-                },
-              });
-              console.log(uiData);
+              setUiInstructionsModalOpen(true);
+              // console.log(uiData);
             }}
           >
             Generate UI
           </Button>
+          <Modal
+            title="Instructions (Optional)"
+            okText="Generate UI"
+            open={uiInstructionsModalOpen}
+            onOk={async () => {
+              await generateProjectUI.mutate(
+                {
+                  projectId: projectId || "",
+                  instructions: uiInstructions || "",
+                },
+                {
+                  onSuccess: (data) => {
+                    const uiData = data.data;
+                    if (uiData) {
+                      form.setFields([
+                        {
+                          name: ["ui", "costSummary"],
+                          value: uiData.costSummary,
+                        },
+                        {
+                          name: ["ui", "description"],
+                          value: uiData.description,
+                        },
+                        {
+                          name: ["ui", "highlights"],
+                          value: uiData.highlights,
+                        },
+                        {
+                          name: ["ui", "amenitiesSummary"],
+                          value: uiData.amenitiesSummary,
+                        },
+                        {
+                          name: ["ui", "oneLiner"],
+                          value: uiData.oneLiner,
+                        },
+                        {
+                          name: ["ui", "summary"],
+                          value: uiData.summary,
+                        },
+                      ]);
+                    }
+                  },
+                }
+              );
+              setUiInstructionsModalOpen(false);
+            }}
+            onCancel={() => {
+              setUiInstructionsModalOpen(false);
+            }}
+          >
+            <Input.TextArea
+              rows={4}
+              onChange={(e: any) => {
+                setUiInstructions(e.target.value);
+              }}
+            ></Input.TextArea>
+          </Modal>
         </Flex>
       );
     }

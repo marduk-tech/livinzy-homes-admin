@@ -71,6 +71,7 @@ export const ProjectsList: React.FC = () => {
       dataIndex: "_id",
       key: "mustHave",
       width: "200px",
+      defaultSortOrder: "descend",
       responsive: ["lg", "xl"],
       sorter: (a: any, b: any) =>
         calculateProgress(projectFields, a, true) -
