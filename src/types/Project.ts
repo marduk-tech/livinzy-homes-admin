@@ -128,7 +128,9 @@ export interface ProjectField {
   fieldDescription: string;
   mustHave?: boolean;
   hide?: boolean;
-  type?: "single_select" | "text" | "multi_select";
+
+  type?: "single_select" | "text" | "multi_select" | "json";
+
   options?: { label: string; value: string }[];
 }
 

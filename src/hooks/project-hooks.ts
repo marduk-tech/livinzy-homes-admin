@@ -64,8 +64,8 @@ export function useCreateProjectMutation() {
 
 export function useGenerateProjectUI() {
   return useMutation({
-    mutationFn: (projectId: string) => {
-      return api.generateProjectUI(projectId);
+    mutationFn: ({projectId, instructions}: {projectId: string, instructions: string}) => {
+      return api.generateProjectUI(projectId, instructions || "");
     },
 
     onSuccess: () => {
@@ -181,16 +181,19 @@ export function useProjectForm() {
         dbField: "summary",
         fieldDisplayName: "Summary",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "highlights",
         fieldDisplayName: "Highlights",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "costSummary",
         fieldDisplayName: "Cost Summary",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "amenitiesSummary",

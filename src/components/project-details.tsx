@@ -7,9 +7,11 @@ import {
   Col,
   Flex,
   Form,
+  FormInstance,
   Grid,
   Image,
   Input,
+  Modal,
   notification,
   Row,
   Select,
@@ -33,6 +35,7 @@ import { IMedia, Project, ProjectField } from "../types/Project";
 import { ImgUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 import { VideoUpload } from "./media-tabs/video-tab";
+import { JsonEditor } from "./update-json-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -44,11 +47,12 @@ interface ProjectFormProps {
 interface FieldType extends ProjectField {}
 
 const RenderFields: React.FC<{
+  form: FormInstance;
   fields: FieldType[];
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
-}> = ({ fields, category, isMobile, fieldRules }) => (
+}> = ({ fields, category, isMobile, fieldRules, form }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -75,9 +79,27 @@ const RenderFields: React.FC<{
                     : [category, dbField]
                 }
                 label={
-                  <Flex gap={8}>
+                  <Flex gap={8} align="center">
                     <Typography.Text>{fieldDisplayName}</Typography.Text>
                     {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
+                    {type === "json" && (
+                      <JsonEditor
+                        title={`Edit ${fieldDisplayName}`}
+                        initialJson={form.getFieldValue(
+                          Array.isArray(dbField)
+                            ? [category, ...dbField]
+                            : [category, dbField]
+                        )}
+                        onJsonChange={(data) => {
+                          form.setFieldValue(
+                            Array.isArray(dbField)
+                              ? [category, ...dbField]
+                              : [category, dbField],
+                            JSON.stringify(data)
+                          );
+                        }}
+                      />
+                    )}
                   </Flex>
                 }
                 rules={
@@ -117,6 +139,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [allTags, setAllTags] = useState<string[]>([]);
 
   const [projectData, setProjectData] = useState<Project>();
+  const [uiInstructionsModalOpen, setUiInstructionsModalOpen] = useState(false);
+  const [uiInstructions, setUiInstructions] = useState<string>();
 
   const { fieldRules, projectFields } = useProjectForm();
 
@@ -198,44 +222,69 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             style={{ marginLeft: "auto" }}
             loading={generateProjectUI.isPending}
             onClick={async () => {
-              const uiData = await generateProjectUI.mutate(projectId || "", {
-                onSuccess: (data) => {
-                  const uiData = data.data;
-                  if (uiData) {
-                    form.setFields([
-                      {
-                        name: ["ui", "costSummary"],
-                        value: uiData.costSummary,
-                      },
-                      {
-                        name: ["ui", "description"],
-                        value: uiData.description,
-                      },
-                      {
-                        name: ["ui", "highlights"],
-                        value: uiData.highlights,
-                      },
-                      {
-                        name: ["ui", "amenitiesSummary"],
-                        value: uiData.amenitiesSummary,
-                      },
-                      {
-                        name: ["ui", "oneLiner"],
-                        value: uiData.oneLiner,
-                      },
-                      {
-                        name: ["ui", "summary"],
-                        value: uiData.summary,
-                      },
-                    ]);
-                  }
-                },
-              });
-              console.log(uiData);
+              setUiInstructionsModalOpen(true);
+              // console.log(uiData);
             }}
           >
             Generate UI
           </Button>
+          <Modal
+            title="Instructions (Optional)"
+            okText="Generate UI"
+            open={uiInstructionsModalOpen}
+            onOk={async () => {
+              await generateProjectUI.mutate(
+                {
+                  projectId: projectId || "",
+                  instructions: uiInstructions || "",
+                },
+                {
+                  onSuccess: (data) => {
+                    const uiData = data.data;
+                    if (uiData) {
+                      form.setFields([
+                        {
+                          name: ["ui", "costSummary"],
+                          value: uiData.costSummary,
+                        },
+                        {
+                          name: ["ui", "description"],
+                          value: uiData.description,
+                        },
+                        {
+                          name: ["ui", "highlights"],
+                          value: uiData.highlights,
+                        },
+                        {
+                          name: ["ui", "amenitiesSummary"],
+                          value: uiData.amenitiesSummary,
+                        },
+                        {
+                          name: ["ui", "oneLiner"],
+                          value: uiData.oneLiner,
+                        },
+                        {
+                          name: ["ui", "summary"],
+                          value: uiData.summary,
+                        },
+                      ]);
+                    }
+                  },
+                }
+              );
+              setUiInstructionsModalOpen(false);
+            }}
+            onCancel={() => {
+              setUiInstructionsModalOpen(false);
+            }}
+          >
+            <Input.TextArea
+              rows={4}
+              onChange={(e: any) => {
+                setUiInstructions(e.target.value);
+              }}
+            ></Input.TextArea>
+          </Modal>
         </Flex>
       );
     }
@@ -357,6 +406,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           >
             {renderTabActions(key)}
             <RenderFields
+              form={form}
               fields={fields as FieldType[]}
               category={key}
               isMobile={isMobile}
