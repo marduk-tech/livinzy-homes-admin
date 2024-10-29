@@ -199,6 +199,7 @@ export function useProjectForm() {
         dbField: "amenitiesSummary",
         fieldDisplayName: "Amenities Summary",
         fieldDescription: "Provide relevant details",
+        type: "json",
       },
       {
         dbField: "categories",
