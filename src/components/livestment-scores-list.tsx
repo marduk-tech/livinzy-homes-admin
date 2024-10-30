@@ -144,7 +144,7 @@ export function LivestmentScoresList() {
       >
         <Col>
           <Typography.Title level={5} style={{ margin: 0 }}>
-            All Projects
+            Livestment Scores
           </Typography.Title>
         </Col>
         <Col></Col>
