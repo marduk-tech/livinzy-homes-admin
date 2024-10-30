@@ -32,10 +32,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${
-          record?.livestment?.metroCityScore?.score?.toFixed(1) || ""
-        } ${placeNames && `- ${placeNames}`}`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.metroCityScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -48,10 +59,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${
-          record?.livestment?.tier2CityScore?.score?.toFixed(1) || ""
-        } ${placeNames && `- ${placeNames}`}`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.tier2CityScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -64,10 +86,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${
-          record?.livestment?.touristCityScore?.score?.toFixed(1) || ""
-        } ${placeNames && `- ${placeNames}`}`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${
+              record?.livestment?.touristCityScore?.score?.toFixed(1) || ""
+            } ${placeNames && `- ${placeNames}`}`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -80,10 +113,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${record?.livestment?.schoolsScore?.score?.toFixed(1) || ""} ${
-          placeNames && `- ${placeNames}`
-        }`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.schoolsScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -96,10 +140,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${
-          record?.livestment?.hospitalsScore?.score?.toFixed(1) || ""
-        } ${placeNames && `- ${placeNames}`}`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.hospitalsScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -112,10 +167,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${record?.livestment?.airportScore?.score?.toFixed(1) || ""} ${
-          placeNames && `- ${placeNames}`
-        }`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.airportScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
 
     {
@@ -128,10 +194,21 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
-        return `${record?.livestment?.roadsScore?.score?.toFixed(1) || ""} ${
-          placeNames && `- ${placeNames}`
-        }`;
+        return (
+          <Typography.Paragraph
+            ellipsis={{
+              rows: 2,
+              expandable: true,
+              symbol: "more",
+            }}
+          >
+            {`${record?.livestment?.roadsScore?.score?.toFixed(1) || ""} ${
+              placeNames && `- ${placeNames}`
+            }`}
+          </Typography.Paragraph>
+        );
       },
+      width: 300,
     },
   ];
 
