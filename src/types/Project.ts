@@ -118,6 +118,8 @@ export interface Project {
   amenities: IAmenities;
   team: ITeam;
   ui: IUI;
+
+  livestment: Livestment;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,6 +134,31 @@ export interface ProjectField {
   type?: "single_select" | "text" | "multi_select" | "json";
 
   options?: { label: string; value: string }[];
+}
+
+interface Place {
+  name: string;
+  latLng: {
+    lat: number;
+    lng: number;
+  };
+  description: string;
+}
+
+interface SubLivestmentScore {
+  placesList: Place[];
+  score: number;
+}
+
+interface Livestment {
+  livestmentScore: number;
+  metroCityScore: SubLivestmentScore;
+  tier2CityScore: SubLivestmentScore;
+  touristCityScore: SubLivestmentScore;
+  schoolsScore: SubLivestmentScore;
+  hospitalsScore: SubLivestmentScore;
+  airportScore: SubLivestmentScore;
+  roadsScore: SubLivestmentScore;
 }
 
 export interface ProjectStructure {
