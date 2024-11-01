@@ -19,6 +19,9 @@ export function LivestmentScoresList() {
       title: "Livestment Score",
       dataIndex: ["livestment", "livestmentScore"],
       key: "livestmentScore",
+      sorter: (a: any, b: any) => {
+        return (b.livestment ? b.livestment.livestmentScore : 0) - (a.livestment ? a.livestment.livestmentScore : 0);
+      },
       render: (livestmentScore: number) => livestmentScore?.toFixed(2) || "",
     },
 
