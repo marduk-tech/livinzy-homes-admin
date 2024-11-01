@@ -6,6 +6,7 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 
 // Pages
 import AskPage from "../pages/ask-page";
+import { LivestmentScorePage } from "../pages/livestment-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -16,6 +17,8 @@ export const Router = () => {
       <Route element={<AuthenticationGuard component={DashboardLayout} />}>
         <Route path="/" element={<Navigate to="/projects" />} />
         <Route path="/projects" element={<ProjectsListPage />} />
+
+        <Route path="/livestment" element={<LivestmentScorePage />} />
 
         <Route path="/projects/:projectId/edit" element={<EditProjectPage />} />
 
