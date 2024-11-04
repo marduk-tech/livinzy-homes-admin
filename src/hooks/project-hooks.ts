@@ -162,6 +162,7 @@ export function useProjectForm() {
         options: [
           { label: "New", value: "new" },
           { label: "Active", value: "active" },
+          { label: "Disabled", value: "disabled" },
         ],
       },
     ],
