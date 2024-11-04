@@ -1,5 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { Col, Row, Table, TableColumnType, Typography } from "antd";
+import {
+  Button,
+  Col,
+  Flex,
+  Modal,
+  Row,
+  Table,
+  TableColumnType,
+  Typography,
+} from "antd";
+import { useState } from "react";
 import { queries } from "../libs/queries";
 import { Project } from "../types/Project";
 
@@ -7,6 +17,37 @@ export function LivestmentScoresList() {
   const { data: projects, isLoading: projectIsLoading } = useQuery(
     queries.getAllProjects()
   );
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState({
+    projectName: "",
+    title: "",
+    description: "",
+  });
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setModalData({
+      projectName: "",
+      title: "",
+      description: "",
+    });
+  };
+
+  const handleMoreClick = (
+    projectName: string,
+    title: string,
+    description: string
+  ) => {
+    setIsModalOpen(true);
+    console.log(title, description);
+
+    setModalData({
+      projectName,
+      title,
+      description,
+    });
+  };
 
   const columns: TableColumnType<Project>[] = [
     {
@@ -20,7 +61,10 @@ export function LivestmentScoresList() {
       dataIndex: ["livestment", "livestmentScore"],
       key: "livestmentScore",
       sorter: (a: any, b: any) => {
-        return (b.livestment ? b.livestment.livestmentScore : 0) - (a.livestment ? a.livestment.livestmentScore : 0);
+        return (
+          (b.livestment ? b.livestment.livestmentScore : 0) -
+          (a.livestment ? a.livestment.livestmentScore : 0)
+        );
       },
       render: (livestmentScore: number) => livestmentScore?.toFixed(2) || "",
     },
@@ -35,17 +79,25 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
+        const score =
+          record?.livestment?.metroCityScore?.score?.toFixed(1) || "";
+
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `MetroCityScore Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.metroCityScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -62,17 +114,25 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
+        const score =
+          record?.livestment?.tier2CityScore?.score?.toFixed(1) || "";
+
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Tier2 City Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.tier2CityScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -88,18 +148,24 @@ export function LivestmentScoresList() {
           record?.livestment?.touristCityScore?.placesList
             ?.map((place) => place.name)
             .join(", ") || "";
-
+        const score =
+          record?.livestment?.touristCityScore?.score?.toFixed(1) || "";
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Tourist Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${
-              record?.livestment?.touristCityScore?.score?.toFixed(1) || ""
-            } ${placeNames && `- ${placeNames}`}`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -116,17 +182,24 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
+        const score = record?.livestment?.schoolsScore?.score?.toFixed(1) || "";
+
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Schools Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.schoolsScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -143,17 +216,25 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
+        const score =
+          record?.livestment?.hospitalsScore?.score?.toFixed(1) || "";
+
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Hospital Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.hospitalsScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`} `}{" "}
           </Typography.Paragraph>
         );
       },
@@ -170,17 +251,24 @@ export function LivestmentScoresList() {
             ?.map((place) => place.name)
             .join(", ") || "";
 
+        const score = record?.livestment?.airportScore?.score?.toFixed(1) || "";
+
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Airport Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.airportScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -196,18 +284,23 @@ export function LivestmentScoresList() {
           record?.livestment?.roadsScore?.placesList
             ?.map((place) => place.name)
             .join(", ") || "";
-
+        const score = record?.livestment?.roadsScore?.score?.toFixed(1) || "";
         return (
           <Typography.Paragraph
             ellipsis={{
               rows: 2,
               expandable: true,
               symbol: "more",
+              expanded: false,
+              onExpand: (_, info) =>
+                handleMoreClick(
+                  record.metadata.name,
+                  `Roads Score: ${score}`,
+                  placeNames
+                ),
             }}
           >
-            {`${record?.livestment?.roadsScore?.score?.toFixed(1) || ""} ${
-              placeNames && `- ${placeNames}`
-            }`}
+            {`${score} ${placeNames && `- ${placeNames}`}`}
           </Typography.Paragraph>
         );
       },
@@ -231,11 +324,34 @@ export function LivestmentScoresList() {
       </Row>
 
       <Table
+        pagination={false}
         dataSource={projects}
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
       />
+
+      <Modal
+        title={modalData.projectName}
+        open={isModalOpen}
+        onOk={handleCancel}
+        onCancel={handleCancel}
+        footer={[
+          <Button type="primary" key="back" onClick={handleCancel}>
+            Okay
+          </Button>,
+        ]}
+      >
+        <Typography.Paragraph
+          style={{
+            maxHeight: 500,
+            overflow: "auto",
+          }}
+        >
+          <br /> <strong>{modalData.title} </strong> <br /> <br />{" "}
+          {modalData.description}
+        </Typography.Paragraph>
+      </Modal>
     </>
   );
 }
