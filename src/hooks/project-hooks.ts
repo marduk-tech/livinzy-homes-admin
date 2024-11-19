@@ -2,7 +2,11 @@ import { useMutation } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
-import { ProjectCategories, queryKeys } from "../libs/constants";
+import {
+  CommunicationPreference,
+  ProjectCategories,
+  queryKeys,
+} from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
 
@@ -64,7 +68,13 @@ export function useCreateProjectMutation() {
 
 export function useGenerateProjectUI() {
   return useMutation({
-    mutationFn: ({projectId, instructions}: {projectId: string, instructions: string}) => {
+    mutationFn: ({
+      projectId,
+      instructions,
+    }: {
+      projectId: string;
+      instructions: string;
+    }) => {
       return api.generateProjectUI(projectId, instructions || "");
     },
 
@@ -432,6 +442,14 @@ export function useProjectForm() {
         fieldDescription:
           "Just a comma separate list of incentives that will be provided on call/visit",
       },
+
+      {
+        dbField: "communicationPreference",
+        fieldDisplayName: "Communication Preference",
+        fieldDescription: "Provide relevant details.",
+        type: "multi_select",
+        options: CommunicationPreference,
+      },
     ],
     team: [
       {
@@ -444,6 +462,39 @@ export function useProjectForm() {
         dbField: "experience",
         fieldDisplayName: "Experience",
         mustHave: true,
+        fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "others",
+        fieldDisplayName: "Others",
+        fieldDescription: "Provide relevant details.",
+      },
+    ],
+
+    livIndex: [
+      {
+        dbField: "landAppreciation",
+        fieldDisplayName: "Land Appreciation",
+        fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "rentalYield",
+        fieldDisplayName: "Rental Yield",
+        fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "agriculturalYield",
+        fieldDisplayName: "Agricultural Yield",
+        fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "surroundingInfra",
+        fieldDisplayName: "Surrounding Infrastructure",
+        fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "ecoLiving",
+        fieldDisplayName: "Eco Living",
         fieldDescription: "Provide relevant details.",
       },
       {
