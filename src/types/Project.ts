@@ -172,4 +172,5 @@ export interface ProjectStructure {
   amenities: ProjectField[];
   clickToAction: ProjectField[];
   team: ProjectField[];
+  livIndex: ProjectField[];
 }

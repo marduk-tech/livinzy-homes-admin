@@ -41,3 +41,26 @@ export const ProjectCategories = [
     label: "Pocket Friendly",
   },
 ];
+
+export const CommunicationPreference = [
+  {
+    value: "PHONE_CALL",
+    label: "Phone Call",
+  },
+  {
+    value: "VIDEO_CALL",
+    label: "Video Call",
+  },
+  {
+    value: "OFFICE_VISIT",
+    label: "Office Visit",
+  },
+  {
+    value: "SITE_VISIT",
+    label: "Site Visit",
+  },
+  {
+    value: "HOME_VISIT",
+    label: "Home Visit",
+  },
+];
