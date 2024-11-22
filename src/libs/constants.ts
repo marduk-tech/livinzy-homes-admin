@@ -5,6 +5,7 @@ export const baseApiUrl = import.meta.env.VITE_API_URL;
 export const queryKeys = {
   projects: "projects",
   getProjectById: "getProjectById",
+  getAllPlaces: "getAllPlaces",
 };
 
 export const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
