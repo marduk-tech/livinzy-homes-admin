@@ -33,7 +33,7 @@ export function JsonProjectImport({
 
   return (
     <Modal
-      title="Create From JSON"
+      title="Create Project From JSON"
       open={isModalOpen}
       onOk={handleOk}
       onCancel={handleCancel}
