@@ -3,7 +3,9 @@ import {
   App as AntApp,
   Button,
   Col,
+  Dropdown,
   Flex,
+  MenuProps,
   notification,
   Progress,
   Row,
@@ -12,7 +14,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React from "react";
+import React, { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -26,6 +28,7 @@ import { calculateProgress } from "../libs/utils";
 import { Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
+import { JsonProjectImport } from "./json-project-import";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
@@ -136,6 +139,22 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
+  const [isJsonImportModalOpen, setIsJsonImportModalOpen] = useState(false);
+
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: <Link to="/projects/create">Create From Scratch</Link>,
+    },
+    {
+      key: "2",
+      onClick: () => {
+        setIsJsonImportModalOpen(true);
+      },
+      label: "Create From JSON",
+    },
+  ];
+
   return (
     <>
       <Row
@@ -149,9 +168,9 @@ export const ProjectsList: React.FC = () => {
           </Typography.Title>
         </Col>
         <Col>
-          <Link to="/projects/create">
+          <Dropdown menu={{ items }} placement="bottomRight" arrow>
             <Button type="primary">Create New Project</Button>
-          </Link>
+          </Dropdown>
         </Col>
       </Row>
 
@@ -160,6 +179,10 @@ export const ProjectsList: React.FC = () => {
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
+      />
+      <JsonProjectImport
+        isModalOpen={isJsonImportModalOpen}
+        setIsModalOpen={setIsJsonImportModalOpen}
       />
     </>
   );
