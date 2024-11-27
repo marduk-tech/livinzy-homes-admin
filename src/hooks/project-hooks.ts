@@ -305,38 +305,6 @@ export function useProjectForm() {
         fieldDescription: "Any other relevant information about the plots.",
       },
     ],
-    connectivity: [
-      {
-        dbField: "roads",
-        fieldDisplayName: "Roads",
-        fieldDescription: "Road connectivity for the project.",
-      },
-      {
-        dbField: "towns",
-        fieldDisplayName: "Towns",
-        fieldDescription: "Any nearby towns or cities.",
-      },
-      {
-        dbField: "schools",
-        fieldDisplayName: "Schools",
-        fieldDescription: "Nearby schools.",
-      },
-      {
-        dbField: "hospital",
-        fieldDisplayName: "Hospital",
-        fieldDescription: "Nearby hospitals.",
-      },
-      {
-        dbField: "airport",
-        fieldDisplayName: "Airport",
-        fieldDescription: "Provide relevant details.",
-      },
-      {
-        dbField: "others",
-        fieldDisplayName: "Others",
-        fieldDescription: "Provide relevant details.",
-      },
-    ],
     status: [
       {
         dbField: "launchDate",
