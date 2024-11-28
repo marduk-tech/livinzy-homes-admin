@@ -42,11 +42,15 @@ export const calculateFieldStatus = (
   key: string,
   form: FormInstance
 ): FieldStatus => {
-  const totalVisibleFields = fields.filter((field) => !field.hide).length;
+  const isNotOthersField = (field: ProjectField) => field.dbField !== "others";
+
+  const totalVisibleFields = fields.filter(
+    (field) => !field.hide && isNotOthersField(field)
+  ).length;
 
   const filledFieldsCount = fields.reduce(
     (count: number, field: ProjectField) => {
-      if (field.hide) return count;
+      if (field.hide || !isNotOthersField(field)) return count;
 
       const fieldValue = form.getFieldValue(
         [
@@ -63,12 +67,13 @@ export const calculateFieldStatus = (
   );
 
   const mustHaveFieldsCount = fields.filter(
-    (field) => field.mustHave && !field.hide
+    (field) => field.mustHave && !field.hide && isNotOthersField(field)
   ).length;
 
   const filledMustHaveFieldsCount = fields.reduce(
     (count: number, field: ProjectField) => {
-      if (field.hide || !field.mustHave) return count;
+      if (field.hide || !field.mustHave || !isNotOthersField(field))
+        return count;
 
       const fieldValue = form.getFieldValue(
         [
