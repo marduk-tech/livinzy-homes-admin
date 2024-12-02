@@ -1,10 +1,36 @@
-import { Col, Row, Table, TableColumnType, Typography } from "antd";
-import { useFetchLivindexPlaces } from "../../hooks/livindex-places-hook";
+import { DeleteOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Col,
+  Flex,
+  Row,
+  Table,
+  TableColumnType,
+  Typography,
+} from "antd";
+import {
+  useDeletePlaceMutation,
+  useFetchLivindexPlaces,
+} from "../../hooks/livindex-places-hook";
+import { useDevice } from "../../hooks/use-device";
 import { ILivIndexPlaces } from "../../types";
 import { ColumnSearch } from "../common/column-search";
+import { DeletePopconfirm } from "../common/delete-popconfirm";
+import { EditLivIndexPlace } from "./edit-livindex-place";
 
 export function LivindexRoadsList() {
+  const { isMobile } = useDevice();
   const { data, isLoading, isError } = useFetchLivindexPlaces({ type: "road" });
+
+  const deletePlaceMutation = useDeletePlaceMutation({ type: "road" });
+
+  const handleDelete = async ({
+    placeId,
+  }: {
+    placeId: string;
+  }): Promise<void> => {
+    deletePlaceMutation.mutate({ placeId: placeId });
+  };
 
   const columns: TableColumnType<ILivIndexPlaces>[] = [
     {
@@ -14,6 +40,39 @@ export function LivindexRoadsList() {
       ...ColumnSearch("name"),
 
       render: (_, record) => <span>{record.name.replace(/^en:/, "")}</span>,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      ...ColumnSearch("description"),
+    },
+    {
+      title: "",
+      align: "right",
+      dataIndex: "_id",
+      key: "_id",
+
+      render: (id: string, record) => {
+        return (
+          <Flex gap={isMobile ? 5 : 15} justify="end">
+            <EditLivIndexPlace selectedPlace={record} type="road" />
+
+            <DeletePopconfirm
+              handleOk={() => handleDelete({ placeId: id })}
+              isLoading={deletePlaceMutation.isPending}
+              title="Delete"
+              description="Are you sure you want to delete this place"
+            >
+              <Button
+                type="default"
+                shape="default"
+                icon={<DeleteOutlined />}
+              ></Button>
+            </DeletePopconfirm>
+          </Flex>
+        );
+      },
     },
   ];
 
@@ -30,6 +89,10 @@ export function LivindexRoadsList() {
           <Typography.Title level={5} style={{ margin: 0 }}>
             Roads
           </Typography.Title>
+        </Col>
+
+        <Col>
+          <EditLivIndexPlace type="road" />
         </Col>
       </Row>
 
