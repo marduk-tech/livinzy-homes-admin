@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import { api } from "../libs/api";
 import {
   CommunicationPreference,
+  LocationFilters,
   ProjectCategories,
   queryKeys,
 } from "../libs/constants";
@@ -218,6 +219,13 @@ export function useProjectForm() {
         fieldDescription: "Categories project belongs to",
         type: "multi_select",
         options: ProjectCategories,
+      },
+      {
+        dbField: "locationFilters",
+        fieldDisplayName: "Location Filter",
+        fieldDescription: "Provide relevant details",
+        type: "multi_select",
+        options: LocationFilters,
       },
     ],
     land: [

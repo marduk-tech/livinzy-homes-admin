@@ -43,6 +43,29 @@ export const ProjectCategories = [
   },
 ];
 
+export const LocationFilters = [
+  {
+    value: "chikkaballapur",
+    label: "Chikkaballapur",
+  },
+  {
+    value: "doddaballapura",
+    label: "Doddaballapura",
+  },
+  {
+    value: "sakleshpur",
+    label: "Sakleshpur",
+  },
+  {
+    value: "kanakpura",
+    label: "Kanakpura",
+  },
+  {
+    value: "mysuru",
+    label: "Mysuru",
+  },
+];
+
 export const CommunicationPreference = [
   {
     value: "PHONE_CALL",
