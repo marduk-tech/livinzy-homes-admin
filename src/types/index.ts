@@ -1,7 +1,8 @@
 export interface ILivIndexPlaces {
+  _id: string;
   name: string;
   description?: string;
-  type?: string;
+  type?: PlaceType;
   placeId?: string;
   pincode?: string;
   location?: {
@@ -14,3 +15,5 @@ export interface ILivIndexPlaces {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type PlaceType = "road" | "hospital" | "school" | "futureInfra";

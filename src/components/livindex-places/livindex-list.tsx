@@ -1,4 +1,4 @@
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
   Button,
   Col,
@@ -18,13 +18,11 @@ import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { EditLivIndexPlace } from "./edit-livindex-place";
 
-export function LivindexFutureInfraList() {
+export function LivindexList() {
   const { isMobile } = useDevice();
-  const { data, isLoading, isError } = useFetchLivindexPlaces({
-    type: "futureInfra",
-  });
+  const { data, isLoading, isError } = useFetchLivindexPlaces({});
 
-  const deletePlaceMutation = useDeletePlaceMutation({ type: "futureInfra" });
+  const deletePlaceMutation = useDeletePlaceMutation({ type: "school" });
 
   const handleDelete = async ({
     placeId,
@@ -40,6 +38,12 @@ export function LivindexFutureInfraList() {
       dataIndex: "name",
       key: "name",
       ...ColumnSearch("name"),
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      ...ColumnSearch("type"),
     },
 
     {
@@ -58,7 +62,7 @@ export function LivindexFutureInfraList() {
       render: (id: string, record) => {
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
-            <EditLivIndexPlace selectedPlace={record} type="futureInfra" />
+            <EditLivIndexPlace selectedPlace={record} type="school" />
 
             <DeletePopconfirm
               handleOk={() => handleDelete({ placeId: id })}
@@ -87,14 +91,9 @@ export function LivindexFutureInfraList() {
         align="middle"
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
-        <Col>
-          <Typography.Title level={5} style={{ margin: 0 }}>
-            Future Infra
-          </Typography.Title>
-        </Col>
 
         <Col>
-          <EditLivIndexPlace type="futureInfra" />
+          <EditLivIndexPlace type="school" />
         </Col>
       </Row>
 
