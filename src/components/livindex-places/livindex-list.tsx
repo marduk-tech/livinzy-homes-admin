@@ -40,19 +40,17 @@ export function LivindexList() {
       ...ColumnSearch("name"),
     },
     {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      ...ColumnSearch("type"),
+      title: "Driver",
+      dataIndex: "driver",
+      key: "driver",
+      ...ColumnSearch("driver"),
     },
-
     {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-      ...ColumnSearch("description"),
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      ...ColumnSearch("status"),
     },
-
     {
       title: "",
       align: "right",
