@@ -7,7 +7,36 @@ export const queryKeys = {
   getProjectById: "getProjectById",
   getAllPlaces: "getAllPlaces",
 };
+export const LivIndexDrivers = [
+  'road',
+  'school',
+  'hospital',
+  'commercial',
+  'leisure',
+  'industrial-hitech',
+  'industrial-general',
+  'airport',
+  'transit',
+  'tier-1-city',
+  'tier-2-city',
+  'tourist-city',
+  'satellite-city'
+]
+export const LivIndexStatuses = [
+  'announced',
+  'pre-construction',
+  'construction',
+  'partial-launch',
+  'launched',
+  'post-launch',
+];
 
+
+export const LivIndexPlacesSuperFactors = [
+  'macro',
+  'transport',
+  'livability',
+];
 export const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
 export const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 export const auth0CallbackUrl = import.meta.env.VITE_AUTH0_CALLBACK_URL;

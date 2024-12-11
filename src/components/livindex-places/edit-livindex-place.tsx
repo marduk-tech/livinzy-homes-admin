@@ -1,11 +1,12 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal } from "antd";
+import { Button, Form, Input, Modal, Select } from "antd";
 import { useState } from "react";
 import {
   useCreateProjectMutation,
   useUpdateLivindexPlaceMutation,
 } from "../../hooks/livindex-places-hook";
 import { ILivIndexPlaces, PlaceType } from "../../types";
+import { LivIndexStatuses, LivIndexPlacesSuperFactors, LivIndexDrivers } from "../../libs/constants";
 
 interface EditLivIndexPlaceProps {
   selectedPlace?: ILivIndexPlaces | undefined;
@@ -14,19 +15,15 @@ interface EditLivIndexPlaceProps {
 
 export function EditLivIndexPlace({
   selectedPlace,
-  type,
 }: EditLivIndexPlaceProps) {
   const [form] = Form.useForm();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const updateLivindexPlace = useUpdateLivindexPlaceMutation({
     placeId: selectedPlace?._id as string,
-    type: type,
   });
 
-  const createLivindexPlace = useCreateProjectMutation({
-    type: type,
-  });
+  const createLivindexPlace = useCreateProjectMutation();
 
   const handleOk = async () => {
     try {
@@ -35,7 +32,7 @@ export function EditLivIndexPlace({
       if (selectedPlace) {
         await updateLivindexPlace.mutateAsync({ placeData: values });
       } else {
-        await createLivindexPlace.mutateAsync({ ...values, type: type });
+        await createLivindexPlace.mutateAsync({ ...values });
         form.resetFields();
       }
 
@@ -69,7 +66,7 @@ export function EditLivIndexPlace({
             setIsEditModalOpen(true);
           }}
         >
-          Add {type}
+          Add New
         </Button>
       )}
 
@@ -91,10 +88,24 @@ export function EditLivIndexPlace({
           initialValues={selectedPlace ? selectedPlace : undefined}
           preserve={false}
         >
-          <Form.Item name="type" hidden>
-            <Input />
+          <Form.Item name="driver">
+            <Select
+              showSearch
+              placeholder="Select driver"
+              options={LivIndexDrivers.map((type) => {
+                return { value: type, label: type };
+              })}
+            />
           </Form.Item>
-
+          <Form.Item name="status">
+            <Select
+              showSearch
+              placeholder="Select status"
+              options={LivIndexStatuses.map((type) => {
+                return { value: type, label: type };
+              })}
+            />
+          </Form.Item>
           <Form.Item name="name" label="Place Name" required>
             <Input placeholder="Place Name" />
           </Form.Item>

@@ -13,18 +13,16 @@ import { ILivIndexPlaces, PlaceType } from "../types";
 
 export function useFetchLivindexPlaces({ type }: { type?: PlaceType }) {
   return useQuery({
-    queryKey: [queryKeys.getAllPlaces, type],
-    queryFn: () => getAllLivIndexPlaces({ type }),
+    queryKey: [queryKeys.getAllPlaces],
+    queryFn: () => getAllLivIndexPlaces(),
   });
 }
 
 export function useUpdateLivindexPlaceMutation({
   placeId,
-  type,
   enableToasts = true,
 }: {
   placeId: string;
-  type?: PlaceType;
   enableToasts?: boolean;
 }) {
   return useMutation({
@@ -50,13 +48,13 @@ export function useUpdateLivindexPlaceMutation({
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllPlaces, type],
+        queryKey: [queryKeys.getAllPlaces],
       });
     },
   });
 }
 
-export function useCreateProjectMutation({ type }: { type: PlaceType }) {
+export function useCreateProjectMutation() {
   return useMutation({
     mutationFn: (placeData: Partial<ILivIndexPlaces>) => {
       return createPlace(placeData);
@@ -78,7 +76,7 @@ export function useCreateProjectMutation({ type }: { type: PlaceType }) {
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllPlaces, type],
+        queryKey: [queryKeys.getAllPlaces],
       });
     },
   });
