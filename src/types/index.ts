@@ -16,4 +16,11 @@ export interface ILivIndexPlaces {
   updatedAt: Date;
 }
 
+export interface IGlobalKnowledge {
+  _id: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type PlaceType = "road" | "hospital" | "school" | "futureInfra";

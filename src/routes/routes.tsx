@@ -6,6 +6,7 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 
 // Pages
 import AskPage from "../pages/ask-page";
+import { GlobalKnowledgePage } from "../pages/global-knowledge-page";
 import { LivestmentScorePage } from "../pages/livestment-page";
 import { LivindexPlacesPage } from "../pages/livindexplaces";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
@@ -21,6 +22,8 @@ export const Router = () => {
 
         <Route path="/livestment" element={<LivestmentScorePage />} />
         <Route path="/livindex-places" element={<LivindexPlacesPage />} />
+
+        <Route path="/global-knowledge" element={<GlobalKnowledgePage />} />
 
         <Route path="/projects/:projectId/edit" element={<EditProjectPage />} />
 
