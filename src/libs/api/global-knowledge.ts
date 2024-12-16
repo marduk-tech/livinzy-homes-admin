@@ -18,3 +18,10 @@ export const createGlobalKnowledge = async (
       return response.data as IGlobalKnowledge;
     });
 };
+
+export const generateGlobalEmbeddings = async () => {
+  const endpoint = `/ai/generate-global-embeddings`;
+  return axiosApiInstance.post(endpoint).then((response) => {
+    return response.data as any;
+  });
+};
