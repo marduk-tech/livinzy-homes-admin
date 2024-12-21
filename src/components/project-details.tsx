@@ -363,6 +363,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         "walkthrough",
         "plot",
         "house",
+        "floorplan"
       ];
 
       setAllTags(Array.from(new Set([...tags, ...dummyTags])));
