@@ -3,6 +3,7 @@ import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
   createGlobalKnowledge,
+  generateGlobalEmbeddings,
   getAllGlobalKnowledge,
 } from "../libs/api/global-knowledge";
 import { queryKeys } from "../libs/constants";
@@ -22,7 +23,9 @@ export function useCreateGlobalKnowledgeMutation() {
       return createGlobalKnowledge(globalKnowledgeData);
     },
 
-    onSuccess: () => {
+    onSuccess: async () => {
+      await generateGlobalEmbeddings();
+
       notification.success({
         message: `Global Knowledge created successfully!`,
       });
