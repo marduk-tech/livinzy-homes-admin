@@ -118,7 +118,7 @@ const RenderFields: React.FC<{
                     mode={type == "multi_select" ? "tags" : undefined}
                     defaultValue={
                       options && options.length > 0 && type == "single_select"
-                        ? options[0].value
+                        ? undefined
                         : undefined
                     }
                   />
@@ -363,7 +363,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         "walkthrough",
         "plot",
         "house",
-        "floorplan"
+        "floorplan",
       ];
 
       setAllTags(Array.from(new Set([...tags, ...dummyTags])));
@@ -398,51 +398,61 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       )}
 
       <Tabs defaultActiveKey="metadata">
-        {Object.entries(projectFields).map(([key, fields], index) => {
-          const fieldStatus = calculateFieldStatus(
-            fields as FieldType[],
-            key,
-            form
-          );
+        {Object.entries(projectFields)
+          .filter(([key]) => {
+            const homeType = form.getFieldValue(["metadata", "homeType"]);
+            if (homeType === "farmland") {
+              return key !== "unitDetails"; //  everything except "unitDetails"
+            } else {
+              return key !== "plots"; // kep everything except "plots"
+            }
+          })
 
-          return (
-            <TabPane
-              tab={
-                <span>
-                  {key
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
-                  <Tag
-                    style={{
-                      borderRadius: "100px",
-                      marginLeft: 5,
-                    }}
-                    color={
-                      fieldStatus.badgeStatus === "success"
-                        ? "green"
-                        : fieldStatus.badgeStatus === "warning"
-                        ? "orange"
-                        : "red"
-                    }
-                  >
-                    {`${fieldStatus.filledFieldsCount}/${fieldStatus.totalVisibleFields}`}
-                  </Tag>
-                </span>
-              }
-              key={key}
-              disabled={!projectId && index !== 0}
-            >
-              {renderTabActions(key)}
-              <RenderFields
-                form={form}
-                fields={fields as FieldType[]}
-                category={key}
-                isMobile={isMobile}
-                fieldRules={fieldRules}
-              />
-            </TabPane>
-          );
-        })}
+          .map(([key, fields], index) => {
+            const fieldStatus = calculateFieldStatus(
+              fields as FieldType[],
+              key,
+              form
+            );
+
+            return (
+              <TabPane
+                tab={
+                  <span>
+                    {key
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
+                    <Tag
+                      style={{
+                        borderRadius: "100px",
+                        marginLeft: 5,
+                      }}
+                      color={
+                        fieldStatus.badgeStatus === "success"
+                          ? "green"
+                          : fieldStatus.badgeStatus === "warning"
+                          ? "orange"
+                          : "red"
+                      }
+                    >
+                      {`${fieldStatus.filledFieldsCount}/${fieldStatus.totalVisibleFields}`}
+                    </Tag>
+                  </span>
+                }
+                key={key}
+                disabled={!projectId && index !== 0}
+              >
+                {renderTabActions(key)}
+                <RenderFields
+                  form={form}
+                  fields={fields as FieldType[]}
+                  category={key}
+                  isMobile={isMobile}
+                  fieldRules={fieldRules}
+                />
+              </TabPane>
+            );
+          })}
 
         <TabPane tab={"Media"} key={"media"} disabled={!projectId}>
           <Tabs defaultActiveKey="images">
