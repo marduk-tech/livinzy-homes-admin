@@ -541,6 +541,7 @@ export function useProjectForm() {
         { required: true, message: "Please input the project location!" },
         { type: "url", message: "Please enter a valid URL" },
       ],
+      homeType: [{ required: true, message: "Please select the Home Type" }],
     },
     land: {},
   };
