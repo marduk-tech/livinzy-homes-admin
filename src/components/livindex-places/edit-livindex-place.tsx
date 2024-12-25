@@ -1,21 +1,23 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select } from "antd";
+import { Button, Form, Input, Modal, Select, Slider } from "antd";
 import { useState } from "react";
 import {
   useCreateProjectMutation,
   useUpdateLivindexPlaceMutation,
 } from "../../hooks/livindex-places-hook";
+import {
+  LivIndexDrivers,
+  LivIndexPlacesSuperFactors,
+  LivIndexStatuses,
+} from "../../libs/constants";
 import { ILivIndexPlaces, PlaceType } from "../../types";
-import { LivIndexStatuses, LivIndexPlacesSuperFactors, LivIndexDrivers } from "../../libs/constants";
 
 interface EditLivIndexPlaceProps {
   selectedPlace?: ILivIndexPlaces | undefined;
   type: PlaceType;
 }
 
-export function EditLivIndexPlace({
-  selectedPlace,
-}: EditLivIndexPlaceProps) {
+export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
   const [form] = Form.useForm();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -108,6 +110,47 @@ export function EditLivIndexPlace({
           </Form.Item>
           <Form.Item name="name" label="Place Name" required>
             <Input placeholder="Place Name" />
+          </Form.Item>
+
+          <Form.Item
+            name={["parameters", "proximityThreshold"]}
+            label="Proximity Threshold"
+            rules={[
+              {
+                required: false,
+                message: "Please input a valid proximity threshold (0-100)",
+                type: "number",
+                transform: (value) => Number(value),
+                validator: (_, value) => {
+                  if (value < 0 || value > 100 || value % 1 !== 0) {
+                    return Promise.reject(
+                      new Error("Value must be an integer between 0 and 100!")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <Input placeholder="Proximity Threshold" type="number" />
+          </Form.Item>
+
+          <Form.Item
+            name={["parameters", "triggerCoefficient"]}
+            label="Trigger Coefficient"
+            rules={[
+              { required: true, message: "Please set a trigger coefficient!" },
+            ]}
+          >
+            <Slider
+              min={0.2}
+              max={1}
+              step={0.01}
+              marks={{
+                0.2: "0.2",
+                1: "1",
+              }}
+            />
           </Form.Item>
 
           <Form.Item name="description" label="Description">
