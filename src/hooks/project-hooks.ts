@@ -336,7 +336,7 @@ export function useProjectForm() {
         mustHave: true,
         fieldDisplayName: "Size And Style",
         fieldDescription:
-          "Details around size of apartments, design type, carpet area etc.",
+          "Details around size of apartments or villas, plot sizes, design type, carpet area etc.",
       },
       {
         dbField: "price",
@@ -358,6 +358,17 @@ export function useProjectForm() {
         dbField: "payment_plan",
         fieldDisplayName: "Payment Plan",
         fieldDescription: "Any specific details around payment plan.",
+      },
+      {
+        dbField: "rental_income",
+        fieldDisplayName: "Rental income",
+        fieldDescription:
+          "Any specific details around estimated rental income.",
+      },
+      {
+        dbField: "others",
+        fieldDisplayName: "Others",
+        fieldDescription: "Any other details.",
       },
     ],
     status: [
