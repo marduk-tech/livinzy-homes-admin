@@ -139,7 +139,7 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             name={["parameters", "triggerCoefficient"]}
             label="Trigger Coefficient"
             rules={[
-              { required: true, message: "Please set a trigger coefficient!" },
+              { required: false, message: "Please set a trigger coefficient!" },
             ]}
           >
             <Slider
