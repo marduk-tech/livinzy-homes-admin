@@ -176,6 +176,23 @@ export function useProjectForm() {
           { label: "Disabled", value: "disabled" },
         ],
       },
+
+      {
+        dbField: "homeType",
+        fieldDisplayName: "Home Type",
+        fieldDescription: "Provide relevant details",
+        type: "single_select",
+
+        options: [
+          { label: "Farmland", value: "farmland" },
+          { label: "Plot", value: "plot" },
+          { label: "Villa", value: "villa" },
+          { label: "Rowhouse", value: "rowhouse" },
+          { label: "Villament", value: "villament" },
+          { label: "Apartment", value: "apartment" },
+          { label: "Penthouse", value: "penthouse" },
+        ],
+      },
     ],
     ui: [
       {
@@ -311,6 +328,36 @@ export function useProjectForm() {
         dbField: "others",
         fieldDisplayName: "Others",
         fieldDescription: "Any other relevant information about the plots.",
+      },
+    ],
+    unitDetails: [
+      {
+        dbField: "size_style",
+        mustHave: true,
+        fieldDisplayName: "Size And Style",
+        fieldDescription:
+          "Details around size of apartments, design type, carpet area etc.",
+      },
+      {
+        dbField: "price",
+        mustHave: true,
+        fieldDisplayName: "Price",
+        fieldDescription: "Details around price, PLC etc.",
+      },
+      {
+        dbField: "building_details",
+        fieldDisplayName: "Building Details",
+        fieldDescription: "Details like number of towers, floors, lifts etc.",
+      },
+      {
+        dbField: "unit_inclusions",
+        fieldDisplayName: "Unit Inclusions",
+        fieldDescription: "Details like bathroom fitting, flooring etc.",
+      },
+      {
+        dbField: "payment_plan",
+        fieldDisplayName: "Payment Plan",
+        fieldDescription: "Any specific details around payment plan.",
       },
     ],
     status: [
@@ -494,6 +541,7 @@ export function useProjectForm() {
         { required: true, message: "Please input the project location!" },
         { type: "url", message: "Please enter a valid URL" },
       ],
+      homeType: [{ required: true, message: "Please select the Home Type" }],
     },
     land: {},
   };

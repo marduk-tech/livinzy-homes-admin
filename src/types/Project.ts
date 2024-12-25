@@ -166,6 +166,7 @@ export interface ProjectStructure {
   ui: ProjectField[];
   land: ProjectField[];
   plots: ProjectField[];
+  unitDetails: ProjectField[];
   status: ProjectField[];
   basic_infra: ProjectField[];
   amenities: ProjectField[];
