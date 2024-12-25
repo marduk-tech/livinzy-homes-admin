@@ -2,38 +2,38 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
-  createPlace,
-  deletePlace,
-  getAllLivIndexPlaces,
-  updateLivIndexPlace,
-} from "../libs/api/livindex-places";
+  createLivIndexDriver,
+  deleteLivIndexDriver,
+  getAllLivIndexDrivers,
+  updateLivIndexDriver,
+} from "../libs/api/livindex-drivers";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
-import { ILivIndexPlaces, PlaceType } from "../types";
+import { ILivIndexDriver } from "../types";
 
-export function useFetchLivindexPlaces({ type }: { type?: PlaceType }) {
+export function useFetchLivindexDrivers() {
   return useQuery({
-    queryKey: [queryKeys.getAllPlaces],
-    queryFn: () => getAllLivIndexPlaces(),
+    queryKey: [queryKeys.getAllDrivers],
+    queryFn: () => getAllLivIndexDrivers(),
   });
 }
 
-export function useUpdateLivindexPlaceMutation({
-  placeId,
+export function useUpdateLivindexDriverMutation({
+  driverId,
   enableToasts = true,
 }: {
-  placeId: string;
+  driverId: string;
   enableToasts?: boolean;
 }) {
   return useMutation({
-    mutationFn: ({ placeData }: { placeData: Partial<ILivIndexPlaces> }) => {
-      return updateLivIndexPlace(placeId, placeData);
+    mutationFn: ({ driverData }: { driverData: Partial<ILivIndexDriver> }) => {
+      return updateLivIndexDriver(driverId, driverData);
     },
 
     onSuccess: () => {
       if (enableToasts) {
         notification.success({
-          message: `Place updated successfully!`,
+          message: `Driver updated successfully!`,
         });
       }
     },
@@ -48,21 +48,21 @@ export function useUpdateLivindexPlaceMutation({
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllPlaces],
+        queryKey: [queryKeys.getAllDrivers],
       });
     },
   });
 }
 
-export function useCreateLivindexPlaceMutation() {
+export function useCreateLivindexDriverMutation() {
   return useMutation({
-    mutationFn: (placeData: Partial<ILivIndexPlaces>) => {
-      return createPlace(placeData);
+    mutationFn: (driverData: Partial<ILivIndexDriver>) => {
+      return createLivIndexDriver(driverData);
     },
 
     onSuccess: () => {
       notification.success({
-        message: `Place created successfully!`,
+        message: `Driver created successfully!`,
       });
     },
 
@@ -76,21 +76,21 @@ export function useCreateLivindexPlaceMutation() {
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllPlaces],
+        queryKey: [queryKeys.getAllDrivers],
       });
     },
   });
 }
 
-export function useDeletePlaceMutation() {
+export function useDeleteLivindexDriverMutation() {
   return useMutation({
-    mutationFn: ({ placeId }: { placeId: string }) => {
-      return deletePlace(placeId);
+    mutationFn: ({ driverId }: { driverId: string }) => {
+      return deleteLivIndexDriver(driverId);
     },
 
     onSuccess: () => {
       notification.success({
-        message: `Place removed successfully!`,
+        message: `Driver removed successfully!`,
       });
     },
 
@@ -104,7 +104,7 @@ export function useDeletePlaceMutation() {
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllPlaces],
+        queryKey: [queryKeys.getAllDrivers],
       });
     },
   });

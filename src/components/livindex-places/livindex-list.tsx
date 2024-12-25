@@ -22,7 +22,7 @@ export function LivindexList() {
   const { isMobile } = useDevice();
   const { data, isLoading, isError } = useFetchLivindexPlaces({});
 
-  const deletePlaceMutation = useDeletePlaceMutation({ type: "school" });
+  const deletePlaceMutation = useDeletePlaceMutation();
 
   const handleDelete = async ({
     placeId,
@@ -89,7 +89,6 @@ export function LivindexList() {
         align="middle"
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
-
         <Col>
           <EditLivIndexPlace type="school" />
         </Col>

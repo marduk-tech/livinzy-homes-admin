@@ -6,6 +6,7 @@ export const queryKeys = {
   projects: "projects",
   getProjectById: "getProjectById",
   getAllPlaces: "getAllPlaces",
+  getAllDrivers: "getAllDrivers",
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
 };
 export const LivIndexDrivers = [
@@ -23,6 +24,9 @@ export const LivIndexDrivers = [
   "tourist-city",
   "satellite-city",
 ];
+
+export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];
+
 export const LivIndexStatuses = [
   "announced",
   "pre-construction",

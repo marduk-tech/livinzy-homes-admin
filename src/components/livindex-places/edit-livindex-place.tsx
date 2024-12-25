@@ -2,7 +2,7 @@ import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Modal, Select, Slider } from "antd";
 import { useState } from "react";
 import {
-  useCreateProjectMutation,
+  useCreateLivindexPlaceMutation,
   useUpdateLivindexPlaceMutation,
 } from "../../hooks/livindex-places-hook";
 import {
@@ -25,7 +25,7 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
     placeId: selectedPlace?._id as string,
   });
 
-  const createLivindexPlace = useCreateProjectMutation();
+  const createLivindexPlace = useCreateLivindexPlaceMutation();
 
   const handleOk = async () => {
     try {

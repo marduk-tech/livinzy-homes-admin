@@ -24,3 +24,11 @@ export interface IGlobalKnowledge {
 }
 
 export type PlaceType = "road" | "hospital" | "school" | "futureInfra";
+
+export interface ILivIndexDriver {
+  _id: string;
+  driverName: string;
+  megaDriver?: "macro" | "connectivity" | "livability";
+  defaultProximityCoefficient?: number;
+  defaultTriggerCoefficient?: number;
+}
