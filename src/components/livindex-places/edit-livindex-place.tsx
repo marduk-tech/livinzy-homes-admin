@@ -52,50 +52,44 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
     isError: driversError,
   } = useFetchLivindexDrivers();
 
-  if (driversLoading) {
-    return <Loader />;
-  }
-
-  if (drivers) {
-    const currentDriver = drivers.find(
-      (driver) => driver.driverName === selectedPlace?.driver
-    );
-
-    return (
-      <>
-        {selectedPlace ? (
-          <Button
-            type="default"
-            shape="default"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setIsEditModalOpen(true);
-            }}
-          ></Button>
-        ) : (
-          <Button
-            type="primary"
-            shape="default"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setIsEditModalOpen(true);
-            }}
-          >
-            Add New
-          </Button>
-        )}
-
-        <Modal
-          title={selectedPlace ? `Edit ${selectedPlace.type}` : "Create Place"}
-          open={isEditModalOpen}
-          onOk={handleOk}
-          onCancel={handleCancel}
-          okText={selectedPlace ? "Save" : "Create"}
-          okButtonProps={{
-            loading:
-              updateLivindexPlace.isPending || createLivindexPlace.isPending,
+  return (
+    <>
+      {selectedPlace ? (
+        <Button
+          type="default"
+          shape="default"
+          icon={<EditOutlined />}
+          onClick={() => {
+            setIsEditModalOpen(true);
+          }}
+        ></Button>
+      ) : (
+        <Button
+          type="primary"
+          shape="default"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            setIsEditModalOpen(true);
           }}
         >
+          Add New
+        </Button>
+      )}
+
+      <Modal
+        title={selectedPlace ? `Edit ${selectedPlace.type}` : "Create Place"}
+        open={isEditModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        okText={selectedPlace ? "Save" : "Create"}
+        okButtonProps={{
+          loading:
+            updateLivindexPlace.isPending || createLivindexPlace.isPending,
+        }}
+      >
+        {driversLoading ? (
+          <Loader />
+        ) : drivers ? (
           <Form
             form={form}
             layout="vertical"
@@ -146,10 +140,11 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
                   },
                 },
               ]}
-              extra={
-                currentDriver?.defaultProximityThreshold &&
-                `Default value ${currentDriver.defaultProximityThreshold} will be overriden.`
-              }
+              extra={`Default value ${
+                drivers.find(
+                  (driver) => driver.driverName === selectedPlace?.driver
+                )?.defaultProximityThreshold || 0
+              } will be overriden.`}
             >
               <Input placeholder="Proximity Threshold" type="number" />
             </Form.Item>
@@ -157,10 +152,11 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             <Form.Item
               name={["parameters", "triggerCoefficient"]}
               label="Trigger Coefficient"
-              extra={
-                currentDriver?.defaultTriggerCoefficient &&
-                `Default value ${currentDriver.defaultTriggerCoefficient} will be overriden.`
-              }
+              extra={`Default value ${
+                drivers.find(
+                  (driver) => driver.driverName === selectedPlace?.driver
+                )?.defaultTriggerCoefficient || 0
+              } will be overriden.`}
             >
               <Slider
                 min={0.2}
@@ -186,8 +182,10 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
               </Form.Item>
             )}
           </Form>
-        </Modal>
-      </>
-    );
-  }
+        ) : (
+          <div>Error fetching drivers</div>
+        )}
+      </Modal>
+    </>
+  );
 }
