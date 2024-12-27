@@ -11,7 +11,7 @@ export interface ILivIndexPlaces {
   };
   status?: string;
   features?: any;
-
+  driver: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +29,6 @@ export interface ILivIndexDriver {
   _id: string;
   driverName: string;
   megaDriver?: "macro" | "connectivity" | "livability";
-  defaultProximityCoefficient?: number;
+  defaultProximityThreshold?: number;
   defaultTriggerCoefficient?: number;
 }
