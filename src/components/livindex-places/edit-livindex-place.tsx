@@ -117,11 +117,12 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             label="Proximity Threshold"
             rules={[
               {
-                required: false,
-                message: "Please input a valid proximity threshold (0-100)",
                 type: "number",
                 transform: (value) => Number(value),
                 validator: (_, value) => {
+                  if (!value) {
+                    return Promise.resolve();
+                  }
                   if (value < 0 || value > 100 || value % 1 !== 0) {
                     return Promise.reject(
                       new Error("Value must be an integer between 0 and 100!")
@@ -138,9 +139,6 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
           <Form.Item
             name={["parameters", "triggerCoefficient"]}
             label="Trigger Coefficient"
-            rules={[
-              { required: false, message: "Please set a trigger coefficient!" },
-            ]}
           >
             <Slider
               min={0.2}
