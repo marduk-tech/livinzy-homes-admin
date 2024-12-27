@@ -105,24 +105,16 @@ export function EditLivIndexDriver({
           </Form.Item>
 
           <Form.Item
-            name="defaultProximityCoefficient"
-            label="Proximity Coefficient"
+            name="defaultProximityThreshold"
+            label="Proximity Threshold"
             rules={[
               {
                 required: false,
-                message: "Please set a proximity coefficient!",
+                message: "Please set a proximity threshold!",
               },
             ]}
           >
-            <Slider
-              min={0.2}
-              max={1}
-              step={0.01}
-              marks={{
-                0.2: "0.2",
-                1: "1",
-              }}
-            />
+            <Input placeholder="10" type="number" />
           </Form.Item>
 
           <Form.Item

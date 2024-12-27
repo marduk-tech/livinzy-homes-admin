@@ -38,10 +38,10 @@ export function LivindexDriversList() {
       ...ColumnSearch("megaDriver"),
     },
     {
-      title: "Default Proximity Coefficient",
-      dataIndex: "defaultProximityCoefficient",
-      key: "defaultProximityCoefficient",
-      ...ColumnSearch("defaultProximityCoefficient"),
+      title: "Default Proximity Threshold",
+      dataIndex: "defaultProximityThreshold",
+      key: "defaultProximityThreshold",
+      ...ColumnSearch("defaultProximityThreshold"),
     },
     {
       title: "Default Trigger Coefficient",
