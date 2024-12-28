@@ -12,7 +12,6 @@ import { Loader } from "../common/loader";
 
 interface EditLivIndexPlaceProps {
   selectedPlace?: ILivIndexPlaces | undefined;
-  type: PlaceType;
 }
 
 export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {

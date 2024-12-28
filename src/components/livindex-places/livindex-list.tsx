@@ -17,6 +17,7 @@ import { ILivIndexPlaces } from "../../types";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { EditLivIndexPlace } from "./edit-livindex-place";
+import { EditPlaceDetails } from "./edit-place-details";
 
 export function LivindexList() {
   const { isMobile } = useDevice();
@@ -60,7 +61,9 @@ export function LivindexList() {
       render: (id: string, record) => {
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
-            <EditLivIndexPlace selectedPlace={record} type="school" />
+            <EditPlaceDetails selectedPlace={record} />
+
+            <EditLivIndexPlace selectedPlace={record} />
 
             <DeletePopconfirm
               handleOk={() => handleDelete({ placeId: id })}
@@ -90,7 +93,7 @@ export function LivindexList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <EditLivIndexPlace type="school" />
+          <EditLivIndexPlace />
         </Col>
       </Row>
 
