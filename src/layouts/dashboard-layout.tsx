@@ -26,6 +26,9 @@ export const DashboardLayout: React.FC = () => {
               </Link>
 
               <Flex justify="center" align="center" gap={15}>
+                <Link to="/chroma-docs">
+                  <Button>Chroma Docs</Button>
+                </Link>
                 <Link to="/global-knowledge">
                   <Button>Global Knowledge</Button>
                 </Link>

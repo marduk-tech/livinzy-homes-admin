@@ -6,6 +6,7 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 
 // Pages
 import AskPage from "../pages/ask-page";
+import ChromaDocsPage from "../pages/chroma-docs";
 import { GlobalKnowledgePage } from "../pages/global-knowledge-page";
 import { LivestmentScorePage } from "../pages/livestment-page";
 import { LivindexPlacesPage } from "../pages/livindexplaces";
@@ -24,6 +25,8 @@ export const Router = () => {
         <Route path="/livindex-places" element={<LivindexPlacesPage />} />
 
         <Route path="/global-knowledge" element={<GlobalKnowledgePage />} />
+
+        <Route path="/chroma-docs" element={<ChromaDocsPage />} />
 
         <Route path="/projects/:projectId/edit" element={<EditProjectPage />} />
 

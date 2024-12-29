@@ -32,3 +32,13 @@ export interface ILivIndexDriver {
   defaultProximityThreshold?: number;
   defaultTriggerCoefficient?: number;
 }
+
+export interface IChromaDoc {
+  id: string;
+  document: string;
+  metadata: IChromaMetaData;
+}
+
+export interface IChromaMetaData {
+  [key: string]: any;
+}

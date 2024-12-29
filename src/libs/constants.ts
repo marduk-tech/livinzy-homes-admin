@@ -8,6 +8,8 @@ export const queryKeys = {
   getAllPlaces: "getAllPlaces",
   getAllDrivers: "getAllDrivers",
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
+
+  getAllChromaDocs: "getAllChromaDocs",
 };
 export const LivIndexDrivers = [
   "road",
@@ -117,3 +119,6 @@ export const CommunicationPreference = [
     label: "Home Visit",
   },
 ];
+
+export const CHROMA_COLLECTION = "livinzy-homes-dev";
+export const GLOBAL_CHROMA_COLLECTION = "global-livinzy-homes-dev";
