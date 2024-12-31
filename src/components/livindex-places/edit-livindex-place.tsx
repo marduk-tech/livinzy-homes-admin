@@ -1,5 +1,5 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select, Slider } from "antd";
+import { Button, Form, Input, Modal, Select, Slider, Tag } from "antd";
 import { useState } from "react";
 import { useFetchLivindexDrivers } from "../../hooks/livindex-drivers-hooks";
 import {
@@ -121,7 +121,7 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
 
             <Form.Item
               name={["parameters", "proximityThreshold"]}
-              label="Proximity Threshold"
+              label="Proximity Threshold (in Kms)"
               rules={[
                 {
                   type: "number",
@@ -139,11 +139,11 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
                   },
                 },
               ]}
-              extra={`Default value ${
+              extra={<Tag style={{marginTop: 4}}>Default value {
                 drivers.find(
                   (driver) => driver.driverName === selectedPlace?.driver
                 )?.defaultProximityThreshold || 0
-              } will be overriden.`}
+              } kms will be overriden.</Tag>}
             >
               <Input placeholder="Proximity Threshold" type="number" />
             </Form.Item>
@@ -151,11 +151,11 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             <Form.Item
               name={["parameters", "triggerCoefficient"]}
               label="Trigger Coefficient"
-              extra={`Default value ${
+              extra={<Tag style={{marginTop: 8}}>Default value {
                 drivers.find(
                   (driver) => driver.driverName === selectedPlace?.driver
                 )?.defaultTriggerCoefficient || 0
-              } will be overriden.`}
+              } will be overriden.</Tag>}
             >
               <Slider
                 min={0.2}
