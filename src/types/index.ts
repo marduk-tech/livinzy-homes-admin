@@ -1,7 +1,7 @@
 export interface ILivIndexPlaces {
   _id: string;
   name: string;
-  description?: string;
+
   type?: PlaceType;
   placeId?: string;
   pincode?: string;
@@ -14,6 +14,12 @@ export interface ILivIndexPlaces {
   driver: string;
   createdAt: Date;
   updatedAt: Date;
+
+  details: {
+    description?: string;
+    oneLiner?: string;
+    footfall?: number;
+  };
 }
 
 export interface IGlobalKnowledge {

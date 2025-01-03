@@ -24,7 +24,7 @@ export function EditPlaceDetails({ selectedPlace }: EditLivIndexPlaceProps) {
     try {
       const values = await form.validateFields();
 
-      await updateLivindexPlace.mutateAsync({ placeData: values });
+      await updateLivindexPlace.mutateAsync({ placeData: { details: values } });
 
       setIsEditModalOpen(false);
     } catch (error) {
@@ -58,7 +58,7 @@ export function EditPlaceDetails({ selectedPlace }: EditLivIndexPlaceProps) {
           form={form}
           layout="vertical"
           style={{ marginTop: 20 }}
-          initialValues={selectedPlace}
+          initialValues={selectedPlace.details}
           preserve={false}
         >
           <Form.Item name="oneLiner" label="One Liner">
