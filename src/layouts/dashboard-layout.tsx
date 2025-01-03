@@ -35,8 +35,8 @@ export const DashboardLayout: React.FC = () => {
                 <Link to="/livindex-places">
                   <Button>LivIndex Places</Button>
                 </Link>
-                <Link to="/livestment">
-                  <Button>Livestment scores</Button>
+                <Link to="/livindex-scores">
+                  <Button>Livindex Scores</Button>
                 </Link>
                 <Link to="/ask">
                   <Button icon={<RobotOutlined />}>Ask Liv</Button>

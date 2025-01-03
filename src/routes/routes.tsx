@@ -8,7 +8,7 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 import AskPage from "../pages/ask-page";
 import ChromaDocsPage from "../pages/chroma-docs";
 import { GlobalKnowledgePage } from "../pages/global-knowledge-page";
-import { LivestmentScorePage } from "../pages/livestment-page";
+import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { LivindexPlacesPage } from "../pages/livindexplaces";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
@@ -21,7 +21,7 @@ export const Router = () => {
         <Route path="/" element={<Navigate to="/projects" />} />
         <Route path="/projects" element={<ProjectsListPage />} />
 
-        <Route path="/livestment" element={<LivestmentScorePage />} />
+        <Route path="/livindex-scores" element={<LivIndexScorePage />} />
         <Route path="/livindex-places" element={<LivindexPlacesPage />} />
 
         <Route path="/global-knowledge" element={<GlobalKnowledgePage />} />
