@@ -1,5 +1,14 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select, Slider, Tag } from "antd";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Slider,
+  Tag,
+} from "antd";
 import { useState } from "react";
 import { useFetchLivindexDrivers } from "../../hooks/livindex-drivers-hooks";
 import {
@@ -139,11 +148,15 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
                   },
                 },
               ]}
-              extra={<Tag style={{marginTop: 4}}>Default value {
-                drivers.find(
-                  (driver) => driver.driverName === selectedPlace?.driver
-                )?.defaultProximityThreshold || 0
-              } kms will be overriden.</Tag>}
+              extra={
+                <Tag style={{ marginTop: 4 }}>
+                  Default value{" "}
+                  {drivers.find(
+                    (driver) => driver.driverName === selectedPlace?.driver
+                  )?.defaultProximityThreshold || 0}{" "}
+                  kms will be overriden.
+                </Tag>
+              }
             >
               <Input placeholder="Proximity Threshold" type="number" />
             </Form.Item>
@@ -151,11 +164,15 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             <Form.Item
               name={["parameters", "triggerCoefficient"]}
               label="Trigger Coefficient"
-              extra={<Tag style={{marginTop: 8}}>Default value {
-                drivers.find(
-                  (driver) => driver.driverName === selectedPlace?.driver
-                )?.defaultTriggerCoefficient || 0
-              } will be overriden.</Tag>}
+              extra={
+                <Tag style={{ marginTop: 8 }}>
+                  Default value{" "}
+                  {drivers.find(
+                    (driver) => driver.driverName === selectedPlace?.driver
+                  )?.defaultTriggerCoefficient || 0}{" "}
+                  will be overriden.
+                </Tag>
+              }
             >
               <Slider
                 min={0.2}
@@ -168,8 +185,11 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
               />
             </Form.Item>
 
-            <Form.Item name="description" label="Description">
-              <Input.TextArea rows={3} placeholder="Description" />
+            <Form.Item
+              name={["parameters", "growthLever"]}
+              valuePropName="checked"
+            >
+              <Checkbox>Growth Lever</Checkbox>
             </Form.Item>
 
             {selectedPlace?.type !== "road" && (
