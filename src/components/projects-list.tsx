@@ -17,7 +17,7 @@ import {
 import React, { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   useDeleteProjectMutation,
   useProjectForm,
@@ -32,6 +32,8 @@ import { JsonProjectImport } from "./json-project-import";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
 
   const { data: projects, isLoading: projectIsLoading } = useQuery(
     queries.getAllProjects()
@@ -179,6 +181,14 @@ export const ProjectsList: React.FC = () => {
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
+        pagination={{
+          current: currentPage,
+          onChange: (page) => {
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set("page", page.toString());
+            setSearchParams(newParams);
+          },
+        }}
       />
       <JsonProjectImport
         isModalOpen={isJsonImportModalOpen}

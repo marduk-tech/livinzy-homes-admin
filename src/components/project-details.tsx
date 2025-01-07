@@ -20,6 +20,7 @@ import {
   Typography,
 } from "antd";
 
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import {
@@ -420,6 +421,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       <Form form={form} layout="vertical" initialValues={project}>
         {project && (
           <Typography.Title style={{ marginBottom: 20 }} level={3}>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => window.history.back()}
+              style={{ marginRight: 16 }}
+            ></Button>
             {project?.metadata.name}
           </Typography.Title>
         )}
