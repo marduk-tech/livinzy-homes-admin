@@ -25,7 +25,7 @@ import {
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { calculateProgress } from "../libs/utils";
-import { Project, ProjectStructure } from "../types/Project";
+import { IMedia, Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import { JsonProjectImport } from "./json-project-import";
@@ -106,6 +106,30 @@ export const ProjectsList: React.FC = () => {
         );
       },
     },
+
+    {
+      title: "Media",
+      dataIndex: "media",
+      key: "media",
+      responsive: ["lg", "xl"],
+      render: (record: any) => {
+        const imagesCount = record.filter(
+          (media: IMedia) => media.type === "image"
+        ).length;
+
+        const videosCount = record.filter(
+          (media: IMedia) => media.type === "video"
+        ).length;
+
+        return (
+          <>
+            <Tag>Images: {imagesCount} </Tag>
+            <Tag>Videos: {videosCount} </Tag>
+          </>
+        );
+      },
+    },
+
     {
       title: "",
       align: "right",
