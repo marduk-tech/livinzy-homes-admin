@@ -395,6 +395,11 @@ export function useProjectForm() {
         fieldDisplayName: "Traction",
         fieldDescription: "Details about plot sold, left or anything else",
       },
+      {
+        dbField: "approvals",
+        fieldDisplayName: "Approvals",
+        fieldDescription: "Details about any approvals received by the project",
+      },
     ],
     basic_infra: [
       {
