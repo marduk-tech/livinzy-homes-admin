@@ -1,13 +1,16 @@
 import { Tabs } from "antd";
-import TabPane from "antd/es/tabs/TabPane";
-import { LivindexFutureInfraList } from "../components/livindex-places/livindex-futureinfra-list";
-import { LivindexHospitalList } from "../components/livindex-places/livindex-hospital-list";
-import { LivindexRoadsList } from "../components/livindex-places/livindex-roads-list";
-import { LivindexSchoolList } from "../components/livindex-places/livindex-school-list";
+import { LivindexDriversList } from "../components/livindex-drivers/livindex-drivers-list";
 import { LivindexList } from "../components/livindex-places/livindex-list";
 
 export function LivindexPlacesPage() {
   return (
-    <LivindexList></LivindexList>
+    <Tabs defaultActiveKey="1">
+      <Tabs.TabPane tab="Livindex Places" key="1">
+        <LivindexList />
+      </Tabs.TabPane>
+      <Tabs.TabPane tab="Livindex Drivers" key="2">
+        <LivindexDriversList />
+      </Tabs.TabPane>
+    </Tabs>
   );
 }

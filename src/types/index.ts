@@ -1,7 +1,7 @@
 export interface ILivIndexPlaces {
   _id: string;
   name: string;
-  description?: string;
+
   type?: PlaceType;
   placeId?: string;
   pincode?: string;
@@ -11,9 +11,15 @@ export interface ILivIndexPlaces {
   };
   status?: string;
   features?: any;
-
+  driver: string;
   createdAt: Date;
   updatedAt: Date;
+
+  details: {
+    description?: string;
+    oneLiner?: string;
+    footfall?: number;
+  };
 }
 
 export interface IGlobalKnowledge {
@@ -24,3 +30,21 @@ export interface IGlobalKnowledge {
 }
 
 export type PlaceType = "road" | "hospital" | "school" | "futureInfra";
+
+export interface ILivIndexDriver {
+  _id: string;
+  driverName: string;
+  megaDriver?: "macro" | "connectivity" | "livability";
+  defaultProximityThreshold?: number;
+  defaultTriggerCoefficient?: number;
+}
+
+export interface IChromaDoc {
+  id: string;
+  document: string;
+  metadata: IChromaMetaData;
+}
+
+export interface IChromaMetaData {
+  [key: string]: any;
+}

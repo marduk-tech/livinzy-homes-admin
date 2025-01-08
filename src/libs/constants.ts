@@ -6,7 +6,10 @@ export const queryKeys = {
   projects: "projects",
   getProjectById: "getProjectById",
   getAllPlaces: "getAllPlaces",
+  getAllDrivers: "getAllDrivers",
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
+
+  getAllChromaDocs: "getAllChromaDocs",
 };
 export const LivIndexDrivers = [
   "road",
@@ -23,6 +26,9 @@ export const LivIndexDrivers = [
   "tourist-city",
   "satellite-city",
 ];
+
+export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];
+
 export const LivIndexStatuses = [
   "announced",
   "pre-construction",
@@ -113,3 +119,6 @@ export const CommunicationPreference = [
     label: "Home Visit",
   },
 ];
+
+export const CHROMA_COLLECTION = "livinzy-homes-dev";
+export const GLOBAL_CHROMA_COLLECTION = "global-livinzy-homes-dev";

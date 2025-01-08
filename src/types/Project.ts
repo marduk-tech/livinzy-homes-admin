@@ -1,3 +1,5 @@
+import { ILivIndexPlaces } from ".";
+
 export interface IMedia {
   _id: string;
   type: "image" | "video";
@@ -106,6 +108,37 @@ export interface IUI {
   categories: string[];
 }
 
+interface ExtrinsicDriverCoefficients {
+  proximityCoeffecient: number;
+  countCoeffecient: number;
+  triggerCoeffecient: number;
+  timelineCoeffecient: number;
+}
+
+export interface ExtrinsicDriver {
+  score: number;
+  place: ILivIndexPlaces;
+  distance: number;
+  summary: string;
+  coefficients: ExtrinsicDriverCoefficients;
+}
+
+interface IntrinsicDriverCoefficients {
+  craftCoeffecient: number;
+  builderCoeffecient: number;
+}
+
+interface IntrinsicDriver {
+  coefficients: IntrinsicDriverCoefficients;
+}
+
+export interface LivIndexScore {
+  score: number;
+  summary: string;
+  extrinsicDrivers: ExtrinsicDriver[];
+  intrinsicDriver: IntrinsicDriver[];
+}
+
 export interface Project {
   _id: string;
   metadata: IMetadata;
@@ -120,6 +153,8 @@ export interface Project {
   ui: IUI;
 
   livestment: Livestment;
+
+  livIndexScore: LivIndexScore;
   createdAt: string;
   updatedAt: string;
 }

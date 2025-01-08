@@ -17,7 +17,7 @@ import {
 import React, { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   useDeleteProjectMutation,
   useProjectForm,
@@ -25,13 +25,15 @@ import {
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { calculateProgress } from "../libs/utils";
-import { Project, ProjectStructure } from "../types/Project";
+import { IMedia, Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import { JsonProjectImport } from "./json-project-import";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
 
   const { data: projects, isLoading: projectIsLoading } = useQuery(
     queries.getAllProjects()
@@ -104,6 +106,30 @@ export const ProjectsList: React.FC = () => {
         );
       },
     },
+
+    {
+      title: "Media",
+      dataIndex: "media",
+      key: "media",
+      responsive: ["lg", "xl"],
+      render: (record: any) => {
+        const imagesCount = record.filter(
+          (media: IMedia) => media.type === "image"
+        ).length;
+
+        const videosCount = record.filter(
+          (media: IMedia) => media.type === "video"
+        ).length;
+
+        return (
+          <>
+            <Tag>Images: {imagesCount} </Tag>
+            <Tag>Videos: {videosCount} </Tag>
+          </>
+        );
+      },
+    },
+
     {
       title: "",
       align: "right",
@@ -179,6 +205,14 @@ export const ProjectsList: React.FC = () => {
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
+        pagination={{
+          current: currentPage,
+          onChange: (page) => {
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set("page", page.toString());
+            setSearchParams(newParams);
+          },
+        }}
       />
       <JsonProjectImport
         isModalOpen={isJsonImportModalOpen}

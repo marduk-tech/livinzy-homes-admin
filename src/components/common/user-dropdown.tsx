@@ -5,6 +5,7 @@ import {
 } from "@ant-design/icons";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Button, Dropdown, Modal } from "antd";
+import { Link } from "react-router-dom";
 
 const { confirm } = Modal;
 
@@ -32,12 +33,42 @@ export function UserDropDown() {
     });
   };
 
+  const navLinks = [
+    { to: "/chroma-docs", label: "Chroma Docs" },
+    { to: "/global-knowledge", label: "Global Knowledge" },
+    { to: "/livindex-places", label: "LivIndex Places" },
+    { to: "/livindex-scores", label: "Livindex Scores" },
+    // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
+    { to: "/ask", label: "Ask Liv", icon: undefined },
+  ];
+
   return (
     <Dropdown
       menu={{
         items: [
+          ...navLinks.map(({ to, label, icon }) => ({
+            key: to,
+            label: (
+              <Link to={to}>
+                <Button
+                  icon={icon}
+                  type="link"
+                  style={{
+                    padding: 0,
+                    height: 32,
+                    width: 150,
+                    textAlign: "left",
+                    justifyContent: "flex-start",
+                  }}
+                >
+                  {label}
+                </Button>
+              </Link>
+            ),
+          })),
+
           {
-            key: "1",
+            key: "6",
             label: (
               <Button
                 icon={<LogoutOutlined />}
@@ -48,6 +79,7 @@ export function UserDropDown() {
                   height: 32,
                   width: 150,
                   textAlign: "left",
+                  justifyContent: "flex-start",
                 }}
               >
                 Logout
