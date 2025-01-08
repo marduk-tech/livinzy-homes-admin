@@ -226,14 +226,7 @@ export const ProjectsList: React.FC = () => {
       </Row>
 
       <Table
-        dataSource={projects?.sort((a, b) => {
-          const nameA = a.metadata.name.toLowerCase();
-          const nameB = b.metadata.name.toLowerCase();
-
-          if (nameA < nameB) return -1;
-          if (nameA > nameB) return 1;
-          return 0;
-        })}
+        dataSource={sortedProjects}
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
