@@ -133,7 +133,7 @@ export function useUpdateProjectMutation({
 
 export function useProjectForm() {
   const projectStructure: ProjectStructure = {
-    metadata: [
+    metadata: [ 
       {
         dbField: "name",
         fieldDisplayName: "Name",
@@ -374,21 +374,21 @@ export function useProjectForm() {
     status: [
       {
         dbField: "launchDate",
-        fieldDisplayName: "Launch Date",
+        fieldDisplayName: "Launch Status",
         mustHave: true,
-        fieldDescription: "When was the project launched",
+        fieldDescription: "Details relevant to launch timeline of the project.",
       },
       {
         dbField: "committedEndData",
-        fieldDisplayName: "Committed end date",
+        fieldDisplayName: "Completion Status",
         mustHave: true,
-        fieldDescription: "Provide relevant details.",
+        fieldDescription: "Details regarding committed timeline.",
       },
       {
         dbField: "constructionStatus",
         fieldDisplayName: "Construction Status",
         fieldDescription:
-          "Any relevant details about current construction status",
+          "Any relevant details about current construction status including approvals received.",
       },
       {
         dbField: "traction",
