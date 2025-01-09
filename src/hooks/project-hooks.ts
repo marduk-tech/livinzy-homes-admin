@@ -133,7 +133,7 @@ export function useUpdateProjectMutation({
 
 export function useProjectForm() {
   const projectStructure: ProjectStructure = {
-    metadata: [ 
+    metadata: [
       {
         dbField: "name",
         fieldDisplayName: "Name",
@@ -164,6 +164,12 @@ export function useProjectForm() {
         dbField: "marketing_copy",
         fieldDisplayName: "Marketing Copy",
         fieldDescription: "Any raw marketing copy provided",
+      },
+      {
+        dbField: "contactNumber",
+        fieldDisplayName: "Contact Number",
+        fieldDescription: "Enter multiple numbers separated by comma",
+        type: "multi_select",
       },
       {
         dbField: "status",
