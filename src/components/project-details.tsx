@@ -194,9 +194,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }));
       }
 
-      if (projectId) {
-        console.log(updatedMedia);
+      if (values.metadata.contactNumber) {
+        values.metadata.contactNumber = values.metadata.contactNumber.join(",");
+      }
 
+      if (projectId) {
         if (updatedMedia) {
           updateProject.mutate({
             projectData: { ...values, media: updatedMedia },
