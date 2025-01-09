@@ -1,4 +1,9 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
+} from "@ant-design/icons";
 import {
   App as AntApp,
   Button,
@@ -50,23 +55,35 @@ export const ProjectsList: React.FC = () => {
     deleteProjectMutation.mutate({ projectId: projectId });
   };
 
+  const [sortOrder, setSortOrder] = useState<
+    "ascend" | "descend" | undefined
+  >();
+
+  const handleSorterChange = (order: "ascend" | "descend" | undefined) => {
+    if (order === "ascend") {
+      setSortOrder("descend");
+    } else if (order === "descend") {
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("descend");
+    }
+  };
+
   const columns: TableColumnType<Project>[] = [
     {
       title: "Project Name",
       dataIndex: ["metadata", "name"],
       key: "name",
+      sorter: (a, b) => a.metadata.name.localeCompare(b.metadata.name),
+      sortDirections: ["descend"],
+      defaultSortOrder: "ascend",
+      showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
-    },
-    {
-      title: "Date Added",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      responsive: ["lg", "md", "xl"],
-      render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: "Date Updated",
       dataIndex: "updatedAt",
+      sorter: (a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       key: "updatedAt",
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
@@ -111,7 +128,9 @@ export const ProjectsList: React.FC = () => {
       title: "Media",
       dataIndex: "media",
       key: "media",
+      width: "200px",
       responsive: ["lg", "xl"],
+
       render: (record: any) => {
         const imagesCount = record.filter(
           (media: IMedia) => media.type === "image"
@@ -127,6 +146,11 @@ export const ProjectsList: React.FC = () => {
             <Tag>Videos: {videosCount} </Tag>
           </>
         );
+      },
+      sorter: (a: any, b: any) => {
+        const aTotalCount = a.media.length;
+        const bTotalCount = b.media.length;
+        return aTotalCount - bTotalCount;
       },
     },
 
@@ -181,6 +205,15 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
+  const sortedProjects = projects?.sort((a, b) => {
+    const nameA = a.metadata.name.toLowerCase();
+    const nameB = b.metadata.name.toLowerCase();
+
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  });
+
   return (
     <>
       <Row
@@ -201,7 +234,7 @@ export const ProjectsList: React.FC = () => {
       </Row>
 
       <Table
-        dataSource={projects}
+        dataSource={sortedProjects}
         columns={columns}
         rowKey="_id"
         loading={projectIsLoading}
