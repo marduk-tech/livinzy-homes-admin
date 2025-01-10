@@ -31,6 +31,7 @@ export interface IMetadata {
   oneLiner?: string;
   description: string;
   summary: string;
+  contactNumber?: string;
 }
 
 export interface ILand {

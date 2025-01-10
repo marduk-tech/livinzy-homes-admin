@@ -194,9 +194,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }));
       }
 
-      if (projectId) {
-        console.log(updatedMedia);
+      if (values.metadata.contactNumber) {
+        values.metadata.contactNumber = values.metadata.contactNumber.join(",");
+      }
 
+      if (projectId) {
         if (updatedMedia) {
           updateProject.mutate({
             projectData: { ...values, media: updatedMedia },
@@ -418,7 +420,17 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   if (visibleTabs) {
     return (
-      <Form form={form} layout="vertical" initialValues={project}>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          ...project,
+          metadata: {
+            ...project?.metadata,
+            contactNumber: project?.metadata?.contactNumber?.split(","),
+          },
+        }}
+      >
         {project && (
           <Typography.Title style={{ marginBottom: 20 }} level={3}>
             <Button
