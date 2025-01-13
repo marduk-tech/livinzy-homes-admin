@@ -136,11 +136,13 @@ export function useProjectForm() {
     metadata: [
       {
         dbField: "name",
+        mustHave: true,
         fieldDisplayName: "Name",
         fieldDescription: "The name of the project.",
       },
       {
         dbField: ["location", "mapLink"],
+        mustHave: true,
         fieldDisplayName: "Location (Google maps url)",
         fieldDescription:
           "The location of the project identified by Google maps url.",
@@ -152,6 +154,7 @@ export function useProjectForm() {
       },
       {
         dbField: "company",
+        mustHave: true,
         fieldDisplayName: "Company",
         fieldDescription: "Provide relevant details.",
       },
@@ -213,19 +216,31 @@ export function useProjectForm() {
           "The description or summary of the project covering the important points at high level.",
       },
       {
-        dbField: "summary",
-        fieldDisplayName: "Summary",
-        fieldDescription: "Provide relevant details",
-        type: "json",
-      },
-      {
-        dbField: "highlights",
+        dbField: "projectHighlights",
         fieldDisplayName: "Highlights",
         fieldDescription: "Provide relevant details",
         type: "json",
       },
       {
-        dbField: "costSummary",
+        dbField: "builderDetails",
+        fieldDisplayName: "Builder",
+        fieldDescription: "Provide relevant details",
+        type: "json",
+      },
+      {
+        dbField: "landDetails",
+        fieldDisplayName: "Land",
+        fieldDescription: "Provide relevant details",
+        type: "json",
+      },
+      {
+        dbField: "statusDetails",
+        fieldDisplayName: "Status",
+        fieldDescription: "Provide relevant details",
+        type: "json",
+      },
+      {
+        dbField: "costingDetails",
         fieldDisplayName: "Cost Summary",
         fieldDescription: "Provide relevant details",
         type: "json",
@@ -236,32 +251,16 @@ export function useProjectForm() {
         fieldDescription: "Provide relevant details",
         type: "json",
       },
-      {
-        dbField: "categories",
-        fieldDisplayName: "Categories",
-        fieldDescription: "Categories project belongs to",
-        type: "multi_select",
-        options: ProjectCategories,
-      },
-      {
-        dbField: "locationFilters",
-        fieldDisplayName: "Location Filter",
-        fieldDescription: "Provide relevant details",
-        type: "multi_select",
-        options: LocationFilters,
-      },
     ],
     land: [
       {
         dbField: "total_area",
         fieldDisplayName: "Total area in acres",
-        mustHave: true,
         fieldDescription: "The total land area of the project in acres.",
       },
       {
         dbField: "plantation",
         fieldDisplayName: "Plantation",
-        mustHave: true,
         fieldDescription:
           "Information about plantation on the project i.e trees, plants etc that grow.",
       },
@@ -387,17 +386,18 @@ export function useProjectForm() {
       {
         dbField: "committedEndData",
         fieldDisplayName: "Completion Status",
-        mustHave: true,
         fieldDescription: "Details regarding committed timeline.",
       },
       {
         dbField: "constructionStatus",
         fieldDisplayName: "Construction Status",
+        mustHave: true,
         fieldDescription:
           "Any relevant details about current construction status including approvals received.",
       },
       {
         dbField: "traction",
+        mustHave: true,
         fieldDisplayName: "Traction",
         fieldDescription: "Details about plot sold, left or anything else",
       },
@@ -411,19 +411,16 @@ export function useProjectForm() {
       {
         dbField: "electricity",
         fieldDisplayName: "Electricity",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
         dbField: "water_supply",
         fieldDisplayName: "Water supply",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
         dbField: "security",
         fieldDisplayName: "Security",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
@@ -441,13 +438,11 @@ export function useProjectForm() {
       {
         dbField: "sports_external",
         fieldDisplayName: "Outdoor sports",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
         dbField: "swimming_pool",
         fieldDisplayName: "Swimming pool",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
@@ -483,7 +478,6 @@ export function useProjectForm() {
       {
         dbField: "incentives",
         fieldDisplayName: "Incentives",
-        mustHave: true,
         fieldDescription:
           "Just a comma separate list of incentives that will be provided on call/visit",
       },
@@ -500,13 +494,11 @@ export function useProjectForm() {
       {
         dbField: "partners",
         fieldDisplayName: "Partners",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
         dbField: "experience",
         fieldDisplayName: "Experience",
-        mustHave: true,
         fieldDescription: "Provide relevant details.",
       },
       {
