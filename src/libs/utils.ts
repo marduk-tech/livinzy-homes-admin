@@ -9,17 +9,21 @@ export function calculateProgress(
   let totalFields = 0;
   let filledFields = 0;
 
+  const skipSection =
+    data.metadata.homeType == "farmland" ? "unitDetails" : "plots";
+
   // loop over each section in the structure
   for (const sectionKey in structure) {
-    const fields = structure[sectionKey];
+    if (sectionKey !== skipSection) {
+      const fields = structure[sectionKey];
 
-    // loop over each field in the section
-    for (const field of fields) {
-      if (checkMustHave ? field.mustHave : !field.mustHave) {
-        totalFields++;
-
-        if (data[sectionKey] && data[sectionKey][field.dbField]) {
-          filledFields++;
+      // loop over each field in the section
+      for (const field of fields) {
+        if (checkMustHave ? field.mustHave : !field.mustHave) {
+          totalFields++;
+          if (data[sectionKey] && data[sectionKey][field.dbField]) {
+            filledFields++;
+          }
         }
       }
     }
