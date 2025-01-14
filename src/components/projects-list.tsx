@@ -83,7 +83,8 @@ export const ProjectsList: React.FC = () => {
     {
       title: "Date Updated",
       dataIndex: "updatedAt",
-      sorter: (a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      sorter: (a, b) =>
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       key: "updatedAt",
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
@@ -152,6 +153,30 @@ export const ProjectsList: React.FC = () => {
         const bTotalCount = b.media.length;
         return aTotalCount - bTotalCount;
       },
+    },
+
+    {
+      title: "Home Type",
+      dataIndex: ["metadata", "homeType"],
+      key: "homeType",
+      width: "200px",
+      responsive: ["lg", "xl"],
+      sorter: (a, b) =>
+        (a.metadata.homeType || "").localeCompare(b.metadata.homeType || ""),
+      sortDirections: ["ascend", "descend"],
+
+      filters: [
+        { text: "Apartment", value: "apartment" },
+        { text: "Farmland", value: "farmland" },
+        { text: "House", value: "house" },
+        { text: "Penthouse", value: "penthouse" },
+        { text: "Plot", value: "plot" },
+        { text: "Rowhouse", value: "rowhouse" },
+        { text: "Villa", value: "villa" },
+        { text: "Villament", value: "villament" },
+      ],
+
+      onFilter: (value, record) => record.metadata.homeType === value,
     },
 
     {
