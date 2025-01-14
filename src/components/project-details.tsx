@@ -262,32 +262,17 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   onSuccess: (data) => {
                     const uiData = data.data;
                     if (uiData) {
-                      form.setFields([
-                        {
-                          name: ["ui", "costSummary"],
-                          value: uiData.costSummary,
-                        },
-                        {
-                          name: ["ui", "description"],
-                          value: uiData.description,
-                        },
-                        {
-                          name: ["ui", "highlights"],
-                          value: uiData.highlights,
-                        },
-                        {
-                          name: ["ui", "amenitiesSummary"],
-                          value: uiData.amenitiesSummary,
-                        },
-                        {
-                          name: ["ui", "oneLiner"],
-                          value: uiData.oneLiner,
-                        },
-                        {
-                          name: ["ui", "summary"],
-                          value: uiData.summary,
-                        },
-                      ]);
+                      const toSetFields: any[] = [];
+                      projectFields.ui.forEach((uiF: any) => {
+                        toSetFields.push({
+                          name: ["ui", uiF.dbField],
+                          value:
+                            uiF.type == "json"
+                              ? JSON.stringify(uiData[uiF.dbField])
+                              : uiData[uiF.dbField],
+                        });
+                      });
+                      form.setFields(toSetFields);
                     }
                   },
                 }
