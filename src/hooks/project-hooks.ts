@@ -202,6 +202,12 @@ export function useProjectForm() {
           { label: "Penthouse", value: "penthouse" },
         ],
       },
+
+      {
+        dbField: "reraNumber",
+        fieldDisplayName: "Rera Number",
+        fieldDescription: "Provide relevant details.",
+      },
     ],
     ui: [
       {
