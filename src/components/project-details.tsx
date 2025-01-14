@@ -395,7 +395,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   }, [allProjects]);
 
   useEffect(() => {
-    if (!projectData && project) {
+    if (project) {
       const uiFormatting: any = {};
 
       projectFields.ui.forEach((uiF: any) => {
@@ -407,6 +407,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           (uiFormatting as any)[uiF.dbField] = (project.ui as any)[uiF.dbField];
         }
       });
+
+      const formValues = {
+        ...project,
+        ui: uiFormatting,
+        metadata: {
+          ...project.metadata,
+          contactNumber: project.metadata?.contactNumber?.split(","),
+        },
+      };
+      form.setFieldsValue(formValues);
 
       setProjectData({
         ...project,
@@ -420,7 +430,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         initialPreviewIndex >= 0 ? initialPreviewIndex : null
       );
     }
-  }, [project]);
+  }, [project, form, projectFields.ui]);
 
   const screens = useBreakpoint();
 
@@ -430,17 +440,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   if (visibleTabs) {
     return (
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          ...projectData,
-          metadata: {
-            ...projectData?.metadata,
-            contactNumber: projectData?.metadata?.contactNumber?.split(","),
-          },
-        }}
-      >
+      <Form form={form} layout="vertical">
         {project && (
           <Typography.Title style={{ marginBottom: 20 }} level={3}>
             <Button
