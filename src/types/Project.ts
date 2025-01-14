@@ -100,11 +100,13 @@ export interface ITeam {
 }
 
 export interface IUI {
-  summary: string;
   description: string;
   oneLiner: string;
-  highlights: string;
-  costSummary: string;
+  projectDetails: string;
+  costingDetails: string;
+  statusDetails: string;
+  landDetails: string;
+  builderDetails: string;
   amenitiesSummary: string;
   categories: string[];
 }

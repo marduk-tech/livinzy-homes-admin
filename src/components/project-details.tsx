@@ -102,7 +102,7 @@ const RenderFields: React.FC<{
                             Array.isArray(dbField)
                               ? [category, ...dbField]
                               : [category, dbField],
-                            JSON.stringify(data)
+                            data
                           );
                         }}
                       />
@@ -192,6 +192,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           ...item,
           isPreview: index === previewImageIndex,
         }));
+      }
+
+      if (values.ui) {
+        projectFields.ui.forEach((uiF: any) => {
+          if (uiF.type == "json") {
+            (values.ui as any)[uiF.dbField] = JSON.parse(
+              (values.ui as any)[uiF.dbField]
+            );
+          }
+        });
       }
 
       if (values.metadata.contactNumber) {
@@ -401,7 +411,22 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   useEffect(() => {
     if (!projectData && project) {
-      setProjectData(project);
+      const uiFormatting: any = {};
+
+      projectFields.ui.forEach((uiF: any) => {
+        if (uiF.type == "json") {
+          (uiFormatting as any)[uiF.dbField] = JSON.stringify(
+            (project.ui as any)[uiF.dbField]
+          );
+        } else {
+          (uiFormatting as any)[uiF.dbField] = (project.ui as any)[uiF.dbField];
+        }
+      });
+
+      setProjectData({
+        ...project,
+        ui: uiFormatting,
+      });
 
       const initialPreviewIndex = project.media.findIndex(
         (item: IMedia) => item.isPreview
@@ -424,10 +449,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         form={form}
         layout="vertical"
         initialValues={{
-          ...project,
+          ...projectData,
           metadata: {
-            ...project?.metadata,
-            contactNumber: project?.metadata?.contactNumber?.split(","),
+            ...projectData?.metadata,
+            contactNumber: projectData?.metadata?.contactNumber?.split(","),
           },
         }}
       >
