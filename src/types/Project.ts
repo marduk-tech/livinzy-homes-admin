@@ -32,6 +32,14 @@ export interface IMetadata {
   description: string;
   summary: string;
   contactNumber?: string;
+  homeType:
+    | "farmland"
+    | "plot"
+    | "villa"
+    | "rowhouse"
+    | "villament"
+    | "apartment"
+    | "penthouse";
 }
 
 export interface ILand {
