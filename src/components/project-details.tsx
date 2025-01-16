@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Button,
@@ -394,33 +394,50 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   }, [allProjects]);
 
-  useEffect(() => {
-    if (!projectData && project) {
-      const uiFormatting: any = {};
+  const initialLoadComplete = useRef(false);
 
-      projectFields.ui.forEach((uiF: any) => {
+  useEffect(() => {
+    if (project && !initialLoadComplete.current) {
+      // Format UI data
+      const uiFormatting: any = {};
+      projectFields.ui?.forEach((uiF: any) => {
         if (uiF.type == "json") {
-          (uiFormatting as any)[uiF.dbField] = JSON.stringify(
+          uiFormatting[uiF.dbField] = JSON.stringify(
             (project.ui as any)[uiF.dbField]
           );
         } else {
-          (uiFormatting as any)[uiF.dbField] = (project.ui as any)[uiF.dbField];
+          uiFormatting[uiF.dbField] = (project.ui as any)[uiF.dbField];
         }
       });
 
-      setProjectData({
+      // set the form values directly when project data is available
+      form.setFieldsValue({
         ...project,
         ui: uiFormatting,
+        metadata: {
+          ...project.metadata,
+          contactNumber: project.metadata?.contactNumber?.split(","),
+        },
       });
 
+      // preview image index
       const initialPreviewIndex = project.media.findIndex(
         (item: IMedia) => item.isPreview
       );
       setPreviewImageIndex(
         initialPreviewIndex >= 0 ? initialPreviewIndex : null
       );
+
+      // project data state
+      setProjectData({
+        ...project,
+        ui: uiFormatting,
+      });
+
+      // Mark initial load as complete
+      initialLoadComplete.current = true;
     }
-  }, [project]);
+  }, [project, form, projectFields.ui]);
 
   const screens = useBreakpoint();
 
@@ -430,17 +447,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   if (visibleTabs) {
     return (
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          ...projectData,
-          metadata: {
-            ...projectData?.metadata,
-            contactNumber: projectData?.metadata?.contactNumber?.split(","),
-          },
-        }}
-      >
+      <Form form={form} layout="vertical">
         {project && (
           <Typography.Title style={{ marginBottom: 20 }} level={3}>
             <Button
