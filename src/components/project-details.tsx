@@ -395,7 +395,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   }, [allProjects]);
 
   useEffect(() => {
-    if (project) {
+    if (!projectData && project) {
       const uiFormatting: any = {};
 
       projectFields.ui.forEach((uiF: any) => {
@@ -408,17 +408,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }
       });
 
-      const formValues = {
-        ...project,
-        ui: uiFormatting,
-        metadata: {
-          ...project.metadata,
-          contactNumber: project.metadata?.contactNumber?.split(","),
-        },
-      };
-      form.setFieldsValue(formValues);
-
-      setProjectData({
+      // set the form values directly when project data is available
+      form.setFieldsValue({
         ...project,
         ui: uiFormatting,
       });

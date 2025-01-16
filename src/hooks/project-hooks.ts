@@ -208,6 +208,19 @@ export function useProjectForm() {
         fieldDisplayName: "Rera Number",
         fieldDescription: "Provide relevant details.",
       },
+      {
+        dbField: ["livinzyArea", "subArea"],
+        fieldDisplayName: "Sub Area",
+        fieldDescription: "Select the sub area where this project is located",
+        type: "single_select",
+        options: [
+          { label: "Near Yelahanka", value: "sub-area-1" },
+          { label: "Near Devanahalli", value: "sub-area-2" },
+          { label: "Near Dodaballapura", value: "sub-area-3" },
+          { label: "Near Airport", value: "sub-area-4" },
+          { label: "Near Nandi Hills", value: "sub-area-5" },
+        ],
+      },
     ],
     ui: [
       {
