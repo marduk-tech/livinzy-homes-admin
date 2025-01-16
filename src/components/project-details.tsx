@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Button,
@@ -394,19 +394,17 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   }, [allProjects]);
 
-  const initialLoadComplete = useRef(false);
-
   useEffect(() => {
-    if (project && !initialLoadComplete.current) {
-      // Format UI data
+    if (!projectData && project) {
       const uiFormatting: any = {};
-      projectFields.ui?.forEach((uiF: any) => {
+
+      projectFields.ui.forEach((uiF: any) => {
         if (uiF.type == "json") {
-          uiFormatting[uiF.dbField] = JSON.stringify(
+          (uiFormatting as any)[uiF.dbField] = JSON.stringify(
             (project.ui as any)[uiF.dbField]
           );
         } else {
-          uiFormatting[uiF.dbField] = (project.ui as any)[uiF.dbField];
+          (uiFormatting as any)[uiF.dbField] = (project.ui as any)[uiF.dbField];
         }
       });
 
@@ -414,28 +412,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       form.setFieldsValue({
         ...project,
         ui: uiFormatting,
-        metadata: {
-          ...project.metadata,
-          contactNumber: project.metadata?.contactNumber?.split(","),
-        },
       });
 
-      // preview image index
       const initialPreviewIndex = project.media.findIndex(
         (item: IMedia) => item.isPreview
       );
       setPreviewImageIndex(
         initialPreviewIndex >= 0 ? initialPreviewIndex : null
       );
-
-      // project data state
-      setProjectData({
-        ...project,
-        ui: uiFormatting,
-      });
-
-      // Mark initial load as complete
-      initialLoadComplete.current = true;
     }
   }, [project, form, projectFields.ui]);
 
