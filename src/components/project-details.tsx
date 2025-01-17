@@ -196,7 +196,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
       if (values.ui) {
         projectFields.ui.forEach((uiF: any) => {
-          if (uiF.type == "json") {
+          const uiFieldValue = (values.ui as any)[uiF.dbField];
+          if (uiF.type == "json" && uiFieldValue) {
             (values.ui as any)[uiF.dbField] = JSON.parse(
               (values.ui as any)[uiF.dbField]
             );
@@ -398,15 +399,22 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     if (!projectData && project) {
       const uiFormatting: any = {};
 
-      projectFields.ui.forEach((uiF: any) => {
-        if (uiF.type == "json") {
-          (uiFormatting as any)[uiF.dbField] = JSON.stringify(
-            (project.ui as any)[uiF.dbField]
-          );
-        } else {
-          (uiFormatting as any)[uiF.dbField] = (project.ui as any)[uiF.dbField];
-        }
-      });
+      if (project && project.ui) {
+        projectFields.ui.forEach((uiF: any) => {
+          const fieldValue = (project.ui as any)[uiF.dbField];
+          if (fieldValue) {
+            if (uiF.type == "json") {
+              (uiFormatting as any)[uiF.dbField] = JSON.stringify(
+                (project.ui as any)[uiF.dbField]
+              );
+            } else {
+              (uiFormatting as any)[uiF.dbField] = (project.ui as any)[
+                uiF.dbField
+              ];
+            }
+          }
+        });
+      }
 
       // set the form values directly when project data is available
       form.setFieldsValue({
