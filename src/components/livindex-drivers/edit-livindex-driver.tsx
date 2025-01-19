@@ -137,6 +137,19 @@ export function EditLivIndexDriver({
               }}
             />
           </Form.Item>
+
+          <Form.Item
+            name="defaultDurationThreshold"
+            label="Default Duration Threshold"
+            rules={[
+              {
+                required: false,
+                message: "Please set a default duration threshold!",
+              },
+            ]}
+          >
+            <Input placeholder="10" type="number" />
+          </Form.Item>
         </Form>
       </Modal>
     </>
