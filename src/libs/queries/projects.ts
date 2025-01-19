@@ -5,7 +5,7 @@ import { queryKeys } from "../constants";
 export const getAllProjects = () =>
   queryOptions({
     queryKey: [queryKeys.projects],
-    queryFn: () => api.getAllProjects(),
+    queryFn: () => api.getAllProjects({ source: "admin" }),
   });
 
 export const getProjectById = (projectId: string) =>
