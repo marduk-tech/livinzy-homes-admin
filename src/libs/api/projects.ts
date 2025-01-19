@@ -10,8 +10,8 @@ export const createProject = async (projectData: Partial<Project>) => {
 };
 
 // Get all projects
-export const getAllProjects = async () => {
-  const endpoint = `/projects`;
+export const getAllProjects = async ({ source = "admin" }) => {
+  const endpoint = `/projects?source=${source}`;
   return axiosApiInstance.get(endpoint).then((response) => {
     return response.data as Project[];
   });
@@ -44,11 +44,15 @@ export const deleteProject = async (id: string) => {
   });
 };
 
-
 // Delete a project by ID
-export const generateProjectUI = async (projectId: string, instructions: string) => {
+export const generateProjectUI = async (
+  projectId: string,
+  instructions: string
+) => {
   const endpoint = `/ai/project/ui`;
-  return axiosApiInstance.post(endpoint, {projectId, instructions}).then((response) => {
-    return response.data as any;
-  });
+  return axiosApiInstance
+    .post(endpoint, { projectId, instructions })
+    .then((response) => {
+      return response.data as any;
+    });
 };

@@ -230,14 +230,17 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
-  const sortedProjects = projects?.sort((a, b) => {
-    const nameA = a.metadata.name.toLowerCase();
-    const nameB = b.metadata.name.toLowerCase();
+  const sortedProjects = projects
+    // fix old project doc dosn't have name which causes undefined errors
+    ?.filter((project) => project.metadata?.name)
+    ?.sort((a, b) => {
+      const nameA = a.metadata?.name?.toLowerCase();
+      const nameB = b.metadata?.name?.toLowerCase();
 
-    if (nameA < nameB) return -1;
-    if (nameA > nameB) return 1;
-    return 0;
-  });
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return 0;
+    });
 
   return (
     <>
