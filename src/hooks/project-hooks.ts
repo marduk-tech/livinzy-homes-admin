@@ -403,7 +403,7 @@ export function useProjectForm() {
         fieldDescription: "Details relevant to launch timeline of the project.",
       },
       {
-        dbField: "committedEndData",
+        dbField: "committedEndDate",
         fieldDisplayName: "Completion Status",
         fieldDescription: "Details regarding committed timeline.",
       },

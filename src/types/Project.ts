@@ -40,6 +40,11 @@ export interface IMetadata {
     | "villament"
     | "apartment"
     | "penthouse";
+  livinzyArea?: {
+    key: string;
+    aliases?: string[];
+    subArea?: string;
+  };
 }
 
 export interface ILand {
