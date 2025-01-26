@@ -32,14 +32,15 @@ export interface IMetadata {
   description: string;
   summary: string;
   contactNumber?: string;
-  homeType:
+  homeType: Array<
     | "farmland"
     | "plot"
     | "villa"
     | "rowhouse"
     | "villament"
     | "apartment"
-    | "penthouse";
+    | "penthouse"
+  >;
   livinzyArea?: {
     key: string;
     aliases?: string[];

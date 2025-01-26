@@ -190,8 +190,7 @@ export function useProjectForm() {
         dbField: "homeType",
         fieldDisplayName: "Home Type",
         fieldDescription: "Provide relevant details",
-        type: "single_select",
-
+        type: "multi_select",
         options: [
           { label: "Farmland", value: "farmland" },
           { label: "Plot", value: "plot" },
