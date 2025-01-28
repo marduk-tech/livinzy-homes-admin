@@ -218,6 +218,8 @@ export function useProjectForm() {
           { label: "Near Dodaballapura", value: "sub-area-3" },
           { label: "Near Airport", value: "sub-area-4" },
           { label: "Near Nandi Hills", value: "sub-area-5" },
+          { label: "Near Hebbal", value: "sub-area-6" },
+          { label: "Remote North", value: "sub-area-7" },
         ],
       },
     ],
