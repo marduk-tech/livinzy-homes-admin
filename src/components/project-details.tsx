@@ -121,12 +121,17 @@ const RenderFields: React.FC<{
                   <Select
                     placeholder={fieldDescription}
                     options={options}
-                    mode={type == "multi_select" ? "tags" : undefined}
-                    defaultValue={
-                      options && options.length > 0 && type == "single_select"
-                        ? undefined
-                        : undefined
-                    }
+                    mode={type === "multi_select" ? "tags" : undefined}
+                    allowClear
+                    showSearch={type !== "multi_select"}
+                    onChange={(value) => {
+                      form.setFieldValue(
+                        Array.isArray(dbField)
+                          ? [category, ...dbField]
+                          : [category, dbField],
+                        value
+                      );
+                    }}
                   />
                 ) : (
                   <TextArea rows={5} placeholder={fieldDescription} />
@@ -207,6 +212,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
       if (values.metadata.contactNumber) {
         values.metadata.contactNumber = values.metadata.contactNumber.join(",");
+      }
+
+      // format hometype
+      if (
+        values.metadata.homeType &&
+        !Array.isArray(values.metadata.homeType)
+      ) {
+        values.metadata.homeType = [values.metadata.homeType];
       }
 
       if (projectId) {
@@ -417,10 +430,19 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       }
 
       // set the form values directly when project data is available
-      form.setFieldsValue({
+      const formValues = {
         ...project,
         ui: uiFormatting,
-      });
+        metadata: {
+          ...project.metadata,
+          homeType: Array.isArray(project.metadata.homeType)
+            ? project.metadata.homeType
+            : [],
+        },
+      };
+
+      form.setFieldsValue(formValues);
+      setProjectData(project);
 
       const initialPreviewIndex = project.media.findIndex(
         (item: IMedia) => item.isPreview

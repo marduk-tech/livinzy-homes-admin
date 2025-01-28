@@ -200,7 +200,7 @@ export const ProjectsList: React.FC = () => {
       width: "200px",
       responsive: ["lg", "xl"],
       sorter: (a, b) =>
-        (a.metadata.homeType || "").localeCompare(b.metadata.homeType || ""),
+        (a.metadata.homeType || "").toString().localeCompare(b.metadata.homeType.toString() || ""),
       sortDirections: ["ascend", "descend"],
 
       filters: [
@@ -214,7 +214,7 @@ export const ProjectsList: React.FC = () => {
         { text: "Villament", value: "villament" },
       ],
 
-      onFilter: (value, record) => record.metadata.homeType === value,
+      onFilter: (value, record) => record.metadata.homeType.toString() === value,
     },
 
     {
