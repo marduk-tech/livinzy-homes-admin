@@ -367,7 +367,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
     const filteredFields = Object.fromEntries(
       Object.entries(projectFields).filter(([key]) => {
-        if (homeType === "farmland") {
+        if (homeType?.includes("farmland")) {
           return key !== "unitDetails";
         } else {
           return key !== "plots";
