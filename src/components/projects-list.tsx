@@ -147,21 +147,7 @@ export const ProjectsList: React.FC = () => {
       },
     },
 
-    {
-      title: "Good To Have",
-      dataIndex: "_id",
-      key: "goodToHave",
-      width: "200px",
-      responsive: ["lg", "xl"],
-      render: (_id: any, record: any) => {
-        return (
-          <Progress
-            percent={calculateProgress(projectFields, record, false)}
-            size="small"
-          />
-        );
-      },
-    },
+
 
     {
       title: "Media",
