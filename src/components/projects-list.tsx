@@ -76,7 +76,6 @@ export const ProjectsList: React.FC = () => {
       key: "name",
       sorter: (a, b) => a.metadata.name.localeCompare(b.metadata.name),
       sortDirections: ["descend"],
-      defaultSortOrder: "ascend",
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
     },
@@ -124,6 +123,7 @@ export const ProjectsList: React.FC = () => {
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       key: "updatedAt",
+      defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
 
