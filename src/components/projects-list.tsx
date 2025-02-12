@@ -147,8 +147,6 @@ export const ProjectsList: React.FC = () => {
       },
     },
 
-
-
     {
       title: "Media",
       dataIndex: "media",
@@ -180,15 +178,29 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
-      title: "Home Type",
+      title: "Home Types",
       dataIndex: ["metadata", "homeType"],
       key: "homeType",
       width: "200px",
       responsive: ["lg", "xl"],
-      sorter: (a, b) =>
-        (a.metadata.homeType || "").toString().localeCompare(b.metadata.homeType.toString() || ""),
+      sorter: (a, b) => {
+        const aTypes = a.metadata.homeType || [];
+        const bTypes = b.metadata.homeType || [];
+        return aTypes.join(",").localeCompare(bTypes.join(","));
+      },
       sortDirections: ["ascend", "descend"],
-
+      render: (homeType: string[]) => {
+        if (!homeType || !homeType.length) return "-";
+        return (
+          <Flex gap={4} wrap="wrap">
+            {homeType.map((type, index) => (
+              <Tag key={index}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </Tag>
+            ))}
+          </Flex>
+        );
+      },
       filters: [
         { text: "Apartment", value: "apartment" },
         { text: "Farmland", value: "farmland" },
@@ -199,8 +211,19 @@ export const ProjectsList: React.FC = () => {
         { text: "Villa", value: "villa" },
         { text: "Villament", value: "villament" },
       ],
-
-      onFilter: (value, record) => record.metadata.homeType.toString() === value,
+      onFilter: (value, record) => {
+        const types = record.metadata.homeType || [];
+        return types.includes(
+          value as
+            | "farmland"
+            | "plot"
+            | "villa"
+            | "rowhouse"
+            | "villament"
+            | "apartment"
+            | "penthouse"
+        );
+      },
     },
 
     {
