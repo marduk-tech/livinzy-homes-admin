@@ -148,6 +148,34 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
+      title: "Avg Sqft Rate",
+      dataIndex: ["ui", "costingDetails"],
+      key: "averageSqftRate",
+      width: "150px",
+      responsive: ["lg", "xl"],
+
+      sorter: (a: any, b: any) => {
+        const extractRate = (details: any) => {
+          if (!details) return 0;
+          return Number(details?.averageSqftRate) || 0;
+        };
+        const aRate = extractRate(a.ui?.costingDetails);
+
+        const bRate = extractRate(b.ui?.costingDetails);
+        return aRate - bRate;
+      },
+
+      render: (details: any) => {
+        if (!details) {
+          return "-";
+        }
+
+        const rate = details?.averageSqftRate;
+
+        return rate ? `₹${Number(rate).toLocaleString()}/sqft` : "-";
+      },
+    },
+    {
       title: "Media",
       dataIndex: "media",
       key: "media",
