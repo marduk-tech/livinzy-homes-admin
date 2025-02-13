@@ -155,24 +155,29 @@ export const ProjectsList: React.FC = () => {
       responsive: ["lg", "xl"],
 
       sorter: (a: any, b: any) => {
-        const extractRate = (details: any) => {
-          if (!details) return 0;
-          return Number(details?.averageSqftRate) || 0;
+        const calculateRate = (details: any) => {
+          if (!details?.singleUnitCost || !details?.singleUnitSize) return 0;
+          const cost = Number(details.singleUnitCost);
+          const size = Number(details.singleUnitSize);
+          if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
+          return Math.round(cost / size);
         };
-        const aRate = extractRate(a.ui?.costingDetails);
-
-        const bRate = extractRate(b.ui?.costingDetails);
+        const aRate = calculateRate(a.ui?.costingDetails);
+        const bRate = calculateRate(b.ui?.costingDetails);
         return aRate - bRate;
       },
 
       render: (details: any) => {
-        if (!details) {
+        if (!details?.singleUnitCost || !details?.singleUnitSize) {
           return "-";
         }
-
-        const rate = details?.averageSqftRate;
-
-        return rate ? `₹${Number(rate).toLocaleString()}/sqft` : "-";
+        const cost = Number(details.singleUnitCost);
+        const size = Number(details.singleUnitSize);
+        if (isNaN(cost) || isNaN(size) || size <= 0) {
+          return "-";
+        }
+        const rate = Math.round(cost / size);
+        return `₹${rate.toLocaleString()}/sqft`;
       },
     },
     {
