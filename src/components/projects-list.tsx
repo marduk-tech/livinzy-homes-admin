@@ -76,7 +76,6 @@ export const ProjectsList: React.FC = () => {
       key: "name",
       sorter: (a, b) => a.metadata.name.localeCompare(b.metadata.name),
       sortDirections: ["descend"],
-      defaultSortOrder: "ascend",
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
     },
@@ -124,6 +123,7 @@ export const ProjectsList: React.FC = () => {
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       key: "updatedAt",
+      defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
 
@@ -148,21 +148,38 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
-      title: "Good To Have",
-      dataIndex: "_id",
-      key: "goodToHave",
-      width: "200px",
+      title: "Avg Sqft Rate",
+      dataIndex: ["ui", "costingDetails"],
+      key: "averageSqftRate",
+      width: "150px",
       responsive: ["lg", "xl"],
-      render: (_id: any, record: any) => {
-        return (
-          <Progress
-            percent={calculateProgress(projectFields, record, false)}
-            size="small"
-          />
-        );
+
+      sorter: (a: any, b: any) => {
+        const calculateRate = (details: any) => {
+          if (!details?.singleUnitCost || !details?.singleUnitSize) return 0;
+          const cost = Number(details.singleUnitCost);
+          const size = Number(details.singleUnitSize);
+          if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
+          return Math.round(cost / size);
+        };
+        const aRate = calculateRate(a.ui?.costingDetails);
+        const bRate = calculateRate(b.ui?.costingDetails);
+        return aRate - bRate;
+      },
+
+      render: (details: any) => {
+        if (!details?.singleUnitCost || !details?.singleUnitSize) {
+          return "-";
+        }
+        const cost = Number(details.singleUnitCost);
+        const size = Number(details.singleUnitSize);
+        if (isNaN(cost) || isNaN(size) || size <= 0) {
+          return "-";
+        }
+        const rate = Math.round(cost / size);
+        return `₹${rate.toLocaleString()}/sqft`;
       },
     },
-
     {
       title: "Media",
       dataIndex: "media",
@@ -194,15 +211,29 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
-      title: "Home Type",
+      title: "Home Types",
       dataIndex: ["metadata", "homeType"],
       key: "homeType",
       width: "200px",
       responsive: ["lg", "xl"],
-      sorter: (a, b) =>
-        (a.metadata.homeType || "").toString().localeCompare(b.metadata.homeType.toString() || ""),
+      sorter: (a, b) => {
+        const aTypes = a.metadata.homeType || [];
+        const bTypes = b.metadata.homeType || [];
+        return aTypes.join(",").localeCompare(bTypes.join(","));
+      },
       sortDirections: ["ascend", "descend"],
-
+      render: (homeType: string[]) => {
+        if (!homeType || !homeType.length) return "-";
+        return (
+          <Flex gap={4} wrap="wrap">
+            {homeType.map((type, index) => (
+              <Tag key={index}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </Tag>
+            ))}
+          </Flex>
+        );
+      },
       filters: [
         { text: "Apartment", value: "apartment" },
         { text: "Farmland", value: "farmland" },
@@ -213,8 +244,19 @@ export const ProjectsList: React.FC = () => {
         { text: "Villa", value: "villa" },
         { text: "Villament", value: "villament" },
       ],
-
-      onFilter: (value, record) => record.metadata.homeType.toString() === value,
+      onFilter: (value, record) => {
+        const types = record.metadata.homeType || [];
+        return types.includes(
+          value as
+            | "farmland"
+            | "plot"
+            | "villa"
+            | "rowhouse"
+            | "villament"
+            | "apartment"
+            | "penthouse"
+        );
+      },
     },
 
     {

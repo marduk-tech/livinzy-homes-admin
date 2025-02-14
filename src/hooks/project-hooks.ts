@@ -45,10 +45,21 @@ export function useCreateProjectMutation() {
       return api.createProject(projectData);
     },
 
-    onSuccess: () => {
+    onSuccess: (project) => {
       notification.success({
         message: `Project created successfully!`,
       });
+
+      // Generate UI in background after project creation
+      api
+        .generateProjectUI(project._id, "")
+        .then((response) => {
+          if (response.data) {
+            // Update project with generated UI
+            api.updateProject(project._id, { ui: response.data });
+          }
+        })
+        .catch(console.error);
     },
 
     onError: (error: AxiosError<any>) => {
@@ -113,6 +124,17 @@ export function useUpdateProjectMutation({
           message: `Project updated successfully!`,
         });
       }
+
+      // Generate UI in background after project update
+      api
+        .generateProjectUI(projectId, "")
+        .then((response) => {
+          if (response.data) {
+            // Update project with generated UI
+            api.updateProject(projectId, { ui: response.data });
+          }
+        })
+        .catch(console.error);
     },
 
     onError: (error: AxiosError<any>) => {
