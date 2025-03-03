@@ -20,6 +20,7 @@ import {
   Typography,
 } from "antd";
 import React, { useState } from "react";
+import { COLORS } from "../theme/colors";
 
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
@@ -78,6 +79,22 @@ export const ProjectsList: React.FC = () => {
       sortDirections: ["descend"],
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
+      render: (name: string, record: Project) => (
+        <Flex align="center" gap={8}>
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor:
+                record.metadata.status === "active"
+                  ? COLORS.greenIdentifier
+                  : COLORS.borderColorDark,
+            }}
+          />
+          <span>{name}</span>
+        </Flex>
+      ),
     },
 
     {

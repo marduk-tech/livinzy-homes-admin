@@ -46,6 +46,7 @@ export interface IMetadata {
     | "apartment"
     | "penthouse"
   >;
+  status: "new" | "active" | "disabled";
   livinzyArea?: {
     key: string;
     aliases?: string[];
