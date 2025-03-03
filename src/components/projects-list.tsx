@@ -203,6 +203,32 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
+      title: "Location",
+      dataIndex: ["metadata", "location"],
+      key: "location",
+      width: "150px",
+      responsive: ["lg", "xl"],
+      render: (location: any) => {
+        if (!location?.lat || !location?.lng) return "-";
+
+        const { lat, lng } = location;
+        return (
+          <Tag
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              window.open(
+                `https://www.google.com/maps?q=${lat},${lng}`,
+                "_blank"
+              )
+            }
+          >
+            {lat.toFixed(6)}, {lng.toFixed(6)}
+          </Tag>
+        );
+      },
+    },
+
+    {
       title: "",
       align: "right",
       dataIndex: "_id",
