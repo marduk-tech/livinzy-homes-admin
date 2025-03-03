@@ -516,22 +516,22 @@ export function useProjectForm() {
         fieldDescription: "Provide relevant details.",
       },
     ],
-    clickToAction: [
-      {
-        dbField: "incentives",
-        fieldDisplayName: "Incentives",
-        fieldDescription:
-          "Just a comma separate list of incentives that will be provided on call/visit",
-      },
+    // clickToAction: [
+    //   {
+    //     dbField: "incentives",
+    //     fieldDisplayName: "Incentives",
+    //     fieldDescription:
+    //       "Just a comma separate list of incentives that will be provided on call/visit",
+    //   },
 
-      {
-        dbField: "communicationPreference",
-        fieldDisplayName: "Communication Preference",
-        fieldDescription: "Provide relevant details.",
-        type: "multi_select",
-        options: CommunicationPreference,
-      },
-    ],
+    //   {
+    //     dbField: "communicationPreference",
+    //     fieldDisplayName: "Communication Preference",
+    //     fieldDescription: "Provide relevant details.",
+    //     type: "multi_select",
+    //     options: CommunicationPreference,
+    //   },
+    // ],
     team: [
       {
         dbField: "partners",

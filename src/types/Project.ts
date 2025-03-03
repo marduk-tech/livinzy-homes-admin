@@ -222,7 +222,7 @@ export interface ProjectStructure {
   status: ProjectField[];
   basic_infra: ProjectField[];
   amenities: ProjectField[];
-  clickToAction: ProjectField[];
+  // clickToAction: ProjectField[];
   team: ProjectField[];
   livIndex: ProjectField[];
 }
