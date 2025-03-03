@@ -79,44 +79,7 @@ export const ProjectsList: React.FC = () => {
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
     },
-    {
-      title: "Livinzy Area",
-      dataIndex: ["metadata", "livinzyArea"],
-      key: "livinzyArea",
-      sorter: (a, b) => {
-        const getAreaString = (area: any) => {
-          if (!area) return "";
-          if (!area.key && !area.subArea) return "";
-          if (!area.key) return area.subArea;
-          if (!area.subArea) return area.key;
-          return `${area.key} - ${area.subArea}`;
-        };
 
-        const areaA = getAreaString(a.metadata.livinzyArea);
-        const areaB = getAreaString(b.metadata.livinzyArea);
-        return areaA.localeCompare(areaB);
-      },
-      render: (livinzyArea: any) => {
-        if (!livinzyArea) return "-";
-        if (!livinzyArea.key && !livinzyArea.subArea) return "-";
-        if (!livinzyArea.key) return livinzyArea.subArea;
-        if (!livinzyArea.subArea) return livinzyArea.key;
-        return `${livinzyArea.key} - ${livinzyArea.subArea}`;
-      },
-      ...ColumnSearch(["metadata", "livinzyArea"]),
-      onFilter: (value: boolean | React.Key, record: Project) => {
-        const area = record.metadata.livinzyArea;
-        if (!area) return false;
-        if (!area.key && !area.subArea) return false;
-
-        let areaString: string;
-        if (!area.key) areaString = area.subArea!;
-        else if (!area.subArea) areaString = area.key;
-        else areaString = `${area.key} - ${area.subArea}`;
-
-        return areaString.toLowerCase().includes(String(value).toLowerCase());
-      },
-    },
     {
       title: "Date Updated",
       dataIndex: "updatedAt",
@@ -125,26 +88,6 @@ export const ProjectsList: React.FC = () => {
       key: "updatedAt",
       defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-
-    {
-      title: "Must Have",
-      dataIndex: "_id",
-      key: "mustHave",
-      width: "200px",
-      defaultSortOrder: "descend",
-      responsive: ["lg", "xl"],
-      sorter: (a: any, b: any) =>
-        calculateProgress(projectFields, a, true) -
-        calculateProgress(projectFields, b, true),
-      render: (_id: any, record: any) => {
-        return (
-          <Progress
-            percent={calculateProgress(projectFields, record, true)}
-            size="small"
-          />
-        );
-      },
     },
 
     {
