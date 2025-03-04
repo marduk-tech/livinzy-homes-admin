@@ -20,6 +20,7 @@ import {
   Typography,
 } from "antd";
 import React, { useState } from "react";
+import { COLORS } from "../theme/colors";
 
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
@@ -78,45 +79,24 @@ export const ProjectsList: React.FC = () => {
       sortDirections: ["descend"],
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
+      render: (name: string, record: Project) => (
+        <Flex align="center" gap={8}>
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor:
+                record.metadata.status === "active"
+                  ? COLORS.greenIdentifier
+                  : COLORS.borderColorDark,
+            }}
+          />
+          <span>{name}</span>
+        </Flex>
+      ),
     },
-    {
-      title: "Livinzy Area",
-      dataIndex: ["metadata", "livinzyArea"],
-      key: "livinzyArea",
-      sorter: (a, b) => {
-        const getAreaString = (area: any) => {
-          if (!area) return "";
-          if (!area.key && !area.subArea) return "";
-          if (!area.key) return area.subArea;
-          if (!area.subArea) return area.key;
-          return `${area.key} - ${area.subArea}`;
-        };
 
-        const areaA = getAreaString(a.metadata.livinzyArea);
-        const areaB = getAreaString(b.metadata.livinzyArea);
-        return areaA.localeCompare(areaB);
-      },
-      render: (livinzyArea: any) => {
-        if (!livinzyArea) return "-";
-        if (!livinzyArea.key && !livinzyArea.subArea) return "-";
-        if (!livinzyArea.key) return livinzyArea.subArea;
-        if (!livinzyArea.subArea) return livinzyArea.key;
-        return `${livinzyArea.key} - ${livinzyArea.subArea}`;
-      },
-      ...ColumnSearch(["metadata", "livinzyArea"]),
-      onFilter: (value: boolean | React.Key, record: Project) => {
-        const area = record.metadata.livinzyArea;
-        if (!area) return false;
-        if (!area.key && !area.subArea) return false;
-
-        let areaString: string;
-        if (!area.key) areaString = area.subArea!;
-        else if (!area.subArea) areaString = area.key;
-        else areaString = `${area.key} - ${area.subArea}`;
-
-        return areaString.toLowerCase().includes(String(value).toLowerCase());
-      },
-    },
     {
       title: "Date Updated",
       dataIndex: "updatedAt",
@@ -125,26 +105,6 @@ export const ProjectsList: React.FC = () => {
       key: "updatedAt",
       defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-
-    {
-      title: "Must Have",
-      dataIndex: "_id",
-      key: "mustHave",
-      width: "200px",
-      defaultSortOrder: "descend",
-      responsive: ["lg", "xl"],
-      sorter: (a: any, b: any) =>
-        calculateProgress(projectFields, a, true) -
-        calculateProgress(projectFields, b, true),
-      render: (_id: any, record: any) => {
-        return (
-          <Progress
-            percent={calculateProgress(projectFields, record, true)}
-            size="small"
-          />
-        );
-      },
     },
 
     {
@@ -255,6 +215,32 @@ export const ProjectsList: React.FC = () => {
             | "villament"
             | "apartment"
             | "penthouse"
+        );
+      },
+    },
+
+    {
+      title: "Location",
+      dataIndex: ["metadata", "location"],
+      key: "location",
+      width: "150px",
+      responsive: ["lg", "xl"],
+      render: (location: any) => {
+        if (!location?.lat || !location?.lng) return "-";
+
+        const { lat, lng } = location;
+        return (
+          <Tag
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              window.open(
+                `https://www.google.com/maps?q=${lat},${lng}`,
+                "_blank"
+              )
+            }
+          >
+            {lat.toFixed(6)}, {lng.toFixed(6)}
+          </Tag>
         );
       },
     },

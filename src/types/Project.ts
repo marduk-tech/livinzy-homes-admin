@@ -26,7 +26,12 @@ export interface IMedia {
 export interface IMetadata {
   _id: string;
   name: string;
-  location: string;
+  location: {
+    _id: string;
+    mapLink: string;
+    lat: number;
+    lng: number;
+  };
   website: string;
   oneLiner?: string;
   description: string;
@@ -41,6 +46,7 @@ export interface IMetadata {
     | "apartment"
     | "penthouse"
   >;
+  status: "new" | "active" | "disabled";
   livinzyArea?: {
     key: string;
     aliases?: string[];
@@ -222,7 +228,7 @@ export interface ProjectStructure {
   status: ProjectField[];
   basic_infra: ProjectField[];
   amenities: ProjectField[];
-  clickToAction: ProjectField[];
+  // clickToAction: ProjectField[];
   team: ProjectField[];
   livIndex: ProjectField[];
 }
