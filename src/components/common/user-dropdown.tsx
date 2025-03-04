@@ -36,7 +36,7 @@ export function UserDropDown() {
   const navLinks = [
     { to: "/chroma-docs", label: "Chroma Docs" },
     { to: "/global-knowledge", label: "Global Knowledge" },
-    { to: "/livindex-places", label: "LivIndex Places" },
+    { to: "/livindex-places", label: "Drivers" },
     { to: "/livindex-scores", label: "Livindex Scores" },
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
     { to: "/ask", label: "Ask Liv", icon: undefined },
