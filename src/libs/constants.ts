@@ -8,8 +8,8 @@ export const queryKeys = {
   getAllPlaces: "getAllPlaces",
   getAllDrivers: "getAllDrivers",
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
-
   getAllChromaDocs: "getAllChromaDocs",
+  getAllCorridors: "getAllCorridors",
 };
 export const LivIndexDrivers = [
   "road",
