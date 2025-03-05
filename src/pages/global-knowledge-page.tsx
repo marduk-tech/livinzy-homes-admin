@@ -5,7 +5,7 @@ import { GlobalKnowladgeList } from "../components/global-knowledge/global-knowl
 export function GlobalKnowledgePage() {
   return (
     <>
-      <Typography.Title level={5}>Global Knowledge</Typography.Title>
+      <Typography.Title level={5}>Encyclopedia</Typography.Title>
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
           <CreateGlobalKnowladgeForm />

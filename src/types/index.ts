@@ -25,6 +25,11 @@ export interface ILivIndexPlaces {
 export interface IGlobalKnowledge {
   _id: string;
   content: string;
+  sources?: string;
+  corridors?: Array<{
+    _id: string;
+    name: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
