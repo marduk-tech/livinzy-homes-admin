@@ -6,6 +6,7 @@ import {
   Row,
   Table,
   TableColumnType,
+  Tabs,
   Typography,
 } from "antd";
 import {
@@ -16,6 +17,7 @@ import { useDevice } from "../../hooks/use-device";
 import { ILivIndexPlaces } from "../../types";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
+import { CorridorsList } from "../corridors/corridors-list";
 import { EditLivIndexPlace } from "./edit-livindex-place";
 import { EditPlaceDetails } from "./edit-place-details";
 
@@ -86,23 +88,29 @@ export function LivindexList() {
   if (isError) return <div>Error fetching data</div>;
 
   return (
-    <>
-      <Row
-        justify="space-between"
-        align="middle"
-        style={{ marginBottom: 20, padding: "0 10px" }}
-      >
-        <Col>
-          <EditLivIndexPlace />
-        </Col>
-      </Row>
+    <Tabs defaultActiveKey="places">
+      <Tabs.TabPane tab="Places" key="places">
+        <Row
+          justify="space-between"
+          align="middle"
+          style={{ marginBottom: 20, padding: "0 10px" }}
+        >
+          <Col>
+            <EditLivIndexPlace />
+          </Col>
+        </Row>
 
-      <Table
-        dataSource={data}
-        columns={columns}
-        loading={isLoading}
-        rowKey="_id"
-      />
-    </>
+        <Table
+          dataSource={data}
+          columns={columns}
+          loading={isLoading}
+          rowKey="_id"
+        />
+      </Tabs.TabPane>
+
+      <Tabs.TabPane tab="Corridors" key="corridors">
+        <CorridorsList />
+      </Tabs.TabPane>
+    </Tabs>
   );
 }
