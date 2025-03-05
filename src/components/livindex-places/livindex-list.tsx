@@ -88,29 +88,23 @@ export function LivindexList() {
   if (isError) return <div>Error fetching data</div>;
 
   return (
-    <Tabs defaultActiveKey="places">
-      <Tabs.TabPane tab="Places" key="places">
-        <Row
-          justify="space-between"
-          align="middle"
-          style={{ marginBottom: 20, padding: "0 10px" }}
-        >
-          <Col>
-            <EditLivIndexPlace />
-          </Col>
-        </Row>
+    <>
+      <Row
+        justify="space-between"
+        align="middle"
+        style={{ marginBottom: 20, padding: "0 10px" }}
+      >
+        <Col>
+          <EditLivIndexPlace />
+        </Col>
+      </Row>
 
-        <Table
-          dataSource={data}
-          columns={columns}
-          loading={isLoading}
-          rowKey="_id"
-        />
-      </Tabs.TabPane>
-
-      <Tabs.TabPane tab="Corridors" key="corridors">
-        <CorridorsList />
-      </Tabs.TabPane>
-    </Tabs>
+      <Table
+        dataSource={data}
+        columns={columns}
+        loading={isLoading}
+        rowKey="_id"
+      />
+    </>
   );
 }
