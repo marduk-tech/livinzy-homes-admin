@@ -52,6 +52,10 @@ export interface IMetadata {
     aliases?: string[];
     subArea?: string;
   };
+  corridors?: {
+    corridorId: string;
+    haversineDistance: number;
+  }
 }
 
 export interface ILand {
