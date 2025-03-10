@@ -120,5 +120,5 @@ export const CommunicationPreference = [
   },
 ];
 
-export const CHROMA_COLLECTION = "livinzy-homes-dev";
-export const GLOBAL_CHROMA_COLLECTION = "global-livinzy-homes-dev";
+export const PROJECTS_CHROMA_COLLECTION = "livinzy-homes-projects";
+export const AREA_CHROMA_COLLECTION = "livinzy-homes-area";

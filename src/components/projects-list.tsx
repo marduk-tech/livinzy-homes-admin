@@ -35,11 +35,13 @@ import { IMedia, Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import { JsonProjectImport } from "./json-project-import";
+import { useFetchCorridors } from "../hooks/corridors-hooks";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
+  const { data: corridors, isLoading: isCorridorsDataLoading } = useFetchCorridors();
 
   const { data: projects, isLoading: projectIsLoading } = useQuery(
     queries.getAllProjects()
@@ -105,6 +107,36 @@ export const ProjectsList: React.FC = () => {
       key: "updatedAt",
       defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+
+    {
+      title: "Corridors",
+      dataIndex: ["metadata", "corridors"],
+      render: (projectCorridors: any) => {
+        if (!projectCorridors || !projectCorridors.length) {
+          return "-";
+        }
+        return <Flex style={{width: 150, flexWrap: "wrap"}} gap={8}>{projectCorridors.map((c: any) => {
+          const corridorObj = corridors!.find(corr => corr._id == c.corridorId);
+          if (corridorObj) {
+            return <Tag>{corridorObj.name}</Tag>
+          }
+        })}</Flex>;
+      },
+      filters: 
+       corridors?.map(c => {
+        return {
+          text: c.name,
+          value: c._id
+        }
+       })
+      ,
+      onFilter: (value, record) => {
+        const corrs = ((record.metadata.corridors || []) as any).map((c: any) => c.corridorId);
+        return corrs.includes(
+          value 
+        );
+      },
     },
 
     {
@@ -331,7 +363,7 @@ export const ProjectsList: React.FC = () => {
         dataSource={sortedProjects}
         columns={columns}
         rowKey="_id"
-        loading={projectIsLoading}
+        loading={projectIsLoading || isCorridorsDataLoading}
         pagination={{
           current: currentPage,
           onChange: (page) => {
