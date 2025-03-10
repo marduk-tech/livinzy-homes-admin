@@ -36,12 +36,14 @@ import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import { JsonProjectImport } from "./json-project-import";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
+import DynamicReactIcon from "./common/dynamic-react-icon";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
-  const { data: corridors, isLoading: isCorridorsDataLoading } = useFetchCorridors();
+  const { data: corridors, isLoading: isCorridorsDataLoading } =
+    useFetchCorridors();
 
   const { data: projects, isLoading: projectIsLoading } = useQuery(
     queries.getAllProjects()
@@ -116,26 +118,30 @@ export const ProjectsList: React.FC = () => {
         if (!projectCorridors || !projectCorridors.length) {
           return "-";
         }
-        return <Flex style={{width: 150, flexWrap: "wrap"}} gap={8}>{projectCorridors.map((c: any) => {
-          const corridorObj = corridors!.find(corr => corr._id == c.corridorId);
-          if (corridorObj) {
-            return <Tag>{corridorObj.name}</Tag>
-          }
-        })}</Flex>;
+        return (
+          <Flex style={{ width: 150, flexWrap: "wrap" }} gap={8}>
+            {projectCorridors.map((c: any) => {
+              const corridorObj = corridors!.find(
+                (corr) => corr._id == c.corridorId
+              );
+              if (corridorObj) {
+                return <Tag>{corridorObj.name}</Tag>;
+              }
+            })}
+          </Flex>
+        );
       },
-      filters: 
-       corridors?.map(c => {
+      filters: corridors?.map((c) => {
         return {
           text: c.name,
-          value: c._id
-        }
-       })
-      ,
+          value: c._id,
+        };
+      }),
       onFilter: (value, record) => {
-        const corrs = ((record.metadata.corridors || []) as any).map((c: any) => c.corridorId);
-        return corrs.includes(
-          value 
+        const corrs = ((record.metadata.corridors || []) as any).map(
+          (c: any) => c.corridorId
         );
+        return corrs.includes(value);
       },
     },
 
@@ -257,12 +263,23 @@ export const ProjectsList: React.FC = () => {
       key: "location",
       width: "150px",
       responsive: ["lg", "xl"],
+      sorter: (a, b) => {
+        if (
+          b.metadata &&
+          b.metadata.location &&
+         !b.metadata.location.lat
+        ) {
+          return -1;
+        } else {
+          return 0;
+        }
+      },
       render: (location: any) => {
         if (!location?.lat || !location?.lng) return "-";
 
         const { lat, lng } = location;
         return (
-          <Tag
+          <Flex
             style={{ cursor: "pointer" }}
             onClick={() =>
               window.open(
@@ -271,8 +288,12 @@ export const ProjectsList: React.FC = () => {
               )
             }
           >
-            {lat.toFixed(6)}, {lng.toFixed(6)}
-          </Tag>
+            <DynamicReactIcon
+              color={COLORS.textColorDark}
+              iconName="IoNavigateCircleSharp"
+              iconSet="io5"
+            ></DynamicReactIcon>
+          </Flex>
         );
       },
     },
