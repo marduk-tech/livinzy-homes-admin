@@ -102,16 +102,6 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
-      title: "Date Updated",
-      dataIndex: "updatedAt",
-      sorter: (a, b) =>
-        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
-      key: "updatedAt",
-      defaultSortOrder: "descend",
-      render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-
-    {
       title: "Corridors",
       dataIndex: ["metadata", "corridors"],
       render: (projectCorridors: any) => {
