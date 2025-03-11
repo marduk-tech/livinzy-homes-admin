@@ -24,6 +24,7 @@ import { COLORS } from "../theme/colors";
 
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
+import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useDeleteProjectMutation,
   useProjectForm,
@@ -34,9 +35,8 @@ import { calculateProgress } from "../libs/utils";
 import { IMedia, Project, ProjectStructure } from "../types/Project";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
-import { JsonProjectImport } from "./json-project-import";
-import { useFetchCorridors } from "../hooks/corridors-hooks";
 import DynamicReactIcon from "./common/dynamic-react-icon";
+import { JsonProjectImport } from "./json-project-import";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
@@ -185,20 +185,36 @@ export const ProjectsList: React.FC = () => {
       width: "200px",
       responsive: ["lg", "xl"],
 
-      render: (record: any) => {
-        const imagesCount = record.filter(
-          (media: IMedia) => media.type === "image"
-        ).length;
+      render: (record: IMedia[]) => {
+        const mediaByTag: {
+          [key: string]: { images: number; videos: number };
+        } = {};
 
-        const videosCount = record.filter(
-          (media: IMedia) => media.type === "video"
-        ).length;
+        record.forEach((media) => {
+          const tags =
+            media.type === "image" ? media.image?.tags : media.video?.tags;
+          tags?.forEach((tag: string) => {
+            if (!mediaByTag[tag]) {
+              mediaByTag[tag] = { images: 0, videos: 0 };
+            }
+            if (media.type === "image") {
+              mediaByTag[tag].images++;
+            } else if (media.type === "video") {
+              mediaByTag[tag].videos++;
+            }
+          });
+        });
 
         return (
-          <>
-            <Tag>Images: {imagesCount} </Tag>
-            <Tag>Videos: {videosCount} </Tag>
-          </>
+          <Flex style={{ maxWidth: 200 }} wrap="wrap" gap={4}>
+            {Object.entries(mediaByTag)
+              .filter(([_, counts]) => counts.images > 0 || counts.videos > 0)
+              .map(([tag, counts]) => (
+                <Tag key={tag}>
+                  {tag} ({counts.images + counts.videos})
+                </Tag>
+              ))}
+          </Flex>
         );
       },
       sorter: (a: any, b: any) => {
@@ -264,11 +280,7 @@ export const ProjectsList: React.FC = () => {
       width: "150px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        if (
-          b.metadata &&
-          b.metadata.location &&
-         !b.metadata.location.lat
-        ) {
+        if (b.metadata && b.metadata.location && !b.metadata.location.lat) {
           return -1;
         } else {
           return 0;
