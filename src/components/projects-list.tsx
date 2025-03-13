@@ -100,7 +100,21 @@ export const ProjectsList: React.FC = () => {
         </Flex>
       ),
     },
-
+    {
+      title: "RERA Number",
+      dataIndex: ["metadata", "reraNumber"],
+      key: "reraNumber",
+      width: "150px",
+      responsive: ["lg", "xl"],
+      sorter: (a, b) => {
+        const aRera = a.metadata.reraNumber || "";
+        const bRera = b.metadata.reraNumber || "";
+        return aRera.localeCompare(bRera);
+      },
+      sortDirections: ["ascend", "descend"],
+      ...ColumnSearch(["metadata", "reraNumber"]),
+      render: (reraNumber: string) => reraNumber || "-",
+    },
     {
       title: "Corridors",
       dataIndex: ["metadata", "corridors"],

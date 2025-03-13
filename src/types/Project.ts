@@ -47,6 +47,7 @@ export interface IMetadata {
     | "penthouse"
   >;
   status: "new" | "active" | "disabled";
+  reraNumber?: string;
   livinzyArea?: {
     key: string;
     aliases?: string[];
@@ -55,7 +56,7 @@ export interface IMetadata {
   corridors?: {
     corridorId: string;
     haversineDistance: number;
-  }
+  };
 }
 
 export interface ILand {
