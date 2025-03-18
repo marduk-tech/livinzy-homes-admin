@@ -17,6 +17,7 @@ import {
   Table,
   TableColumnType,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import React, { useState } from "react";
@@ -191,7 +192,7 @@ export const ProjectsList: React.FC = () => {
 
       render: (record: IMedia[]) => {
         const mediaByTag: {
-          [key: string]: { images: number; videos: number };
+          [key: string]: { images: IMedia[]; videos: number };
         } = {};
 
         record.forEach((media) => {
@@ -199,10 +200,10 @@ export const ProjectsList: React.FC = () => {
             media.type === "image" ? media.image?.tags : media.video?.tags;
           tags?.forEach((tag: string) => {
             if (!mediaByTag[tag]) {
-              mediaByTag[tag] = { images: 0, videos: 0 };
+              mediaByTag[tag] = { images: [], videos: 0 };
             }
             if (media.type === "image") {
-              mediaByTag[tag].images++;
+              mediaByTag[tag].images.push(media);
             } else if (media.type === "video") {
               mediaByTag[tag].videos++;
             }
@@ -212,11 +213,33 @@ export const ProjectsList: React.FC = () => {
         return (
           <Flex style={{ maxWidth: 200 }} wrap="wrap" gap={4}>
             {Object.entries(mediaByTag)
-              .filter(([_, counts]) => counts.images > 0 || counts.videos > 0)
+              .filter(
+                ([_, counts]) => counts.images.length > 0 || counts.videos > 0
+              )
               .map(([tag, counts]) => (
-                <Tag key={tag}>
-                  {tag} ({counts.images + counts.videos})
-                </Tag>
+                <Tooltip
+                  key={tag}
+                  title={
+                    <Flex wrap="wrap" gap={8}>
+                      {counts.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image.image?.url}
+                          alt={tag}
+                          style={{
+                            height: 90,
+                            objectFit: "cover",
+                            borderRadius: 4,
+                          }}
+                        />
+                      ))}
+                    </Flex>
+                  }
+                >
+                  <Tag>
+                    {tag} ({counts.images.length + counts.videos})
+                  </Tag>
+                </Tooltip>
               ))}
           </Flex>
         );
