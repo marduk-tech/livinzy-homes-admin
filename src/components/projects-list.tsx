@@ -85,37 +85,22 @@ export const ProjectsList: React.FC = () => {
       showSorterTooltip: false,
       ...ColumnSearch(["metadata", "name"]),
       render: (name: string, record: Project) => (
-        <Flex align="center" gap={8}>
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              backgroundColor:
-                record.metadata.status === "active"
-                  ? COLORS.greenIdentifier
-                  : COLORS.borderColorDark,
-            }}
-          />
+        <Flex
+          align="center"
+          gap={8}
+          style={{
+            padding: 2,
+            backgroundColor:
+              record.metadata.status === "active"
+                ? COLORS.greenIdentifier
+                : COLORS.borderColorDark,
+          }}
+        >
           <span>{name}</span>
         </Flex>
       ),
     },
-    {
-      title: "RERA Number",
-      dataIndex: ["metadata", "reraNumber"],
-      key: "reraNumber",
-      width: "150px",
-      responsive: ["lg", "xl"],
-      sorter: (a, b) => {
-        const aRera = a.metadata.reraNumber || "";
-        const bRera = b.metadata.reraNumber || "";
-        return aRera.localeCompare(bRera);
-      },
-      sortDirections: ["ascend", "descend"],
-      ...ColumnSearch(["metadata", "reraNumber"]),
-      render: (reraNumber: string) => reraNumber || "-",
-    },
+   
     {
       title: "Corridors",
       dataIndex: ["metadata", "corridors"],
@@ -184,6 +169,24 @@ export const ProjectsList: React.FC = () => {
       },
     },
     {
+      title: "RERA",
+      dataIndex: ["metadata", "reraNumber"],
+      key: "reraNumber",
+      width: "50px",
+      responsive: ["lg", "xl"],
+      sorter: (a, b) => {
+        const aRera = a.metadata.reraNumber || "";
+        const bRera = b.metadata.reraNumber || "";
+        return aRera.localeCompare(bRera);
+      },
+      sortDirections: ["ascend", "descend"],
+      ...ColumnSearch(["metadata", "reraNumber"]),
+      render: (reraNumber: string) => {
+        return <Typography.Text copyable style={ { width: 100 }}
+        ellipsis={{ }}>{reraNumber || "-"}</Typography.Text>
+      },
+    },
+    {
       title: "Media",
       dataIndex: "media",
       key: "media",
@@ -220,7 +223,11 @@ export const ProjectsList: React.FC = () => {
                 <Tooltip
                   key={tag}
                   title={
-                    <Flex wrap="wrap" gap={8} style={{height: 200, overflowY: "scroll"}}>
+                    <Flex
+                      wrap="wrap"
+                      gap={8}
+                      style={{ height: 200, overflowY: "scroll" }}
+                    >
                       {counts.images.map((image, index) => (
                         <img
                           key={index}
@@ -304,7 +311,7 @@ export const ProjectsList: React.FC = () => {
       title: "Location",
       dataIndex: ["metadata", "location"],
       key: "location",
-      width: "150px",
+      width: "30px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
         if (b.metadata && b.metadata.location && !b.metadata.location.lat) {
@@ -335,6 +342,15 @@ export const ProjectsList: React.FC = () => {
           </Flex>
         );
       },
+    },
+    {
+      title: "Date Added",
+      dataIndex: "createdAt",
+      sorter: (a, b) =>
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      key: "createdAt",
+      defaultSortOrder: "descend",
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
 
     {
