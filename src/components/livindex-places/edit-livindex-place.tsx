@@ -10,6 +10,7 @@ import {
   Tag,
 } from "antd";
 import { useState } from "react";
+import { useFetchCorridors } from "../../hooks/corridors-hooks";
 import { useFetchLivindexDrivers } from "../../hooks/livindex-drivers-hooks";
 import {
   useCreateLivindexPlaceMutation,
@@ -37,10 +38,18 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
     try {
       const values = await form.validateFields();
 
+      const formattedValues = {
+        ...values,
+        corridors: values.corridors?.map((corridorId: string) => ({
+          corridorId,
+          haversineDistance: 0,
+        })),
+      };
+
       if (selectedPlace) {
-        await updateLivindexPlace.mutateAsync({ placeData: values });
+        await updateLivindexPlace.mutateAsync({ placeData: formattedValues });
       } else {
-        await createLivindexPlace.mutateAsync({ ...values });
+        await createLivindexPlace.mutateAsync(formattedValues);
         form.resetFields();
       }
 
@@ -53,12 +62,14 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
   const handleCancel = () => {
     setIsEditModalOpen(false);
   };
-
   const {
     data: drivers,
     isLoading: driversLoading,
     isError: driversError,
   } = useFetchLivindexDrivers();
+
+  const { data: corridorsData, isLoading: corridorsLoading } =
+    useFetchCorridors();
 
   return (
     <>
@@ -102,7 +113,16 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
             form={form}
             layout="vertical"
             style={{ marginTop: 20 }}
-            initialValues={selectedPlace ? selectedPlace : undefined}
+            initialValues={
+              selectedPlace
+                ? {
+                    ...selectedPlace,
+                    corridors: selectedPlace.corridors?.map(
+                      (c: { corridorId: string }) => c.corridorId
+                    ),
+                  }
+                : undefined
+            }
             preserve={false}
           >
             <Form.Item name="driver" label="Driver">
@@ -190,6 +210,20 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
               valuePropName="checked"
             >
               <Checkbox>Growth Lever</Checkbox>
+            </Form.Item>
+
+            <Form.Item name="corridors" label="Corridors">
+              <Select
+                mode="multiple"
+                showSearch
+                placeholder="Select corridors"
+                loading={corridorsLoading}
+                options={corridorsData?.map((corridor) => ({
+                  value: corridor._id,
+                  label: corridor.name,
+                }))}
+                optionFilterProp="label"
+              />
             </Form.Item>
 
             {selectedPlace?.type !== "road" && (

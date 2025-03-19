@@ -20,6 +20,11 @@ export interface ILivIndexPlaces {
     oneLiner?: string;
     footfall?: number;
   };
+  corridors?: Array<{
+    _id: string;
+    corridorId: string;
+    haversineDistance: number;
+  }>;
 }
 
 export interface IGlobalKnowledge {
