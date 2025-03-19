@@ -220,14 +220,14 @@ export const ProjectsList: React.FC = () => {
                 <Tooltip
                   key={tag}
                   title={
-                    <Flex wrap="wrap" gap={8}>
+                    <Flex wrap="wrap" gap={8} style={{height: 200, overflowY: "scroll"}}>
                       {counts.images.map((image, index) => (
                         <img
                           key={index}
                           src={image.image?.url}
                           alt={tag}
                           style={{
-                            height: 90,
+                            height: 125,
                             objectFit: "cover",
                             borderRadius: 4,
                           }}

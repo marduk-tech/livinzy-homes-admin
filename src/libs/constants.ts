@@ -25,6 +25,7 @@ export const LivIndexDrivers = [
   "tier-2-city",
   "tourist-city",
   "satellite-city",
+  "food"
 ];
 
 export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];
