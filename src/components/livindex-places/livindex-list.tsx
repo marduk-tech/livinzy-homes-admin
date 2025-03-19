@@ -9,6 +9,7 @@ import {
   Tabs,
   Typography,
 } from "antd";
+import { useFetchCorridors } from "../../hooks/corridors-hooks";
 import {
   useDeletePlaceMutation,
   useFetchLivindexPlaces,
@@ -24,6 +25,9 @@ import { EditPlaceDetails } from "./edit-place-details";
 export function LivindexList() {
   const { isMobile } = useDevice();
   const { data, isLoading, isError } = useFetchLivindexPlaces({});
+
+  const { data: corridorsData, isLoading: corridorLoading } =
+    useFetchCorridors();
 
   const deletePlaceMutation = useDeletePlaceMutation();
 
@@ -53,6 +57,27 @@ export function LivindexList() {
       dataIndex: "status",
       key: "status",
       ...ColumnSearch("status"),
+    },
+    {
+      title: "Corridors",
+      dataIndex: "corridors",
+      key: "corridors",
+      width: "400px",
+      render: (corridors: Array<{ corridorId: string }>) => {
+        if (!corridors?.length || !corridorsData?.length) return "-";
+
+        return (
+          corridors
+            .map((corridor) => {
+              const corridorDetails = corridorsData.find(
+                (c) => c._id === corridor.corridorId
+              );
+              return corridorDetails?.name;
+            })
+            .filter(Boolean)
+            .join(", ") || "-"
+        );
+      },
     },
     {
       title: "",
@@ -102,7 +127,7 @@ export function LivindexList() {
       <Table
         dataSource={data}
         columns={columns}
-        loading={isLoading}
+        loading={isLoading || corridorLoading}
         rowKey="_id"
       />
     </>
