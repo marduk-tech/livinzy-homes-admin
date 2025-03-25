@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
@@ -10,6 +10,7 @@ import {
 } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
+import { useFetchDevelopers } from "./real-estate-developer-hooks";
 
 export function useDeleteProjectMutation() {
   return useMutation({
@@ -168,6 +169,17 @@ export function useProjectForm() {
         fieldDisplayName: "Location (Google maps url)",
         fieldDescription:
           "The location of the project identified by Google maps url.",
+      },
+      {
+        dbField: "developerId",
+        fieldDisplayName: "Developer/Builder",
+        fieldDescription: "Select the developer/builder for this project",
+        type: "single_select",
+        options:
+          useFetchDevelopers().data?.map((developer) => ({
+            label: developer.name,
+            value: developer._id,
+          })) || [],
       },
       {
         dbField: "website",

@@ -36,6 +36,7 @@ export interface IMetadata {
   oneLiner?: string;
   description: string;
   summary: string;
+  developerId?: string;
   contactNumber?: string;
   homeType: Array<
     | "farmland"
@@ -169,6 +170,7 @@ export interface LivIndexScore {
 
 export interface Project {
   _id: string;
+  developerId?: string;
   metadata: IMetadata;
   land: ILand;
   plots: IPlots;
