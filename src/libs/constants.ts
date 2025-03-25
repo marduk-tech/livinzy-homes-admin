@@ -10,6 +10,9 @@ export const queryKeys = {
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
   getAllChromaDocs: "getAllChromaDocs",
   getAllCorridors: "getAllCorridors",
+
+  getAllDevelopers: "getAllDevelopers",
+  getDeveloperById: "getDeveloperById",
 };
 export const LivIndexDrivers = [
   "road",
@@ -25,7 +28,7 @@ export const LivIndexDrivers = [
   "tier-2-city",
   "tourist-city",
   "satellite-city",
-  "food"
+  "food",
 ];
 
 export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];

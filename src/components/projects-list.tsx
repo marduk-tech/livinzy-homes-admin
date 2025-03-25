@@ -100,7 +100,7 @@ export const ProjectsList: React.FC = () => {
         </Flex>
       ),
     },
-   
+
     {
       title: "Corridors",
       dataIndex: ["metadata", "corridors"],
@@ -175,15 +175,19 @@ export const ProjectsList: React.FC = () => {
       width: "50px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        const aRera = a.metadata.reraNumber || "";
-        const bRera = b.metadata.reraNumber || "";
-        return aRera.localeCompare(bRera);
+        if (!a.metadata.reraNumber && !b.metadata.reraNumber) return 0;
+        if (!a.metadata.reraNumber) return -1;
+        if (!b.metadata.reraNumber) return 1;
+        return a.metadata.reraNumber.localeCompare(b.metadata.reraNumber);
       },
       sortDirections: ["ascend", "descend"],
       ...ColumnSearch(["metadata", "reraNumber"]),
       render: (reraNumber: string) => {
-        return <Typography.Text copyable style={ { width: 100 }}
-        ellipsis={{ }}>{reraNumber || "-"}</Typography.Text>
+        return (
+          <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
+            {reraNumber || "-"}
+          </Typography.Text>
+        );
       },
     },
     {
@@ -314,11 +318,17 @@ export const ProjectsList: React.FC = () => {
       width: "30px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        if (b.metadata && b.metadata.location && !b.metadata.location.lat) {
-          return -1;
-        } else {
-          return 0;
-        }
+        const aHasLocation =
+          a.metadata?.location?.lat && a.metadata?.location?.lng;
+        const bHasLocation =
+          b.metadata?.location?.lat && b.metadata?.location?.lng;
+
+        if (!aHasLocation && !bHasLocation) return 0;
+        if (!aHasLocation) return -1;
+        if (!bHasLocation) return 1;
+
+        // if  have locations sort by latitude
+        return a.metadata.location.lat - b.metadata.location.lat;
       },
       render: (location: any) => {
         if (!location?.lat || !location?.lng) return "-";
