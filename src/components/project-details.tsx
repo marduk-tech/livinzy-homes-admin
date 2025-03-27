@@ -124,6 +124,11 @@ const RenderFields: React.FC<{
                     mode={type === "multi_select" ? "tags" : undefined}
                     allowClear
                     showSearch={type !== "multi_select"}
+                    filterOption={(input, option) =>
+                      (option?.label?.toString() || "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
                     onChange={(value) => {
                       form.setFieldValue(
                         Array.isArray(dbField)

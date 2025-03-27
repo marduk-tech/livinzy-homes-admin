@@ -155,6 +155,8 @@ export function useUpdateProjectMutation({
 }
 
 export function useProjectForm() {
+  const { data: developers = [] } = useFetchDevelopers();
+
   const projectStructure: ProjectStructure = {
     metadata: [
       {
@@ -175,11 +177,10 @@ export function useProjectForm() {
         fieldDisplayName: "Developer/Builder",
         fieldDescription: "Select the developer/builder for this project",
         type: "single_select",
-        options:
-          useFetchDevelopers().data?.map((developer) => ({
-            label: developer.name,
-            value: developer._id,
-          })) || [],
+        options: developers.map((developer) => ({
+          label: developer.name,
+          value: developer._id,
+        })),
       },
       {
         dbField: "website",
