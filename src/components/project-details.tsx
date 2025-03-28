@@ -206,6 +206,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         values.metadata = {
           ...values.metadata,
           corridors: projectData.metadata.corridors,
+          reraProjectId: projectData.metadata.reraProjectId,
+          developerId: projectData.metadata.developerId,
         };
       }
 

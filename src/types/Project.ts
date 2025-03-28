@@ -54,6 +54,7 @@ export interface IMetadata {
     aliases?: string[];
     subArea?: string;
   };
+  reraProjectId: string;
   corridors?: {
     corridorId: string;
     haversineDistance: number;

@@ -29,6 +29,7 @@ export const LivIndexDrivers = [
   "tourist-city",
   "satellite-city",
   "food",
+  "locality"
 ];
 
 export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];
