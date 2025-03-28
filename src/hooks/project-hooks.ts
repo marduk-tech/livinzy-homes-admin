@@ -150,6 +150,10 @@ export function useUpdateProjectMutation({
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getProjectById, projectId],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllCorridors],
+      });
     },
   });
 }
