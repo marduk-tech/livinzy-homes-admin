@@ -96,7 +96,7 @@ export function EditLivIndexPlace({ selectedPlace }: EditLivIndexPlaceProps) {
       )}
 
       <Modal
-        title={selectedPlace ? `Edit ${selectedPlace.type}` : "Create Place"}
+        title={selectedPlace ? `Edit Driver` : "Create Driver"}
         open={isEditModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}

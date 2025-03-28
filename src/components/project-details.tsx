@@ -124,6 +124,11 @@ const RenderFields: React.FC<{
                     mode={type === "multi_select" ? "tags" : undefined}
                     allowClear
                     showSearch={type !== "multi_select"}
+                    filterOption={(input, option) =>
+                      (option?.label?.toString() || "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
                     onChange={(value) => {
                       form.setFieldValue(
                         Array.isArray(dbField)
@@ -190,6 +195,21 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+
+      // add corridors to metadata
+      if (
+        projectId &&
+        projectData &&
+        projectData.metadata &&
+        projectData.metadata.corridors
+      ) {
+        values.metadata = {
+          ...values.metadata,
+          corridors: projectData.metadata.corridors,
+          reraProjectId: projectData.metadata.reraProjectId,
+          developerId: projectData.metadata.developerId,
+        };
+      }
 
       let updatedMedia;
       if (values.media) {
