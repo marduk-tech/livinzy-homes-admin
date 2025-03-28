@@ -196,6 +196,19 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     try {
       const values = await form.validateFields();
 
+      // add corridors to metadata
+      if (
+        projectId &&
+        projectData &&
+        projectData.metadata &&
+        projectData.metadata.corridors
+      ) {
+        values.metadata = {
+          ...values.metadata,
+          corridors: projectData.metadata.corridors,
+        };
+      }
+
       let updatedMedia;
       if (values.media) {
         updatedMedia = values.media.map((item: IMedia, index: number) => ({
