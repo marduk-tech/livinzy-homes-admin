@@ -34,6 +34,7 @@ import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
 import { calculateProgress } from "../libs/utils";
 import { IMedia, Project, ProjectStructure } from "../types/Project";
+import { AVGSQFTRateDisplay } from "./common/avg-sqft-rate-display";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
@@ -155,17 +156,14 @@ export const ProjectsList: React.FC = () => {
         return aRate - bRate;
       },
 
-      render: (details: any) => {
-        if (!details?.singleUnitCost || !details?.singleUnitSize) {
-          return "-";
-        }
-        const cost = Number(details.singleUnitCost);
-        const size = Number(details.singleUnitSize);
-        if (isNaN(cost) || isNaN(size) || size <= 0) {
-          return "-";
-        }
-        const rate = Math.round(cost / size);
-        return `₹${rate.toLocaleString()}/sqft`;
+      render: (details: any, record: Project) => {
+        return (
+          <AVGSQFTRateDisplay
+            details={details}
+            record={record}
+            projects={projects}
+          />
+        );
       },
     },
     {
