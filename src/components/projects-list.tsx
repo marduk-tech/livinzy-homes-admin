@@ -79,12 +79,12 @@ export const ProjectsList: React.FC = () => {
   const columns: TableColumnType<Project>[] = [
     {
       title: "Project Name",
-      dataIndex: ["metadata", "name"],
+      dataIndex: ["info", "name"],
       key: "name",
-      sorter: (a, b) => a.metadata.name.localeCompare(b.metadata.name),
+      sorter: (a, b) => a.info.name.localeCompare(b.info.name),
       sortDirections: ["descend"],
       showSorterTooltip: false,
-      ...ColumnSearch(["metadata", "name"]),
+      ...ColumnSearch(["info", "name"]),
       render: (name: string, record: Project) => (
         <Flex
           align="center"
@@ -92,7 +92,7 @@ export const ProjectsList: React.FC = () => {
           style={{
             padding: 2,
             backgroundColor:
-              record.metadata.status === "active"
+              record.info.status === "active"
                 ? COLORS.greenIdentifier
                 : COLORS.borderColorDark,
           }}
@@ -104,7 +104,7 @@ export const ProjectsList: React.FC = () => {
 
     {
       title: "Corridors",
-      dataIndex: ["metadata", "corridors"],
+      dataIndex: ["info", "corridors"],
       render: (projectCorridors: any) => {
         if (!projectCorridors || !projectCorridors.length) {
           return "-";
@@ -129,7 +129,7 @@ export const ProjectsList: React.FC = () => {
         };
       }),
       onFilter: (value, record) => {
-        const corrs = ((record.metadata.corridors || []) as any).map(
+        const corrs = ((record.info.corridors || []) as any).map(
           (c: any) => c.corridorId
         );
         return corrs.includes(value);
@@ -168,18 +168,18 @@ export const ProjectsList: React.FC = () => {
     },
     {
       title: "RERA",
-      dataIndex: ["metadata", "reraNumber"],
+      dataIndex: ["info", "reraNumber"],
       key: "reraNumber",
       width: "50px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        if (!a.metadata.reraNumber && !b.metadata.reraNumber) return 0;
-        if (!a.metadata.reraNumber) return -1;
-        if (!b.metadata.reraNumber) return 1;
-        return a.metadata.reraNumber.localeCompare(b.metadata.reraNumber);
+        if (!a.info.reraNumber && !b.info.reraNumber) return 0;
+        if (!a.info.reraNumber) return -1;
+        if (!b.info.reraNumber) return 1;
+        return a.info.reraNumber.localeCompare(b.info.reraNumber);
       },
       sortDirections: ["ascend", "descend"],
-      ...ColumnSearch(["metadata", "reraNumber"]),
+      ...ColumnSearch(["info", "reraNumber"]),
       render: (reraNumber: string) => {
         return (
           <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
@@ -262,13 +262,13 @@ export const ProjectsList: React.FC = () => {
 
     {
       title: "Home Types",
-      dataIndex: ["metadata", "homeType"],
+      dataIndex: ["info", "homeType"],
       key: "homeType",
       width: "200px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        const aTypes = a.metadata.homeType || [];
-        const bTypes = b.metadata.homeType || [];
+        const aTypes = a.info.homeType || [];
+        const bTypes = b.info.homeType || [];
         return aTypes.join(",").localeCompare(bTypes.join(","));
       },
       sortDirections: ["ascend", "descend"],
@@ -295,7 +295,7 @@ export const ProjectsList: React.FC = () => {
         { text: "Villament", value: "villament" },
       ],
       onFilter: (value, record) => {
-        const types = record.metadata.homeType || [];
+        const types = record.info.homeType || [];
         return types.includes(
           value as
             | "farmland"
@@ -311,22 +311,22 @@ export const ProjectsList: React.FC = () => {
 
     {
       title: "Location",
-      dataIndex: ["metadata", "location"],
+      dataIndex: ["info", "location"],
       key: "location",
       width: "30px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
         const aHasLocation =
-          a.metadata?.location?.lat && a.metadata?.location?.lng;
+          a.info?.location?.lat && a.info?.location?.lng;
         const bHasLocation =
-          b.metadata?.location?.lat && b.metadata?.location?.lng;
+          b.info?.location?.lat && b.info?.location?.lng;
 
         if (!aHasLocation && !bHasLocation) return 0;
         if (!aHasLocation) return -1;
         if (!bHasLocation) return 1;
 
         // if  have locations sort by latitude
-        return a.metadata.location.lat - b.metadata.location.lat;
+        return a.info.location.lat - b.info.location.lat;
       },
       render: (location: any) => {
         if (!location?.lat || !location?.lng) return "-";
@@ -352,15 +352,14 @@ export const ProjectsList: React.FC = () => {
       },
     },
     {
-      title: "Date Added",
-      dataIndex: "createdAt",
+      title: "Date Updated",
+      dataIndex: "updatedAt",
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
-      key: "createdAt",
+      key: "updatedAt",
       defaultSortOrder: "descend",
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
-
     {
       title: "",
       align: "right",
@@ -414,10 +413,10 @@ export const ProjectsList: React.FC = () => {
 
   const sortedProjects = projects
     // fix old project doc dosn't have name which causes undefined errors
-    ?.filter((project) => project.metadata?.name)
+    ?.filter((project) => project.info?.name)
     ?.sort((a, b) => {
-      const nameA = a.metadata?.name?.toLowerCase();
-      const nameB = b.metadata?.name?.toLowerCase();
+      const nameA = a.info?.name?.toLowerCase();
+      const nameB = b.info?.name?.toLowerCase();
 
       if (nameA < nameB) return -1;
       if (nameA > nameB) return 1;

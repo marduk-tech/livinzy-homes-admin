@@ -23,7 +23,7 @@ export interface IMedia {
   };
 }
 
-export interface IMetadata {
+export interface IInfo {
   _id: string;
   name: string;
   location: {
@@ -32,12 +32,11 @@ export interface IMetadata {
     lat: number;
     lng: number;
   };
-  website: string;
-  oneLiner?: string;
-  description: string;
-  summary: string;
+  externalWebsites: string;
+  configWithPricing: string;
+  financialPlan: string;
+  amenities: string;
   developerId?: string;
-  contactNumber?: string;
   homeType: Array<
     | "farmland"
     | "plot"
@@ -49,11 +48,6 @@ export interface IMetadata {
   >;
   status: "new" | "active" | "disabled";
   reraNumber?: string;
-  livinzyArea?: {
-    key: string;
-    aliases?: string[];
-    subArea?: string;
-  };
   reraProjectId: string;
   corridors?: {
     corridorId: string;
@@ -171,21 +165,9 @@ export interface LivIndexScore {
 
 export interface Project {
   _id: string;
-  developerId?: string;
-  metadata: IMetadata;
-  land: ILand;
-  plots: IPlots;
+  info: IInfo;
   media: IMedia[];
-  connectivity: IConnectivity;
-  climate: IClimate;
-  basic_infra: IBasicInfra;
-  amenities: IAmenities;
-  team: ITeam;
-  ui: IUI;
-
-  livestment: Livestment;
-
-  livIndexScore: LivIndexScore;
+  ui: IUI,
   createdAt: string;
   updatedAt: string;
 }
@@ -228,15 +210,5 @@ interface Livestment {
 }
 
 export interface ProjectStructure {
-  metadata: ProjectField[];
-  ui: ProjectField[];
-  land: ProjectField[];
-  plots: ProjectField[];
-  unitDetails: ProjectField[];
-  status: ProjectField[];
-  basic_infra: ProjectField[];
-  amenities: ProjectField[];
-  // clickToAction: ProjectField[];
-  team: ProjectField[];
-  livIndex: ProjectField[];
+  info: ProjectField[];
 }

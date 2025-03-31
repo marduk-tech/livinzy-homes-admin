@@ -30,7 +30,7 @@ import {
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
-import { baseApiUrl } from "../libs/constants";
+import { baseApiUrl, MediaTags } from "../libs/constants";
 import { queries } from "../libs/queries";
 import { calculateFieldStatus } from "../libs/utils";
 import {
@@ -138,8 +138,10 @@ const RenderFields: React.FC<{
                       );
                     }}
                   />
-                ) : (
+                ) : type == "text" ? (
                   <TextArea rows={5} placeholder={fieldDescription} />
+                ): (
+                  <Input placeholder={fieldDescription} />
                 )}
               </Form.Item>
             </Col>
@@ -149,12 +151,12 @@ const RenderFields: React.FC<{
   </Row>
 );
 
+
 export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
 
   const navigate = useNavigate();
   const { isMobile } = useDevice();
-  const [allTags, setAllTags] = useState<string[]>([]);
 
   const [projectData, setProjectData] = useState<Project>();
   const [uiInstructionsModalOpen, setUiInstructionsModalOpen] = useState(false);
@@ -168,10 +170,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     throwOnError: true,
   });
 
-  const { data: allProjects, isLoading: allProjectsLoading } = useQuery({
-    ...queries.getAllProjects(),
-    enabled: !!projectId,
-  });
+  // const { data: allProjects, isLoading: allProjectsLoading } = useQuery({
+  //   ...queries.getAllProjects(),
+  //   enabled: !!projectId,
+  // });
 
   const createProject = useCreateProjectMutation();
   const updateProject = useUpdateProjectMutation({
@@ -196,18 +198,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     try {
       const values = await form.validateFields();
 
-      // add corridors to metadata
+      // add corridors to info
       if (
         projectId &&
         projectData &&
-        projectData.metadata &&
-        projectData.metadata.corridors
+        projectData.info &&
+        projectData.info.corridors
       ) {
-        values.metadata = {
-          ...values.metadata,
-          corridors: projectData.metadata.corridors,
-          reraProjectId: projectData.metadata.reraProjectId,
-          developerId: projectData.metadata.developerId,
+        values.info = {
+          ...values.info,
+          corridors: projectData.info.corridors,
+          reraProjectId: projectData.info.reraProjectId,
+          developerId: projectData.info.developerId,
         };
       }
 
@@ -219,27 +221,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }));
       }
 
-      if (values.ui) {
-        projectFields.ui.forEach((uiF: any) => {
-          const uiFieldValue = (values.ui as any)[uiF.dbField];
-          if (uiF.type == "json" && uiFieldValue) {
-            (values.ui as any)[uiF.dbField] = JSON.parse(
-              (values.ui as any)[uiF.dbField]
-            );
-          }
-        });
-      }
-
-      if (values.metadata.contactNumber) {
-        values.metadata.contactNumber = values.metadata.contactNumber.join(",");
-      }
-
       // format hometype
       if (
-        values.metadata.homeType &&
-        !Array.isArray(values.metadata.homeType)
+        values.info.homeType &&
+        !Array.isArray(values.info.homeType)
       ) {
-        values.metadata.homeType = [values.metadata.homeType];
+        values.info.homeType = [values.info.homeType];
       }
 
       if (projectId) {
@@ -266,68 +253,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
       console.error("Validation failed:", error);
     }
-  };
-
-  const renderTabActions = (key: string) => {
-    if (key == "ui") {
-      return (
-        <Flex style={{ width: "100%" }}>
-          <Button
-            style={{ marginLeft: "auto" }}
-            loading={generateProjectUI.isPending}
-            onClick={async () => {
-              setUiInstructionsModalOpen(true);
-              // console.log(uiData);
-            }}
-          >
-            Generate UI
-          </Button>
-          <Modal
-            title="Instructions (Optional)"
-            okText="Generate UI"
-            open={uiInstructionsModalOpen}
-            onOk={async () => {
-              await generateProjectUI.mutate(
-                {
-                  projectId: projectId || "",
-                  instructions: uiInstructions || "",
-                },
-                {
-                  onSuccess: (data) => {
-                    const uiData = data.data;
-                    if (uiData) {
-                      const toSetFields: any[] = [];
-                      projectFields.ui.forEach((uiF: any) => {
-                        toSetFields.push({
-                          name: ["ui", uiF.dbField],
-                          value:
-                            uiF.type == "json"
-                              ? JSON.stringify(uiData[uiF.dbField])
-                              : uiData[uiF.dbField],
-                        });
-                      });
-                      form.setFields(toSetFields);
-                    }
-                  },
-                }
-              );
-              setUiInstructionsModalOpen(false);
-            }}
-            onCancel={() => {
-              setUiInstructionsModalOpen(false);
-            }}
-          >
-            <Input.TextArea
-              rows={4}
-              onChange={(e: any) => {
-                setUiInstructions(e.target.value);
-              }}
-            ></Input.TextArea>
-          </Modal>
-        </Flex>
-      );
-    }
-    return null;
   };
 
   const onUploadComplete = (urls: string[], index?: number) => {
@@ -378,12 +303,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
-  const watchHomeType = Form.useWatch(["metadata", "homeType"], form);
+  const watchHomeType = Form.useWatch(["info", "homeType"], form);
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
 
   useEffect(() => {
-    const homeType = form.getFieldValue(["metadata", "homeType"]);
+    const homeType = form.getFieldValue(["info", "homeType"]);
 
     const filteredFields = Object.fromEntries(
       Object.entries(projectFields).filter(([key]) => {
@@ -399,64 +324,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   }, [watchHomeType, form]);
 
   useEffect(() => {
-    if (allProjects) {
-      const tags = new Set<string>();
-      allProjects.forEach((project: Project) => {
-        project.media.forEach((media: IMedia) => {
-          if (media?.type === "image" && media?.image?.tags) {
-            media.image.tags.forEach((tag: string) => tags.add(tag));
-          } else if (media?.type === "video" && media?.video?.tags) {
-            media?.video?.tags.forEach((tag: string) => tags.add(tag));
-          }
-        });
-      });
-
-      const dummyTags = [
-        "exterior",
-        "layout",
-        "aerial",
-        "video",
-        "construction",
-        "amenities",
-        "walkthrough",
-        "plot",
-        "house",
-        "floorplan",
-      ];
-
-      setAllTags(Array.from(new Set([...tags, ...dummyTags])));
-    }
-  }, [allProjects]);
-
-  useEffect(() => {
     if (!projectData && project) {
       const uiFormatting: any = {};
-
-      if (project && project.ui) {
-        projectFields.ui.forEach((uiF: any) => {
-          const fieldValue = (project.ui as any)[uiF.dbField];
-          if (fieldValue) {
-            if (uiF.type == "json") {
-              (uiFormatting as any)[uiF.dbField] = JSON.stringify(
-                (project.ui as any)[uiF.dbField]
-              );
-            } else {
-              (uiFormatting as any)[uiF.dbField] = (project.ui as any)[
-                uiF.dbField
-              ];
-            }
-          }
-        });
-      }
-
       // set the form values directly when project data is available
       const formValues = {
         ...project,
         ui: uiFormatting,
-        metadata: {
-          ...project.metadata,
-          homeType: Array.isArray(project.metadata.homeType)
-            ? project.metadata.homeType
+        infoV2: {
+          ...project.info,
+          homeType: Array.isArray(project.info.homeType)
+            ? project.info.homeType
             : [],
         },
       };
@@ -471,11 +348,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         initialPreviewIndex >= 0 ? initialPreviewIndex : null
       );
     }
-  }, [project, form, projectFields.ui]);
+  }, [project, form]);
 
   const screens = useBreakpoint();
 
-  if (projectIsLoading || allProjectsLoading) {
+  if (projectIsLoading) {
     return <Loader />;
   }
 
@@ -489,11 +366,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               onClick={() => window.history.back()}
               style={{ marginRight: 16 }}
             ></Button>
-            {project?.metadata.name}
+            {project?.info.name}
           </Typography.Title>
         )}
 
-        <Tabs defaultActiveKey="metadata">
+        <Tabs defaultActiveKey="info">
           {Object.entries(visibleTabs || {}).map(([key, fields], index) => {
             const fieldStatus = calculateFieldStatus(
               fields as FieldType[],
@@ -528,7 +405,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 key={key}
                 disabled={!projectId && index !== 0}
               >
-                {renderTabActions(key)}
                 <RenderFields
                   form={form}
                   fields={fields as FieldType[]}
@@ -605,7 +481,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                   maxWidth: screens.lg ? "600px" : "100%",
                                 }}
                                 placeholder="Enter tags"
-                                options={allTags.map((tag) => ({
+                                options={MediaTags.map((tag) => ({
                                   value: tag,
                                   label: tag,
                                 }))}
@@ -676,7 +552,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     form={form}
                     projectId={projectId}
                     project={project!}
-                    allTags={allTags}
+                    allTags={MediaTags}
                   />
                 </div>
               </TabPane>
@@ -686,7 +562,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   form={form}
                   projectId={projectId}
                   project={project!}
-                  allTags={allTags}
+                  allTags={MediaTags}
                 />
               </TabPane>
             </Tabs>

@@ -27,7 +27,7 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
 
   //  all rates for the same corridor
   const corridorRates: number[] = [];
-  const recordCorridors = (record.metadata.corridors || []) as Array<{
+  const recordCorridors = (record.info.corridors || []) as Array<{
     corridorId: string;
     haversineDistance: number;
   }>;
@@ -46,7 +46,7 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
       }
 
       // check if project shares any corridor with current record
-      const projectCorridors = (project.metadata.corridors || []) as Array<{
+      const projectCorridors = (project.info.corridors || []) as Array<{
         corridorId: string;
         haversineDistance: number;
       }>;
