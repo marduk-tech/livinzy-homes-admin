@@ -404,6 +404,7 @@ export const ProjectsList: React.FC = () => {
     },
     {
       key: "2",
+      disabled: true,
       onClick: () => {
         setIsJsonImportModalOpen(true);
       },
