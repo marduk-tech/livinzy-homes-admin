@@ -19,7 +19,7 @@ export const updateLivIndexPlace = async (
 };
 
 export const createPlace = async (placeData: Partial<ILivIndexPlaces>) => {
-  const endpoint = `/livindex-places`;
+  const endpoint = `/livindex-places/create`;
   return axiosApiInstance.post(endpoint, placeData).then((response) => {
     return response.data as ILivIndexPlaces;
   });
