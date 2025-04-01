@@ -3,7 +3,7 @@ import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getAllLivIndexPlaces = async () => {
   const endpoint = `/livindex-places`;
-  return axiosApiInstance.get(endpoint).then((response) => {
+  return axiosApiInstance.post(endpoint).then((response) => {
     return response.data as ILivIndexPlaces[];
   });
 };
