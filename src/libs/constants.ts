@@ -55,7 +55,6 @@ export const MediaTags = [
   "walkthrough",
   "construction",
   "amenities",
-  "walkthrough",
   "plot",
   "house",
   "floorplan",
