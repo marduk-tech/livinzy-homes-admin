@@ -87,9 +87,9 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
         : sortedRates[mid];
 
     // check if current rate deviates more than 30% from median
-    const deviation = Math.abs(rate - medianRate) / medianRate;
+    const deviation = (rate - medianRate) / medianRate;
 
-    if (deviation > 0.3) {
+    if (deviation <= -0.25 ) {
       return (
         <Tooltip
           title={`Corridor median: ₹${medianRate.toLocaleString()}/sqft`}
