@@ -138,7 +138,7 @@ export const ProjectsList: React.FC = () => {
 
     {
       title: "Avg Sqft Rate",
-      dataIndex: ["ui", "costingDetails"],
+      dataIndex: ["info", "refinedContent", "costingDetails"],
       key: "averageSqftRate",
       width: "150px",
       responsive: ["lg", "xl"],

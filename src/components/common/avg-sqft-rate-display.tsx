@@ -3,8 +3,8 @@ import { Project } from "../../types/Project";
 
 type Props = {
   details: {
-    singleUnitCost: string;
-    singleUnitSize: string;
+    minimumUnitCost: number;
+    minimumUnitSize: number;
   };
   record: Project;
   projects?: Project[];
@@ -15,11 +15,11 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
   record,
   projects,
 }) => {
-  if (!details?.singleUnitCost || !details?.singleUnitSize) {
+  if (!details?.minimumUnitCost || !details?.minimumUnitSize) {
     return "-";
   }
-  const cost = Number(details.singleUnitCost);
-  const size = Number(details.singleUnitSize);
+  const cost = details.minimumUnitCost;
+  const size = details.minimumUnitSize;
   if (isNaN(cost) || isNaN(size) || size <= 0) {
     return "-";
   }
@@ -34,14 +34,14 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
 
   if (projects && recordCorridors.length > 0) {
     projects.forEach((project) => {
-      const costingDetails = project.ui?.costingDetails as unknown as
+      const costingDetails = record.info.refinedContent.costingDetails as unknown as
         | {
-            singleUnitCost: string;
-            singleUnitSize: string;
+          minimumUnitCost: number;
+          minimumUnitSize: number;
           }
         | undefined;
 
-      if (!costingDetails?.singleUnitCost || !costingDetails?.singleUnitSize) {
+      if (!costingDetails?.minimumUnitCost || !costingDetails?.minimumUnitSize) {
         return;
       }
 
@@ -59,17 +59,17 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
       );
 
       if (hasCommonCorridor) {
-        const projectDetails = project.ui?.costingDetails as unknown as
+        const projectCostingDetails = project.info?.refinedContent.costingDetails as unknown as
           | {
               singleUnitCost: string;
               singleUnitSize: string;
             }
           | undefined;
 
-        if (!projectDetails) return;
+        if (!projectCostingDetails) return;
 
-        const pCost = Number(projectDetails.singleUnitCost);
-        const pSize = Number(projectDetails.singleUnitSize);
+        const pCost = Number(projectCostingDetails.singleUnitCost);
+        const pSize = Number(projectCostingDetails.singleUnitSize);
         if (!isNaN(pCost) && !isNaN(pSize) && pSize > 0) {
           corridorRates.push(Math.round(pCost / pSize));
         }
@@ -95,7 +95,7 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
           title={`Corridor median: ₹${medianRate.toLocaleString()}/sqft`}
         >
           <Typography.Text type="danger">
-            ₹{rate.toLocaleString()}/sqft
+            ₹{rate.toLocaleString()}
           </Typography.Text>
         </Tooltip>
       );
@@ -103,10 +103,10 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
 
     return (
       <Tooltip title={`Corridor median: ₹${medianRate.toLocaleString()}/sqft`}>
-        <Typography.Text>₹{rate.toLocaleString()}/sqft</Typography.Text>
+        <Typography.Text>₹{rate.toLocaleString()}</Typography.Text>
       </Tooltip>
     );
   }
 
-  return <Typography.Text>₹{rate.toLocaleString()}/sqft</Typography.Text>;
+  return <Typography.Text>₹{rate.toLocaleString()}</Typography.Text>;
 };

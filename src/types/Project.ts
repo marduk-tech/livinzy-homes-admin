@@ -53,6 +53,7 @@ export interface IInfo {
     corridorId: string;
     haversineDistance: number;
   };
+  refinedContent: any;
 }
 
 export interface ILand {
