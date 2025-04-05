@@ -210,6 +210,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           corridors: projectData.info.corridors,
           reraProjectId: projectData.info.reraProjectId,
           developerId: projectData.info.developerId,
+          refinedContent: projectData.info.refinedContent
         };
       }
 

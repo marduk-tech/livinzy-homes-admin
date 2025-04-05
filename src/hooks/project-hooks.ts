@@ -126,16 +126,16 @@ export function useUpdateProjectMutation({
         });
       }
 
-      // Generate UI in background after project update
-      api
-        .generateProjectUI(projectId, "")
-        .then((response) => {
-          if (response.data) {
-            // Update project with generated UI
-            console.log("ui data was generated")
-          }
-        })
-        .catch(console.error);
+      // // Generate UI in background after project update
+      // api
+      //   .generateProjectUI(projectId, "")
+      //   .then((response) => {
+      //     if (response.data) {
+      //       // Update project with generated UI
+      //       console.log("ui data was generated")
+      //     }
+      //   })
+      //   .catch(console.error);
     },
 
     onError: (error: AxiosError<any>) => {
