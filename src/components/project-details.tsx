@@ -15,12 +15,18 @@ import {
   notification,
   Row,
   Select,
+  Space,
   Tabs,
   Tag,
   Typography,
 } from "antd";
 
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
+} from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import {
@@ -39,8 +45,9 @@ import {
   ProjectField,
   ProjectStructure,
 } from "../types/Project";
-import { ImgUpload } from "./common/img-upload";
+import { FileUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
+import { DocumentsList } from "./documents-list";
 import { VideoUpload } from "./media-tabs/video-tab";
 import { JsonEditor } from "./update-json-modal";
 
@@ -140,7 +147,7 @@ const RenderFields: React.FC<{
                   />
                 ) : type == "text" ? (
                   <TextArea rows={5} placeholder={fieldDescription} />
-                ): (
+                ) : (
                   <Input placeholder={fieldDescription} />
                 )}
               </Form.Item>
@@ -150,7 +157,6 @@ const RenderFields: React.FC<{
     )}
   </Row>
 );
-
 
 export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
@@ -210,7 +216,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           corridors: projectData.info.corridors,
           reraProjectId: projectData.info.reraProjectId,
           developerId: projectData.info.developerId,
-          refinedContent: projectData.info.refinedContent
+          refinedContent: projectData.info.refinedContent,
         };
       }
 
@@ -223,10 +229,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       }
 
       // format hometype
-      if (
-        values.info.homeType &&
-        !Array.isArray(values.info.homeType)
-      ) {
+      if (values.info.homeType && !Array.isArray(values.info.homeType)) {
         values.info.homeType = [values.info.homeType];
       }
 
@@ -256,26 +259,47 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
-  const onUploadComplete = (urls: string[], index?: number) => {
+  const onUploadComplete = (
+    urls: string[],
+    originalNames: string[],
+    index?: number,
+    mediaType: "image" | "document" | "video" = "image"
+  ) => {
     notification.success({
-      message: `${urls.length} images uploaded successfully`,
+      message: `${urls.length} ${mediaType}s uploaded successfully`,
     });
 
     const currentMedia = form.getFieldValue("media") || [];
 
     if (index !== undefined) {
       // Update existing media
-      currentMedia[index].image.url = urls[0];
+      if (mediaType === "document") {
+        currentMedia[index].document.url = urls[0];
+      } else if (mediaType === "image") {
+        currentMedia[index].image.url = urls[0];
+      }
     } else {
       // Add new media
-      const newMedia = urls.map((url) => ({
-        type: "image",
-        image: {
-          url,
-          tags: [],
-          caption: "",
-        },
-      }));
+      const newMedia = urls.map((url, index) => {
+        if (mediaType === "document") {
+          return {
+            type: "document",
+            document: {
+              name: originalNames[index],
+              url,
+              documentType: "",
+            },
+          };
+        }
+        return {
+          type: "image",
+          image: {
+            url,
+            tags: [],
+            caption: "",
+          },
+        };
+      });
       currentMedia.push(...newMedia);
     }
 
@@ -417,12 +441,26 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             );
           })}
 
+          <TabPane tab={"Documents"} key={"documents"} disabled={!projectId}>
+            <DocumentsList
+              project={project}
+              onUploadComplete={onUploadComplete}
+              handleDeleteMedia={handleDeleteMedia}
+            />
+          </TabPane>
+
           <TabPane tab={"Media"} key={"media"} disabled={!projectId}>
             <Tabs defaultActiveKey="images">
               <TabPane tab={"Images"} key={"images"}>
                 <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>
-                  <ImgUpload
-                    onUploadComplete={onUploadComplete}
+                  <FileUpload
+                    onUploadComplete={(
+                      urls: string[],
+                      originalNames: string[]
+                    ) =>
+                      onUploadComplete(urls, originalNames, undefined, "image")
+                    }
+                    fileType="image"
                     button={{
                       label: "Upload Images",
                       type: "primary",
@@ -518,10 +556,19 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                             </Form.Item>
 
                             <Flex wrap="wrap">
-                              <ImgUpload
-                                onUploadComplete={(urls) =>
-                                  onUploadComplete(urls, index)
+                              <FileUpload
+                                onUploadComplete={(
+                                  urls: string[],
+                                  originalNames: string[]
+                                ) =>
+                                  onUploadComplete(
+                                    urls,
+                                    originalNames,
+                                    index,
+                                    "image"
+                                  )
                                 }
+                                fileType="image"
                                 isMultiple={false}
                                 button={{
                                   label: "Update Image",

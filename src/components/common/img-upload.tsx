@@ -4,22 +4,24 @@ import { UploadChangeParam, UploadProps } from "antd/es/upload";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
 import { baseApiUrl } from "../../libs/constants";
 
-const MAX_IMAGE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 20;
 
 interface MediaTabProps {
-  onUploadComplete: (urls: string[]) => void;
+  onUploadComplete: (urls: string[], originalNames: string[]) => void;
   isMultiple?: boolean;
   showUploadList?: boolean;
+  fileType?: "image" | "document";
   button?: {
     label?: string | ReactNode;
     type?: "primary" | "link" | "text" | "default" | "dashed" | undefined;
   };
 }
 
-export const ImgUpload: React.FC<MediaTabProps> = ({
+export const FileUpload: React.FC<MediaTabProps> = ({
   onUploadComplete,
   isMultiple = true,
   showUploadList = false,
+  fileType = "image",
   button = {
     label: "Upload",
     type: "primary",
@@ -35,15 +37,19 @@ export const ImgUpload: React.FC<MediaTabProps> = ({
 
   const handleProcessImages = useCallback(() => {
     const urls: string[] = [];
+    const originalNames: string[] = [];
 
     fileList.forEach((file) => {
+      console.log(file);
+
       if (file.response) {
         urls.push(file.response.results[0].Location);
+        originalNames.push(file.name);
       }
     });
 
     setFileList([]);
-    onUploadComplete(urls);
+    onUploadComplete(urls, originalNames);
   }, [fileList, onUploadComplete]);
 
   useEffect(() => {
@@ -53,18 +59,18 @@ export const ImgUpload: React.FC<MediaTabProps> = ({
   }, [fileList, handleProcessImages, uploadPending]);
 
   const beforeUpload = (file: UploadFile, fileList: UploadFile[]) => {
-    const isLt3M = file.size! / 1024 / 1024 < MAX_IMAGE_SIZE_MB;
-    if (!isLt3M) {
-      message.error(`${file.name} is larger than ${MAX_IMAGE_SIZE_MB}MB!`);
+    const isUnderLimit = file.size! / 1024 / 1024 < MAX_FILE_SIZE_MB;
+    if (!isUnderLimit) {
+      message.error(`${file.name} is larger than ${MAX_FILE_SIZE_MB}MB!`);
     }
-    return isLt3M;
+    return isUnderLimit;
   };
 
   return (
     <>
       <Upload
-        name="images"
-        accept="image/*"
+        name="files"
+        accept={fileType === "image" ? "image/*" : ".pdf,.doc,.docx,.xls,.xlsx"}
         listType="picture"
         fileList={fileList}
         action={`${baseApiUrl}upload/multiple`}

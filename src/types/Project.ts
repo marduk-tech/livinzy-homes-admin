@@ -2,7 +2,7 @@ import { ILivIndexPlaces } from ".";
 
 export interface IMedia {
   _id: string;
-  type: "image" | "video";
+  type: "image" | "video" | "document";
   image?: {
     url: string;
     tags: string[];
@@ -20,6 +20,11 @@ export interface IMedia {
     hlsUrl?: string;
     thumbnailUrl?: string;
     previewUrl?: string;
+  };
+  document?: {
+    name: string;
+    url: string;
+    documentType: "brochure" | "project-specs";
   };
 }
 
@@ -168,7 +173,7 @@ export interface Project {
   _id: string;
   info: IInfo;
   media: IMedia[];
-  ui: IUI,
+  ui: IUI;
   createdAt: string;
   updatedAt: string;
 }
