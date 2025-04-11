@@ -13,11 +13,15 @@ import {
   Table,
   Typography,
 } from "antd";
-import { IMedia } from "../types/Project";
-import { FileUpload } from "./common/img-upload";
+import { IMedia } from "../../types/Project";
+import { FileUpload } from "../common/img-upload";
+import "./documents-list.css";
 
 interface DocumentsListProps {
-  project: any;
+  project: {
+    media: IMedia[];
+    _id?: string;
+  };
   onUploadComplete: (
     urls: string[],
     originalNames: string[],
@@ -47,40 +51,42 @@ export const DocumentsList = ({
         />
       </Flex>
 
-      <Table
-        dataSource={project?.media?.filter(
-          (item: IMedia) => item.type === "document"
-        )}
+      <Table<IMedia>
+        style={{ marginBottom: 24 }}
+        dataSource={project?.media || []}
         rowKey="_id"
         pagination={false}
+        rowClassName={(record: IMedia) =>
+          record.type !== "document" ? "hide-row" : ""
+        }
         columns={[
           {
             title: "Document",
             key: "document",
-            render: (_, record: IMedia, index) => (
-              <Flex align="center" gap={16}>
-                <Button
-                  type="text"
-                  href={record.document?.url}
-                  target="_blank"
-                  icon={<FilePdfOutlined style={{ fontSize: "24px" }} />}
-                  style={{ padding: 0 }}
-                />
-                <div>
-                  <Typography.Text strong style={{ display: "block" }}>
-                    {record.document?.name || `Document ${index + 1}`}
-                  </Typography.Text>
-                  <Typography.Text
-                    type="secondary"
-                    style={{ fontSize: "12px" }}
-                  >
-                    {new URL(record.document?.url || "").pathname
-                      .split("/")
-                      .pop()}
-                  </Typography.Text>
-                </div>
-              </Flex>
-            ),
+            render: (_, record: IMedia, index) => {
+              return (
+                <Flex align="center" gap={16}>
+                  <Button
+                    type="text"
+                    href={record.document?.url}
+                    target="_blank"
+                    icon={<FilePdfOutlined style={{ fontSize: "24px" }} />}
+                    style={{ padding: 0 }}
+                  />
+                  <div>
+                    <Typography.Text strong style={{ display: "block" }}>
+                      {record.document?.name}
+                    </Typography.Text>
+                    <Typography.Text
+                      type="secondary"
+                      style={{ fontSize: "12px" }}
+                    >
+                      {record.document?.url}
+                    </Typography.Text>
+                  </div>
+                </Flex>
+              );
+            },
           },
           {
             title: "Document Type",
@@ -124,9 +130,19 @@ export const DocumentsList = ({
                     onClick={() => handleDeleteMedia(index)}
                   />
                 </Space>
-                <Form.Item name={["media", index, "document", "url"]} hidden>
-                  <Input />
-                </Form.Item>
+
+                {/* Hidden Fields */}
+                <Form.Item
+                  name={["media", index, "document", "url"]}
+                  hidden
+                ></Form.Item>
+
+                <Form.Item
+                  name={["media", index, "document", "name"]}
+                  hidden
+                ></Form.Item>
+
+                <Form.Item name={["media", index, "type"]} hidden></Form.Item>
               </>
             ),
           },

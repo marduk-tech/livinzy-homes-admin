@@ -47,7 +47,7 @@ import {
 } from "../types/Project";
 import { FileUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
-import { DocumentsList } from "./documents-list";
+import { DocumentsList } from "./media-tabs/documents-list";
 import { VideoUpload } from "./media-tabs/video-tab";
 import { JsonEditor } from "./update-json-modal";
 
@@ -281,24 +281,28 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     } else {
       // Add new media
       const newMedia = urls.map((url, index) => {
-        if (mediaType === "document") {
-          return {
-            type: "document",
-            document: {
-              name: originalNames[index],
-              url,
-              documentType: "",
-            },
-          };
+        switch (mediaType) {
+          case "document":
+            return {
+              type: "document",
+              document: {
+                name: originalNames[index],
+                url,
+                documentType: "",
+              },
+            };
+          case "image":
+            return {
+              type: "image",
+              image: {
+                url,
+                tags: [],
+                caption: "",
+              },
+            };
+          default:
+            throw new Error(`Invalid media type: ${mediaType}`);
         }
-        return {
-          type: "image",
-          image: {
-            url,
-            tags: [],
-            caption: "",
-          },
-        };
       });
       currentMedia.push(...newMedia);
     }
@@ -441,13 +445,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             );
           })}
 
-          <TabPane tab={"Documents"} key={"documents"} disabled={!projectId}>
-            <DocumentsList
-              project={project}
-              onUploadComplete={onUploadComplete}
-              handleDeleteMedia={handleDeleteMedia}
-            />
-          </TabPane>
+          {/* <TabPane tab={"Documents"} key={"documents"} disabled={!projectId}>
+            {project && (
+              <DocumentsList
+                project={project}
+                onUploadComplete={onUploadComplete}
+                handleDeleteMedia={handleDeleteMedia}
+              />
+            )}
+          </TabPane> */}
 
           <TabPane tab={"Media"} key={"media"} disabled={!projectId}>
             <Tabs defaultActiveKey="images">
@@ -602,6 +608,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     project={project!}
                     allTags={MediaTags}
                   />
+
+                  <DocumentsList
+                    project={project!}
+                    onUploadComplete={onUploadComplete}
+                    handleDeleteMedia={handleDeleteMedia}
+                  />
                 </div>
               </TabPane>
 
@@ -611,6 +623,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   projectId={projectId}
                   project={project!}
                   allTags={MediaTags}
+                />
+              </TabPane>
+
+              <TabPane tab={"Documents"} key={"documents"}>
+                <DocumentsList
+                  project={project!}
+                  onUploadComplete={onUploadComplete}
+                  handleDeleteMedia={handleDeleteMedia}
                 />
               </TabPane>
             </Tabs>
