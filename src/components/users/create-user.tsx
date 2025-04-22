@@ -22,7 +22,7 @@ export function CreateUser() {
       };
 
       const payload: CreateUserPayload = {
-        mobile: values.mobile,
+        mobile: `91${values.mobile}`,
         countryCode: "91",
         profile: {
           name: values.name,
