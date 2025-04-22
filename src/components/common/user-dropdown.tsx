@@ -40,6 +40,7 @@ export function UserDropDown() {
     { to: "/livindex-scores", label: "Livindex Scores" },
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
     { to: "/ask", label: "Ask Liv", icon: undefined },
+    { to: "/users", label: "Users", icon: undefined },
   ];
 
   return (

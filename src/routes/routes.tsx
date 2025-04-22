@@ -13,6 +13,7 @@ import { LivindexPlacesPage } from "../pages/livindexplaces";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
+import { UsersPage } from "../pages/users-page";
 
 export const Router = () => {
   return (
@@ -33,6 +34,8 @@ export const Router = () => {
         <Route path="/projects/create" element={<CreateProjectPage />} />
 
         <Route path="/ask" element={<AskPage />} />
+
+        <Route path="/users" element={<UsersPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />

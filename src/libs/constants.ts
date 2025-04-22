@@ -13,6 +13,8 @@ export const queryKeys = {
 
   getAllDevelopers: "getAllDevelopers",
   getDeveloperById: "getDeveloperById",
+
+  getAllUsers: "getAllUsers",
 };
 export const LivIndexDrivers = [
   "road",
@@ -29,7 +31,7 @@ export const LivIndexDrivers = [
   "tourist-city",
   "satellite-city",
   "food",
-  "locality"
+  "locality",
 ];
 
 export const LivIndexMegaDrivers = ["macro", "connectivity", "livability"];
