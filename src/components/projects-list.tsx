@@ -28,6 +28,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useDeleteProjectMutation,
+  useGetAllProjects,
   useProjectForm,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
@@ -47,9 +48,8 @@ export const ProjectsList: React.FC = () => {
   const { data: corridors, isLoading: isCorridorsDataLoading } =
     useFetchCorridors();
 
-  const { data: projects, isLoading: projectIsLoading } = useQuery(
-    queries.getAllProjects()
-  );
+  const { data: projects, isLoading: projectIsLoading } = useGetAllProjects();
+
   const deleteProjectMutation = useDeleteProjectMutation();
 
   const { projectFields } = useProjectForm();
@@ -316,10 +316,8 @@ export const ProjectsList: React.FC = () => {
       width: "30px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        const aHasLocation =
-          a.info?.location?.lat && a.info?.location?.lng;
-        const bHasLocation =
-          b.info?.location?.lat && b.info?.location?.lng;
+        const aHasLocation = a.info?.location?.lat && a.info?.location?.lng;
+        const bHasLocation = b.info?.location?.lat && b.info?.location?.lng;
 
         if (!aHasLocation && !bHasLocation) return 0;
         if (!aHasLocation) return -1;

@@ -12,6 +12,13 @@ import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
 import { useFetchDevelopers } from "./real-estate-developer-hooks";
 
+export function useGetAllProjects() {
+  return useQuery({
+    queryKey: [queryKeys.projects],
+    queryFn: () => api.getAllProjects({ source: "admin" }),
+  });
+}
+
 export function useDeleteProjectMutation() {
   return useMutation({
     mutationFn: ({ projectId }: { projectId: string }) => {
@@ -57,7 +64,7 @@ export function useCreateProjectMutation() {
         .then((response) => {
           if (response.data) {
             // Update project with generated UI
-            console.log('ui data was generated');
+            console.log("ui data was generated");
           }
         })
         .catch(console.error);
@@ -125,17 +132,6 @@ export function useUpdateProjectMutation({
           message: `Project updated successfully!`,
         });
       }
-
-      // // Generate UI in background after project update
-      // api
-      //   .generateProjectUI(projectId, "")
-      //   .then((response) => {
-      //     if (response.data) {
-      //       // Update project with generated UI
-      //       console.log("ui data was generated")
-      //     }
-      //   })
-      //   .catch(console.error);
     },
 
     onError: (error: AxiosError<any>) => {
@@ -230,8 +226,7 @@ export function useProjectForm() {
         fieldDisplayName: "Unit configs and pricing",
         fieldDescription: "List all unit configuration along with base price",
       },
-      
-    ]
+    ],
   };
 
   const fieldRules = {
