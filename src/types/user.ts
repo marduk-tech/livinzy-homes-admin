@@ -19,6 +19,11 @@ export interface SavedLvnzyProject {
   projects: string[];
 }
 
+export interface CreateSavedLvnzyProject {
+  collectionName: string;
+  projects: string[];
+}
+
 export interface User {
   _id: string;
   mobile: string;
@@ -36,4 +41,5 @@ export interface CreateUserPayload {
   mobile: string;
   countryCode: string;
   profile?: UserProfile;
+  savedLvnzyProjects?: CreateSavedLvnzyProject[];
 }
