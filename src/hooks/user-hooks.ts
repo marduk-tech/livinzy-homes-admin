@@ -1,10 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
-import { createUser, getAllUsers } from "../libs/api/user";
+import { createUser, getAllUsers, updateUser } from "../libs/api/user";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
-import { CreateUserPayload } from "../types/user";
+import { CreateUserPayload, UpdateUserPayload } from "../types/user";
 
 export function useGetAllUsers() {
   return useQuery({
@@ -30,6 +30,39 @@ export function useCreateUserMutation() {
         message: `An unexpected error occurred. Please try again later.`,
       });
 
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllUsers],
+      });
+    },
+  });
+}
+
+export function useUpdateUserMutation() {
+  return useMutation({
+    mutationFn: ({
+      userId,
+      userData,
+    }: {
+      userId: string;
+      userData: UpdateUserPayload;
+    }) => {
+      return updateUser(userId, userData);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: `User updated successfully!`,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `An unexpected error occurred. Please try again later.`,
+      });
       console.log(error);
     },
 

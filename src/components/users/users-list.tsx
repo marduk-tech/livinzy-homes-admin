@@ -1,11 +1,22 @@
-import { Col, Row, Table, TableColumnType, Typography } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Col,
+  Row,
+  Table,
+  TableColumnType,
+  Tag,
+  Typography,
+} from "antd";
+import { useState } from "react";
 import { useGetAllUsers } from "../../hooks/user-hooks";
 import { User } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
-import { CreateUser } from "./create-user";
+import { UserForm } from "./user-form";
 
 export function UsersList() {
   const { data, isLoading, isError } = useGetAllUsers();
+  const [userToEdit, setUserToEdit] = useState<User | undefined>();
 
   const columns: TableColumnType<User>[] = [
     {
@@ -20,6 +31,33 @@ export function UsersList() {
       title: "Mobile",
       key: "mobile",
       render: (_, record) => `${record.mobile}`,
+    },
+    {
+      title: "Collections",
+      key: "collections",
+      render: (_, record) => (
+        <>
+          {record.savedLvnzyProjects?.length
+            ? record.savedLvnzyProjects.map((collection) => (
+                <Tag key={collection._id} style={{ margin: "2px" }}>
+                  {collection.collectionName || "Unnamed Collection"}
+                </Tag>
+              ))
+            : "-"}
+        </>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Button
+          type="default"
+          shape="default"
+          icon={<EditOutlined />}
+          onClick={() => setUserToEdit(record)}
+        ></Button>
+      ),
     },
   ];
 
@@ -36,7 +74,7 @@ export function UsersList() {
           <Typography.Title level={4}>All Users</Typography.Title>
         </Col>
         <Col>
-          <CreateUser />
+          <UserForm />
         </Col>
       </Row>
 
@@ -46,6 +84,10 @@ export function UsersList() {
         loading={isLoading}
         rowKey="_id"
       />
+
+      {userToEdit && (
+        <UserForm data={userToEdit} onClose={() => setUserToEdit(undefined)} />
+      )}
     </>
   );
 }
