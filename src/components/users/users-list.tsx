@@ -35,6 +35,7 @@ export function UsersList() {
     {
       title: "Collections",
       key: "collections",
+      width: 500,
       render: (_, record) => (
         <>
           {record.savedLvnzyProjects?.length
