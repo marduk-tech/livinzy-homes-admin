@@ -1,7 +1,8 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Modal, Select } from "antd";
 import { useState } from "react";
-import { useGetAllProjects } from "../../hooks/project-hooks";
+import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
+
 import { useCreateUserMutation } from "../../hooks/user-hooks";
 import { CreateSavedLvnzyProject, CreateUserPayload } from "../../types/user";
 
@@ -10,7 +11,8 @@ export function CreateUser() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const createUserMutation = useCreateUserMutation();
-  const { data: projects, isLoading: projectsLoading } = useGetAllProjects();
+  const { data: projects, isLoading: projectsLoading } =
+    useGetAllLvnzyProjects();
 
   const handleOk = async () => {
     try {
@@ -103,8 +105,8 @@ export function CreateUser() {
                 if (!option?.label) return false;
                 return option.label.toLowerCase().includes(input.toLowerCase());
               }}
-              options={projects?.map((project) => ({
-                label: project.info.name,
+              options={projects?.map((project: any) => ({
+                label: project.meta.projectName,
                 value: project._id,
               }))}
             />
