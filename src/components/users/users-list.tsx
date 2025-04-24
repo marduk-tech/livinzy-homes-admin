@@ -23,7 +23,7 @@ export function UsersList() {
       title: "Name",
       dataIndex: ["profile", "name"],
       key: "name",
-      ...ColumnSearch("name"),
+      ...ColumnSearch(["profile", "name"]),
       render: (name: string, record) => record.profile?.name || "-",
     },
 
