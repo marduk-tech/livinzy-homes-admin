@@ -1,5 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Modal, Select, Space, Typography } from "antd";
+import PhoneInput from "antd-phone-input";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
@@ -31,9 +32,16 @@ export function UserForm({ data, onClose }: UserFormProps) {
   // Pre-populate form when in edit mode
   useEffect(() => {
     if (data) {
+      // clean the mobile number
+      const cleanMobile = data.mobile?.replace(/[^0-9]/g, "") || "";
+      const mobile = cleanMobile.slice(-10); // Take last 10 digits
+
       form.setFieldsValue({
         name: data.profile?.name || "",
-        mobile: data.mobile?.replace("91", "") || "",
+        mobileNumber: {
+          countryCode: Number(data.countryCode || "91"),
+          phoneNumber: mobile,
+        },
         collections: data.savedLvnzyProjects?.map((collection) => ({
           name: collection.collectionName,
           projects: collection.projects,
@@ -52,11 +60,24 @@ export function UserForm({ data, onClose }: UserFormProps) {
         projects: collection.projects,
       }));
 
+      let areaCode;
+      let phoneNumber;
+      let combinedNumber;
+      let countryCode;
+
+      // format mobile number
+      if (values.mobileNumber?.phoneNumber) {
+        areaCode = values.mobileNumber.areaCode || "";
+        phoneNumber = values.mobileNumber.phoneNumber || "";
+        combinedNumber = (areaCode + phoneNumber).replace(/[^0-9]/g, "");
+        countryCode = values.mobileNumber.countryCode?.toString() || "91";
+      }
+
       if (data) {
         // update existing user
         const payload: UpdateUserPayload = {
-          mobile: values.mobile ? `91${values.mobile}` : "",
-          countryCode: "91",
+          mobile: combinedNumber,
+          countryCode: countryCode,
           profile: {
             name: values.name,
           },
@@ -70,8 +91,8 @@ export function UserForm({ data, onClose }: UserFormProps) {
       } else {
         //  new user
         const payload: CreateUserPayload = {
-          mobile: values.mobile ? `91${values.mobile}` : "",
-          countryCode: "91",
+          mobile: combinedNumber,
+          countryCode: countryCode,
           profile: {
             name: values.name,
           },
@@ -127,17 +148,29 @@ export function UserForm({ data, onClose }: UserFormProps) {
           </Form.Item>
 
           <Form.Item
-            name="mobile"
+            name="mobileNumber"
             label="Mobile Number"
+            validateTrigger="onSubmit"
             rules={[
-              { required: true, message: "Please enter mobile number" },
               {
-                pattern: /^[0-9]{10}$/,
-                message: "Please enter valid 10 digit mobile number",
+                validator: (_, { valid }) => {
+                  if (valid(true)) return Promise.resolve();
+
+                  return Promise.reject("Invalid phone number");
+                },
               },
             ]}
+            initialValue={{
+              countryCode: 91,
+              isoCode: "in",
+            }}
           >
-            <Input placeholder="Enter 10 digit mobile number" maxLength={10} />
+            <PhoneInput
+              placeholder="Enter mobile number"
+              enableArrow
+              enableSearch
+              disableParentheses
+            />
           </Form.Item>
 
           <Form.List
