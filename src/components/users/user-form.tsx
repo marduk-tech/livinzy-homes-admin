@@ -243,7 +243,7 @@ export function UserForm({ data, onClose }: UserFormProps) {
                             .includes(input.toLowerCase());
                         }}
                         options={projects?.map((project: any) => ({
-                          label: project.meta.projectName,
+                          label: project.meta?.projectName,
                           value: project._id,
                         }))}
                       />
