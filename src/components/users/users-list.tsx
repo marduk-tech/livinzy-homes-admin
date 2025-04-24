@@ -30,6 +30,7 @@ export function UsersList() {
     {
       title: "Mobile",
       key: "mobile",
+      ...ColumnSearch("mobile"),
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
     },
     {
