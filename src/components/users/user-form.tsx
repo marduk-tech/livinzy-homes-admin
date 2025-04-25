@@ -17,10 +17,11 @@ import {
 
 interface UserFormProps {
   data?: User;
+  users: User[];
   onClose?: () => void;
 }
 
-export function UserForm({ data, onClose }: UserFormProps) {
+export function UserForm({ data, users, onClose }: UserFormProps) {
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -155,8 +156,32 @@ export function UserForm({ data, onClose }: UserFormProps) {
               {
                 validator: (_, { valid }) => {
                   if (valid(true)) return Promise.resolve();
-
                   return Promise.reject("Invalid phone number");
+                },
+              },
+              {
+                validator: (_, value) => {
+                  if (!value?.phoneNumber) return Promise.resolve();
+
+                  const areaCode = value.areaCode || "";
+                  const phoneNumber = value.phoneNumber || "";
+                  const combinedNumber = (areaCode + phoneNumber).replace(
+                    /[^0-9]/g,
+                    ""
+                  );
+                  const countryCode = value.countryCode?.toString() || "91";
+
+                  const existingUser = users.find(
+                    (user) =>
+                      user.mobile === combinedNumber &&
+                      user.countryCode === countryCode &&
+                      user._id !== data?._id
+                  );
+
+                  if (existingUser) {
+                    return Promise.reject("Mobile number already exists");
+                  }
+                  return Promise.resolve();
                 },
               },
             ]}
@@ -228,25 +253,38 @@ export function UserForm({ data, onClose }: UserFormProps) {
                         },
                       ]}
                     >
-                      <Select
-                        mode="multiple"
-                        placeholder="Select projects"
-                        loading={projectsLoading}
-                        showSearch
-                        filterOption={(
-                          input: string,
-                          option?: { label: string; value: string }
-                        ) => {
-                          if (!option?.label) return false;
-                          return option.label
-                            .toLowerCase()
-                            .includes(input.toLowerCase());
-                        }}
-                        options={projects?.map((project: any) => ({
-                          label: project.meta?.projectName,
-                          value: project._id,
-                        }))}
-                      />
+                      {projectsLoading ? (
+                        <div style={{ textAlign: "center", padding: "10px" }}>
+                          <Typography.Text type="secondary">
+                            Loading projects...
+                          </Typography.Text>
+                        </div>
+                      ) : projects ? (
+                        <Select
+                          mode="multiple"
+                          placeholder="Select projects"
+                          showSearch
+                          filterOption={(
+                            input: string,
+                            option?: { label: string; value: string }
+                          ) => {
+                            if (!option?.label) return false;
+                            return option.label
+                              .toLowerCase()
+                              .includes(input.toLowerCase());
+                          }}
+                          options={projects.map((project: any) => ({
+                            label: project.meta?.projectName,
+                            value: project._id,
+                          }))}
+                        />
+                      ) : (
+                        <div style={{ textAlign: "center", padding: "10px" }}>
+                          <Typography.Text type="warning">
+                            No projects available
+                          </Typography.Text>
+                        </div>
+                      )}
                     </Form.Item>
                   </div>
                 ))}

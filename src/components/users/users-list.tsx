@@ -76,7 +76,7 @@ export function UsersList() {
           <Typography.Title level={4}>All Users</Typography.Title>
         </Col>
         <Col>
-          <UserForm />
+          <UserForm users={data || []} />
         </Col>
       </Row>
 
@@ -88,7 +88,11 @@ export function UsersList() {
       />
 
       {userToEdit && (
-        <UserForm data={userToEdit} onClose={() => setUserToEdit(undefined)} />
+        <UserForm
+          data={userToEdit}
+          users={data || []}
+          onClose={() => setUserToEdit(undefined)}
+        />
       )}
     </>
   );
