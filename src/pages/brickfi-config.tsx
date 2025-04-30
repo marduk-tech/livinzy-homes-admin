@@ -3,7 +3,7 @@ import { CorridorsList } from "../components/corridors/corridors-list";
 import { LivindexDriversList } from "../components/livindex-drivers/livindex-drivers-list";
 import { LivindexList } from "../components/livindex-places/livindex-list";
 
-export function LivindexPlacesPage() {
+export function BrickfiConfig() {
   return (
     <Tabs defaultActiveKey="1">
       <Tabs.TabPane tab="Drivers" key="1">

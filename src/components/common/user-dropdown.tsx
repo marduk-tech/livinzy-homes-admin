@@ -34,12 +34,12 @@ export function UserDropDown() {
   };
 
   const navLinks = [
-    { to: "/chroma-docs", label: "Chroma Docs" },
-    { to: "/global-knowledge", label: "Encyclopedia" },
-    { to: "/livindex-places", label: "Drivers" },
-    { to: "/livindex-scores", label: "Livindex Scores" },
+    // { to: "/chroma-docs", label: "Chroma Docs" },
+    // { to: "/global-knowledge", label: "Encyclopedia" },
+    { to: "/config", label: "Config" },
+    // { to: "/livindex-scores", label: "Livindex Scores" },
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
-    { to: "/ask", label: "Ask Liv", icon: undefined },
+    // { to: "/ask", label: "Ask Liv", icon: undefined },
     { to: "/users", label: "Users", icon: undefined },
   ];
 
