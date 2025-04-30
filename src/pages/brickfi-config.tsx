@@ -3,6 +3,7 @@ import { CorridorsList } from "../components/corridors/corridors-list";
 import { DevelopersList } from "../components/developers/developers-list";
 import { LivindexDriversList } from "../components/livindex-drivers/livindex-drivers-list";
 import { LivindexList } from "../components/livindex-places/livindex-list";
+import { ReraProjectsList } from "../components/rera-projects/rera-projects-list";
 
 export function BrickfiConfig() {
   return (
@@ -18,6 +19,9 @@ export function BrickfiConfig() {
       </Tabs.TabPane>
       <Tabs.TabPane tab="Developers" key="4">
         <DevelopersList />
+      </Tabs.TabPane>
+      <Tabs.TabPane tab="Rera Projects" key="5">
+        <ReraProjectsList />
       </Tabs.TabPane>
     </Tabs>
   );

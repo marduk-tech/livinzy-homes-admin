@@ -14,6 +14,9 @@ export const queryKeys = {
   getAllDevelopers: "getAllDevelopers",
   getDeveloperById: "getDeveloperById",
 
+  getAllReraProjects: "getAllReraProjects",
+  getReraProjectById: "getReraProjectById",
+
   getAllUsers: "getAllUsers",
 };
 export const LivIndexDrivers = [
