@@ -1,10 +1,16 @@
-import { Tooltip, Typography } from "antd";
+import { Divider, Flex, Tooltip, Typography } from "antd";
 import { Project } from "../../types/Project";
 
 type Props = {
   details: {
     minimumUnitCost: number;
     minimumUnitSize: number;
+    configurations: [
+      {
+        config: string;
+        cost: number;
+      }
+    ];
   };
   record: Project;
   projects?: Project[];
@@ -34,14 +40,18 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
 
   if (projects && recordCorridors.length > 0) {
     projects.forEach((project) => {
-      const costingDetails = record.info.refinedContent.costingDetails as unknown as
+      const costingDetails = record.info.refinedContent
+        .costingDetails as unknown as
         | {
-          minimumUnitCost: number;
-          minimumUnitSize: number;
+            minimumUnitCost: number;
+            minimumUnitSize: number;
           }
         | undefined;
 
-      if (!costingDetails?.minimumUnitCost || !costingDetails?.minimumUnitSize) {
+      if (
+        !costingDetails?.minimumUnitCost ||
+        !costingDetails?.minimumUnitSize
+      ) {
         return;
       }
 
@@ -59,17 +69,18 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
       );
 
       if (hasCommonCorridor) {
-        const projectCostingDetails = project.info?.refinedContent.costingDetails as unknown as
+        const projectCostingDetails = project.info?.refinedContent
+          .costingDetails as unknown as
           | {
-              singleUnitCost: string;
-              singleUnitSize: string;
+              minimumUnitCost: string;
+              minimumUnitSize: string;
             }
           | undefined;
 
         if (!projectCostingDetails) return;
 
-        const pCost = Number(projectCostingDetails.singleUnitCost);
-        const pSize = Number(projectCostingDetails.singleUnitSize);
+        const pCost = Number(projectCostingDetails.minimumUnitCost);
+        const pSize = Number(projectCostingDetails.minimumUnitSize);
         if (!isNaN(pCost) && !isNaN(pSize) && pSize > 0) {
           corridorRates.push(Math.round(pCost / pSize));
         }
@@ -89,21 +100,26 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
     // check if current rate deviates more than 30% from median
     const deviation = (rate - medianRate) / medianRate;
 
-    if (deviation <= -0.25 ) {
-      return (
-        <Tooltip
-          title={`Corridor median: ₹${medianRate.toLocaleString()}/sqft`}
-        >
-          <Typography.Text type="danger">
-            ₹{rate.toLocaleString()}
-          </Typography.Text>
-        </Tooltip>
-      );
-    }
-
     return (
-      <Tooltip title={`Corridor median: ₹${medianRate.toLocaleString()}/sqft`}>
-        <Typography.Text>₹{rate.toLocaleString()}</Typography.Text>
+      <Tooltip
+        title={
+          <Flex vertical>
+            <Typography.Text style={{color:"white", paddingBottom: 4, borderBottom: "1px solid", marginBottom: 4}}>
+              Corridor median: ₹{medianRate.toLocaleString()}/sqft
+            </Typography.Text>
+            {details.configurations.map((config) => {
+              return (
+                <Typography.Text style={{color:"white"}}>
+                  {config.config}: ₹{config.cost}
+                </Typography.Text>
+              );
+            })}
+          </Flex>
+        }
+      >
+        <Typography.Text type={deviation <= -0.25 ? "danger" : "info"}>
+          ₹{rate.toLocaleString()}
+        </Typography.Text>
       </Tooltip>
     );
   }
