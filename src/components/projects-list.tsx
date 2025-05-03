@@ -98,6 +98,24 @@ export const ProjectsList: React.FC = () => {
           }}
         >
           <span>{name}</span>
+          {record.info?.location?.lat && record.info?.location?.lng && (
+            <span
+              style={{ cursor: "pointer", marginTop: "5px" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(
+                  `https://www.google.com/maps?q=${record.info.location.lat},${record.info.location.lng}`,
+                  "_blank"
+                );
+              }}
+            >
+              <DynamicReactIcon
+                color={COLORS.textColorDark}
+                iconName="IoNavigateCircleSharp"
+                iconSet="io5"
+              />
+            </span>
+          )}
         </Flex>
       ),
     },
@@ -184,6 +202,72 @@ export const ProjectsList: React.FC = () => {
         return (
           <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
             {reraNumber || "-"}
+          </Typography.Text>
+        );
+      },
+    },
+    {
+      title: "Timeline",
+      dataIndex: [
+        "info",
+        "reraProjectId",
+        "projectDetails",
+        "listOfRegistrationsExtensions",
+      ],
+      key: "timeline",
+      width: "200px",
+      responsive: ["lg", "xl"],
+      sorter: (a: any, b: any) => {
+        const aExtensions =
+          a.info?.reraProjectId?.projectDetails
+            ?.listOfRegistrationsExtensions || [];
+        const bExtensions =
+          b.info?.reraProjectId?.projectDetails
+            ?.listOfRegistrationsExtensions || [];
+
+        const parseDateString = (dateStr: string) => {
+          const [day, month, year] = dateStr.split("-");
+          return new Date(Number(year), Number(month) - 1, Number(day));
+        };
+
+        const aEndDate =
+          aExtensions.length > 0
+            ? parseDateString(
+                aExtensions[aExtensions.length - 1].completionDate
+              )
+            : new Date(0);
+        const bEndDate =
+          bExtensions.length > 0
+            ? parseDateString(
+                bExtensions[bExtensions.length - 1].completionDate
+              )
+            : new Date(0);
+
+        return aEndDate.getTime() - bEndDate.getTime();
+      },
+      render: (extensions: any[]) => {
+        if (!extensions || extensions.length === 0) return "-";
+
+        const parseDateString = (dateStr: string) => {
+          const [day, month, year] = dateStr.split("-");
+          return new Date(Number(year), Number(month) - 1, Number(day));
+        };
+
+        const startDate = parseDateString(extensions[0].startDate);
+        const endDate = parseDateString(
+          extensions[extensions.length - 1].completionDate
+        );
+
+        const formatDate = (date: Date) => {
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
+        };
+
+        return (
+          <Typography.Text>
+            {formatDate(startDate)} | {formatDate(endDate)}
           </Typography.Text>
         );
       },
@@ -309,46 +393,6 @@ export const ProjectsList: React.FC = () => {
       },
     },
 
-    {
-      title: "Location",
-      dataIndex: ["info", "location"],
-      key: "location",
-      width: "30px",
-      responsive: ["lg", "xl"],
-      sorter: (a, b) => {
-        const aHasLocation = a.info?.location?.lat && a.info?.location?.lng;
-        const bHasLocation = b.info?.location?.lat && b.info?.location?.lng;
-
-        if (!aHasLocation && !bHasLocation) return 0;
-        if (!aHasLocation) return -1;
-        if (!bHasLocation) return 1;
-
-        // if  have locations sort by latitude
-        return a.info.location.lat - b.info.location.lat;
-      },
-      render: (location: any) => {
-        if (!location?.lat || !location?.lng) return "-";
-
-        const { lat, lng } = location;
-        return (
-          <Flex
-            style={{ cursor: "pointer" }}
-            onClick={() =>
-              window.open(
-                `https://www.google.com/maps?q=${lat},${lng}`,
-                "_blank"
-              )
-            }
-          >
-            <DynamicReactIcon
-              color={COLORS.textColorDark}
-              iconName="IoNavigateCircleSharp"
-              iconSet="io5"
-            ></DynamicReactIcon>
-          </Flex>
-        );
-      },
-    },
     {
       title: "Date Updated",
       dataIndex: "updatedAt",
