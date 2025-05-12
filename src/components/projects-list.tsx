@@ -40,6 +40,7 @@ import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
+import Paragraph from "antd/es/skeleton/Paragraph";
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
@@ -88,34 +89,34 @@ export const ProjectsList: React.FC = () => {
       render: (name: string, record: Project) => (
         <Flex
           align="center"
-          gap={8}
           style={{
             padding: 2,
-            backgroundColor:
-              record.info.status === "active"
-                ? COLORS.greenIdentifier
-                : COLORS.borderColorDark,
           }}
         >
-          <span>{name}</span>
-          {record.info?.location?.lat && record.info?.location?.lng && (
-            <span
-              style={{ cursor: "pointer", marginTop: "5px" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(
-                  `https://www.google.com/maps?q=${record.info.location.lat},${record.info.location.lng}`,
-                  "_blank"
-                );
-              }}
-            >
-              <DynamicReactIcon
-                color={COLORS.textColorDark}
-                iconName="IoNavigateCircleSharp"
-                iconSet="io5"
-              />
-            </span>
-          )}
+          <Tag>
+            <Flex gap={4} align="center">
+              <Typography.Text>{name}</Typography.Text>
+              {record.info?.location?.lat && record.info?.location?.lng && (
+                <span
+                  style={{ cursor: "pointer", marginTop: "5px" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(
+                      `https://www.google.com/maps?q=${record.info.location.lat},${record.info.location.lng}`,
+                      "_blank"
+                    );
+                  }}
+                >
+                  <DynamicReactIcon
+                    color={COLORS.textColorDark}
+                    iconName="IoNavigateCircleSharp"
+                    iconSet="io5"
+                    size={20}
+                  />
+                </span>
+              )}
+            </Flex>
+          </Tag>
         </Flex>
       ),
     },
@@ -128,13 +129,13 @@ export const ProjectsList: React.FC = () => {
           return "-";
         }
         return (
-          <Flex style={{ width: 150, flexWrap: "wrap" }} gap={8}>
+          <Flex style={{ width: 125, flexWrap: "wrap" }} gap={4}>
             {projectCorridors.map((c: any) => {
               const corridorObj = corridors!.find(
                 (corr) => corr._id == c.corridorId
               );
               if (corridorObj) {
-                return <Tag>{corridorObj.name}</Tag>;
+                return <Tag style={{fontSize: 10, padding: "4px 2px", height: 18, lineHeight: "70%"}}>{corridorObj.name}</Tag>;
               }
             })}
           </Flex>
@@ -155,7 +156,7 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
-      title: "Avg Sqft Rate",
+      title: "Sqft Rate",
       dataIndex: ["info", "refinedContent", "costingDetails"],
       key: "averageSqftRate",
       width: "150px",
@@ -300,7 +301,7 @@ export const ProjectsList: React.FC = () => {
         });
 
         return (
-          <Flex style={{ maxWidth: 200 }} wrap="wrap" gap={4}>
+          <Flex style={{ maxWidth: 200 }} wrap="wrap" gap={2}>
             {Object.entries(mediaByTag)
               .filter(
                 ([_, counts]) => counts.images.length > 0 || counts.videos > 0
@@ -329,9 +330,10 @@ export const ProjectsList: React.FC = () => {
                     </Flex>
                   }
                 >
-                  <Tag>
-                    {tag} ({counts.images.length + counts.videos})
-                  </Tag>
+                 
+                    <Tag style={{fontSize: 8, padding: 2, height: 12, lineHeight: '90%', margin: 0 }}>
+                      {tag} ({counts.images.length + counts.videos})
+                    </Tag>
                 </Tooltip>
               ))}
           </Flex>
