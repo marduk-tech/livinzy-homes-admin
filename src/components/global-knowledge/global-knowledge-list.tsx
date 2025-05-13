@@ -1,21 +1,37 @@
-import { Button, Modal, Table, TableColumnType, Typography } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Flex,
+  Modal,
+  Popconfirm,
+  Space,
+  Table,
+  TableColumnType,
+  Typography,
+} from "antd";
 import { useState } from "react";
-import { useFetchGlobalKnowledge } from "../../hooks/global-knowledge-hooks";
-
+import {
+  useDeleteGlobalKnowledgeMutation,
+  useFetchGlobalKnowledge,
+} from "../../hooks/global-knowledge-hooks";
 import { IGlobalKnowledge } from "../../types";
+import { DeletePopconfirm } from "../common/delete-popconfirm";
+import { CreateGlobalKnowladgeForm } from "./create-global-knowledge-form";
 
 export function GlobalKnowladgeList() {
   const { data, isLoading, isError } = useFetchGlobalKnowledge();
 
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<IGlobalKnowledge | null>(
+    null
+  );
   const [infoModalData, setInfoModalData] = useState<{
     content: string;
-    sources: string;
     corridors: Array<{ _id: string; name: string }>;
     createdAt: string;
   }>({
     content: "",
-    sources: "",
     corridors: [],
     createdAt: "",
   });
@@ -25,7 +41,6 @@ export function GlobalKnowladgeList() {
 
     setInfoModalData({
       content: record.content,
-      sources: record.sources || "",
       corridors: record.corridors || [],
       createdAt,
     });
@@ -35,10 +50,26 @@ export function GlobalKnowladgeList() {
     setIsInfoModalOpen(false);
     setInfoModalData({
       content: "",
-      sources: "",
       corridors: [],
       createdAt: "",
     });
+  };
+
+  const handleEdit = (record: IGlobalKnowledge) => {
+    setSelectedRecord(record);
+
+    setIsEditModalOpen(true);
+  };
+
+  const deleteGlobalKnowledge = useDeleteGlobalKnowledgeMutation();
+
+  const handleDelete = async ({ id }: { id: string }): Promise<void> => {
+    await deleteGlobalKnowledge.mutateAsync(id);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedRecord(null);
   };
 
   const columns: TableColumnType<IGlobalKnowledge>[] = [
@@ -75,20 +106,6 @@ export function GlobalKnowladgeList() {
       width: 400,
     },
     {
-      title: "Sources",
-      dataIndex: "sources",
-      key: "sources",
-      render: (sources: string) =>
-        sources ? (
-          <Typography.Paragraph ellipsis={{ rows: 2 }}>
-            {sources}
-          </Typography.Paragraph>
-        ) : (
-          "-"
-        ),
-      width: 200,
-    },
-    {
       title: "Corridors",
       dataIndex: "corridors",
       key: "corridors",
@@ -108,7 +125,30 @@ export function GlobalKnowladgeList() {
           hour: "2-digit",
           minute: "2-digit",
         }),
-      width: 500,
+      width: 400,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Flex gap={15} justify="end">
+          <Button
+            type="default"
+            shape="default"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          />
+          <DeletePopconfirm
+            handleOk={() => handleDelete({ id: record._id })}
+            isLoading={deleteGlobalKnowledge.isPending}
+            title="Delete Knowledge"
+            description="Are you sure you want to delete this knowledge?"
+          >
+            <Button type="default" shape="default" icon={<DeleteOutlined />} />
+          </DeletePopconfirm>
+        </Flex>
+      ),
+      width: 100,
     },
   ];
 
@@ -144,11 +184,6 @@ export function GlobalKnowladgeList() {
           <Typography.Title level={5}>Content</Typography.Title>
           <Typography.Paragraph>{infoModalData.content}</Typography.Paragraph>
 
-          <Typography.Title level={5}>Sources</Typography.Title>
-          <Typography.Paragraph>
-            {infoModalData.sources || "-"}
-          </Typography.Paragraph>
-
           <Typography.Title level={5}>Corridors</Typography.Title>
           <Typography.Paragraph>
             {infoModalData.corridors?.length
@@ -156,6 +191,19 @@ export function GlobalKnowladgeList() {
               : "-"}
           </Typography.Paragraph>
         </div>
+      </Modal>
+
+      <Modal
+        title="Edit Knowledge"
+        open={isEditModalOpen}
+        onCancel={handleEditModalClose}
+        footer={null}
+        width={800}
+      >
+        <CreateGlobalKnowladgeForm
+          initialData={selectedRecord}
+          onSuccess={handleEditModalClose}
+        />
       </Modal>
     </>
   );

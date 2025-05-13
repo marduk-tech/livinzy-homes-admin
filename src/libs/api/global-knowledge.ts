@@ -25,3 +25,22 @@ export const generateGlobalEmbeddings = async () => {
     return response.data as any;
   });
 };
+
+export const deleteGlobalKnowledge = async (id: string) => {
+  const endpoint = `/global-knowledge/${id}`;
+  return axiosApiInstance.delete(endpoint).then((response) => {
+    return response.data;
+  });
+};
+
+export const updateGlobalKnowledge = async (
+  id: string,
+  globalKnowledgeData: Partial<IGlobalKnowledge>
+) => {
+  const endpoint = `/global-knowledge/${id}`;
+  return axiosApiInstance
+    .put(endpoint, globalKnowledgeData)
+    .then((response) => {
+      return response.data as IGlobalKnowledge;
+    });
+};
