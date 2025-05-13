@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Col,
@@ -18,11 +18,18 @@ import { Developer } from "../../types/developer";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { DeveloperForm } from "./developer-form";
+import ProjectForm from "./project-form";
 
 export function DevelopersList() {
   const { data, isLoading, isError } = useGetAllDevelopers();
   const [developerToEdit, setDeveloperToEdit] = useState<
     Developer | undefined
+  >();
+  const [selectedDeveloper, setSelectedDeveloper] = useState<
+    Developer | undefined
+  >();
+  const [selectedProjectIndex, setSelectedProjectIndex] = useState<
+    number | undefined
   >();
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
 
@@ -54,6 +61,24 @@ export function DevelopersList() {
       key: "primaryProject",
       render: (primaryProject: string) => primaryProject || "-",
     },
+    {
+      title: "Actions",
+      key: "projectActions",
+      align: "right",
+      render: (_, record, index) => (
+        <Button
+          type="default"
+          shape="default"
+          icon={<EditOutlined />}
+          onClick={() => {
+            setSelectedDeveloper(
+              data?.find((dev) => dev.developerProjects.includes(record))
+            );
+            setSelectedProjectIndex(index);
+          }}
+        />
+      ),
+    },
   ];
 
   const columns: TableColumnType<Developer>[] = [
@@ -75,7 +100,17 @@ export function DevelopersList() {
       key: "actions",
       align: "right",
       render: (_, record) => (
-        <Flex gap={15} justify="end">
+        <Flex gap={15} justify="end" align="center">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setSelectedDeveloper(record);
+              setSelectedProjectIndex(undefined);
+            }}
+          >
+            Add Project
+          </Button>
           <Button
             type="default"
             shape="default"
@@ -129,6 +164,18 @@ export function DevelopersList() {
           ),
         }}
       />
+
+      {selectedDeveloper && (
+        <ProjectForm
+          isOpen={true}
+          onClose={() => {
+            setSelectedDeveloper(undefined);
+            setSelectedProjectIndex(undefined);
+          }}
+          developer={selectedDeveloper}
+          projectIndex={selectedProjectIndex}
+        />
+      )}
 
       {developerToEdit && (
         <DeveloperForm
