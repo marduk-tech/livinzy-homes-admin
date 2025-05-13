@@ -110,7 +110,7 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
           </Form.Item>
 
           {/* developer projects edit form */}
-          {/* <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16 }}>
             <Typography.Text strong>Developer Projects</Typography.Text>
           </div>
 
@@ -217,7 +217,7 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
             >
               Add Project
             </Button>
-          </div> */}
+          </div>
         </Form>
       </Modal>
     </>
