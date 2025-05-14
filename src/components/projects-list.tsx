@@ -93,7 +93,7 @@ export const ProjectsList: React.FC = () => {
             padding: 2,
           }}
         >
-          <Tag>
+          <Tag color={record.info.status == "active" ? COLORS.greenIdentifier : "default"}>
             <Flex gap={4} align="center">
               <Typography.Text>{name}</Typography.Text>
               {record.info?.location?.lat && record.info?.location?.lng && (
