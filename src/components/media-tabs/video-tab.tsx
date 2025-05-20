@@ -15,6 +15,7 @@ import {
   Modal,
   Row,
   Select,
+  Tabs,
   Tag,
   Upload,
 } from "antd";
@@ -70,7 +71,8 @@ export function VideoUpload({
         caption: "",
         isYoutube: true,
         youtubeUrl: youtubeLink,
-        status: "done",
+        thumbnailUrl:
+          "https://img.youtube.com/vi/" + youtubeLink.split("v=")[1] + "/0.jpg",
       },
     };
 
@@ -95,6 +97,10 @@ export function VideoUpload({
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleUploadComplete = () => {
+    setIsYoutubeModalVisible(false);
   };
 
   const handleOnComplete = async ({
@@ -144,8 +150,10 @@ export function VideoUpload({
   };
 
   const { upload, progress, isLoading } = useBunnyUploader({
-    onComplete: ({ videoId, libraryId }) =>
-      handleOnComplete({ videoId, libraryId }),
+    onComplete: async ({ videoId, libraryId }) => {
+      await handleOnComplete({ videoId, libraryId });
+      handleUploadComplete();
+    },
   });
 
   return (
@@ -163,27 +171,82 @@ export function VideoUpload({
       <Modal
         title="Add Video"
         open={isYoutubeModalVisible}
-        onCancel={() => setIsYoutubeModalVisible(false)}
-        footer={[
-          <Button
-            key="submit"
-            type="primary"
-            onClick={handleYoutubeSave}
-            disabled={!youtubeLink}
-          >
-            Save
-          </Button>,
-        ]}
+        onCancel={() => {
+          setIsYoutubeModalVisible(false);
+          setYoutubeLink("");
+        }}
+        footer={null}
       >
-        <Form layout="vertical">
-          <Form.Item label="YouTube Link">
-            <Input
-              placeholder="Paste YouTube video link here"
-              value={youtubeLink}
-              onChange={(e) => setYoutubeLink(e.target.value)}
-            />
-          </Form.Item>
-        </Form>
+        <Tabs
+          defaultActiveKey="youtube"
+          items={[
+            {
+              key: "youtube",
+              label: "YouTube Link",
+              children: (
+                <div style={{ padding: "20px 0" }}>
+                  <Input
+                    size="large"
+                    placeholder="Paste YouTube video link here"
+                    value={youtubeLink}
+                    onChange={(e) => setYoutubeLink(e.target.value)}
+                    style={{ marginBottom: 16 }}
+                  />
+                  <Button
+                    type="primary"
+                    onClick={handleYoutubeSave}
+                    disabled={!youtubeLink}
+                    block
+                    size="large"
+                  >
+                    Save
+                  </Button>
+                </div>
+              ),
+            },
+            {
+              key: "upload",
+              label: "Upload Video",
+              children: (
+                <div style={{ padding: "20px 0", textAlign: "center" }}>
+                  <Upload
+                    accept="video/*"
+                    beforeUpload={(file) => {
+                      handleUpload(file);
+                      return false;
+                    }}
+                    showUploadList={false}
+                  >
+                    <Button
+                      type="primary"
+                      disabled={
+                        isLoading ||
+                        (progress !== undefined &&
+                          progress > 0 &&
+                          progress < 100) ||
+                        updateProject.isPending
+                      }
+                      loading={
+                        isLoading ||
+                        (progress !== undefined &&
+                          progress > 0 &&
+                          progress < 100) ||
+                        updateProject.isPending
+                      }
+                      size="large"
+                      icon={<PlusOutlined />}
+                    >
+                      Select Video to Upload
+                    </Button>
+                  </Upload>
+                  {progress !== undefined && progress > 0 && progress < 100 && (
+                    <div style={{ marginTop: 16 }}>Uploading {progress}%</div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
       </Modal>
 
       {project?.media.map((item: IMedia, index) => {
@@ -229,7 +292,7 @@ export const VideoItem: React.FC<VideoItemProps> = ({
   const { data: videoStatus, isLoading: videoStatusLoading } = useQuery({
     queryKey: [`video-item-${item._id}`],
     queryFn: () => api.getVideoStatus(item.video!.bunnyVideoId!),
-    enabled: item.video?.status != "done",
+    enabled: !item.video?.isYoutube && item.video?.status !== "done",
     refetchInterval: 5000,
   });
 
@@ -263,10 +326,23 @@ export const VideoItem: React.FC<VideoItemProps> = ({
   const deleteVideo = useMutation<void, Error>({
     mutationFn: async () => {
       if (item.video?.isYoutube) {
+        const updatedMedia = project.media.filter(
+          (media) => media?._id !== item?._id
+        );
+
+        updateProject.mutate({
+          projectData: {
+            media: updatedMedia,
+          },
+        });
+
+        form.setFieldValue("media", updatedMedia);
+
+        return;
+      } else {
+        await api.deleteVideo(item.video?.bunnyVideoId as string);
         return;
       }
-      await api.deleteVideo(item.video?.bunnyVideoId as string);
-      return;
     },
     onSuccess: () => {
       const updatedMedia = project.media.filter(
@@ -306,10 +382,8 @@ export const VideoItem: React.FC<VideoItemProps> = ({
           width="100%"
           src={
             item.video?.isYoutube
-              ? "https://img.youtube.com/vi/" +
-                item.video.youtubeUrl?.split("v=")[1] +
-                "/0.jpg"
-              : item.video?.status == "done"
+              ? item.video.thumbnailUrl
+              : item.video?.status === "done"
               ? previewUrl
               : ""
           }
