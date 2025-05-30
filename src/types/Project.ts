@@ -10,7 +10,7 @@ export interface IMedia {
   };
   isPreview: boolean;
   video?: {
-    url: string;
+    url?: string;
     tags: string[];
     caption?: string;
     bunnyVideoId?: string;
@@ -20,6 +20,9 @@ export interface IMedia {
     hlsUrl?: string;
     thumbnailUrl?: string;
     previewUrl?: string;
+    isYoutube?: boolean;
+    youtubeUrl?: string;
+    bunnyLibraryId?: number;
   };
   document?: {
     name: string;

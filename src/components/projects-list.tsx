@@ -286,8 +286,9 @@ export const ProjectsList: React.FC = () => {
         } = {};
 
         record.forEach((media) => {
-          const tags =
+          let tags =
             media.type === "image" ? media.image?.tags : media.video?.tags;
+            tags = tags && tags.length ? tags : ["all"];
           tags?.forEach((tag: string) => {
             if (!mediaByTag[tag]) {
               mediaByTag[tag] = { images: [], videos: 0 };

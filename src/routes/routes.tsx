@@ -6,10 +6,10 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 
 // Pages
 import AskPage from "../pages/ask-page";
-import ChromaDocsPage from "../pages/chroma-docs";
-import { GlobalKnowledgePage } from "../pages/global-knowledge-page";
-import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { BrickfiConfig } from "../pages/brickfi-config";
+import ChromaDocsPage from "../pages/chroma-docs";
+import { EncyclopediaPage } from "../pages/encyclopedia-page";
+import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -25,7 +25,7 @@ export const Router = () => {
         <Route path="/livindex-scores" element={<LivIndexScorePage />} />
         <Route path="/config" element={<BrickfiConfig />} />
 
-        <Route path="/global-knowledge" element={<GlobalKnowledgePage />} />
+        <Route path="/encyclopedia" element={<EncyclopediaPage />} />
 
         <Route path="/chroma-docs" element={<ChromaDocsPage />} />
 

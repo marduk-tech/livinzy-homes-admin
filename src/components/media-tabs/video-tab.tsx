@@ -1,7 +1,7 @@
 import {
   CheckCircleOutlined,
+  PlusOutlined,
   SyncOutlined,
-  UploadOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -12,8 +12,10 @@ import {
   FormInstance,
   Image,
   Input,
+  Modal,
   Row,
   Select,
+  Tabs,
   Tag,
   Upload,
 } from "antd";
@@ -49,9 +51,45 @@ export function VideoUpload({
   project,
   allTags,
 }: VideoUploadProps) {
+  const [isYoutubeModalVisible, setIsYoutubeModalVisible] = useState(false);
+  const [youtubeLink, setYoutubeLink] = useState("");
+
   const updateProject = useUpdateProjectMutation({
     projectId: projectId || "",
   });
+
+  const handleYoutubeSave = () => {
+    if (!youtubeLink) return;
+
+    const currentMedia = form.getFieldValue("media") || [];
+
+    // Add new YouTube video media
+    const newMedia = {
+      type: "video",
+      video: {
+        tags: [],
+        caption: "",
+        isYoutube: true,
+        youtubeUrl: youtubeLink,
+        thumbnailUrl:
+          "https://img.youtube.com/vi/" + youtubeLink.split("v=")[1] + "/0.jpg",
+      },
+    };
+
+    currentMedia.push(newMedia);
+    form.setFieldValue("media", currentMedia);
+
+    if (projectId) {
+      updateProject.mutate({
+        projectData: {
+          media: currentMedia,
+        },
+      });
+    }
+
+    setYoutubeLink("");
+    setIsYoutubeModalVisible(false);
+  };
 
   const handleUpload = async (file: File) => {
     try {
@@ -59,6 +97,10 @@ export function VideoUpload({
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleUploadComplete = () => {
+    setIsYoutubeModalVisible(false);
   };
 
   const handleOnComplete = async ({
@@ -108,45 +150,104 @@ export function VideoUpload({
   };
 
   const { upload, progress, isLoading } = useBunnyUploader({
-    onComplete: ({ videoId, libraryId }) =>
-      handleOnComplete({ videoId, libraryId }),
+    onComplete: async ({ videoId, libraryId }) => {
+      await handleOnComplete({ videoId, libraryId });
+      handleUploadComplete();
+    },
   });
 
   return (
     <>
       <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>
-        <Upload
-          accept="video/*"
-          beforeUpload={(file) => {
-            handleUpload(file);
-            return false; // Return false to prevent default antd upload behavior
-          }}
-          showUploadList={false}
+        <Button
+          icon={<PlusOutlined />}
+          type="primary"
+          onClick={() => setIsYoutubeModalVisible(true)}
         >
-          <Button
-            icon={<UploadOutlined />}
-            disabled={
-              isLoading ||
-              (progress !== undefined && progress > 0 && progress < 100) ||
-              updateProject.isPending
-            }
-            loading={
-              isLoading ||
-              (progress !== undefined && progress > 0 && progress < 100) ||
-              updateProject.isPending
-            }
-            type="primary"
-          >
-            {isLoading && !progress
-              ? "Preparing Upload..."
-              : progress !== undefined && progress > 0 && progress < 100
-              ? `Uploading ${progress}%`
-              : isLoading || updateProject.isPending
-              ? "Updating Project..."
-              : "Upload Video"}
-          </Button>
-        </Upload>
+          Add
+        </Button>
       </Flex>
+
+      <Modal
+        title="Add Video"
+        open={isYoutubeModalVisible}
+        onCancel={() => {
+          setIsYoutubeModalVisible(false);
+          setYoutubeLink("");
+        }}
+        footer={null}
+      >
+        <Tabs
+          defaultActiveKey="youtube"
+          items={[
+            {
+              key: "youtube",
+              label: "YouTube Link",
+              children: (
+                <div style={{ padding: "20px 0" }}>
+                  <Input
+                    size="large"
+                    placeholder="Paste YouTube video link here"
+                    value={youtubeLink}
+                    onChange={(e) => setYoutubeLink(e.target.value)}
+                    style={{ marginBottom: 16 }}
+                  />
+                  <Button
+                    type="primary"
+                    onClick={handleYoutubeSave}
+                    disabled={!youtubeLink}
+                    block
+                    size="large"
+                  >
+                    Save
+                  </Button>
+                </div>
+              ),
+            },
+            {
+              key: "upload",
+              label: "Upload Video",
+              children: (
+                <div style={{ padding: "20px 0", textAlign: "center" }}>
+                  <Upload
+                    accept="video/*"
+                    beforeUpload={(file) => {
+                      handleUpload(file);
+                      return false;
+                    }}
+                    showUploadList={false}
+                  >
+                    <Button
+                      type="primary"
+                      disabled={
+                        isLoading ||
+                        (progress !== undefined &&
+                          progress > 0 &&
+                          progress < 100) ||
+                        updateProject.isPending
+                      }
+                      loading={
+                        isLoading ||
+                        (progress !== undefined &&
+                          progress > 0 &&
+                          progress < 100) ||
+                        updateProject.isPending
+                      }
+                      size="large"
+                      icon={<PlusOutlined />}
+                    >
+                      Select Video to Upload
+                    </Button>
+                  </Upload>
+                  {progress !== undefined && progress > 0 && progress < 100 && (
+                    <div style={{ marginTop: 16 }}>Uploading {progress}%</div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
+      </Modal>
 
       {project?.media.map((item: IMedia, index) => {
         if (item?.type === "video") {
@@ -191,7 +292,7 @@ export const VideoItem: React.FC<VideoItemProps> = ({
   const { data: videoStatus, isLoading: videoStatusLoading } = useQuery({
     queryKey: [`video-item-${item._id}`],
     queryFn: () => api.getVideoStatus(item.video!.bunnyVideoId!),
-    enabled: item.video?.status != "done",
+    enabled: !item.video?.isYoutube && item.video?.status !== "done",
     refetchInterval: 5000,
   });
 
@@ -222,8 +323,27 @@ export const VideoItem: React.FC<VideoItemProps> = ({
     }
   };
 
-  const deleteVideo = useMutation({
-    mutationFn: () => api.deleteVideo(item.video?.bunnyVideoId as string),
+  const deleteVideo = useMutation<void, Error>({
+    mutationFn: async () => {
+      if (item.video?.isYoutube) {
+        const updatedMedia = project.media.filter(
+          (media) => media?._id !== item?._id
+        );
+
+        updateProject.mutate({
+          projectData: {
+            media: updatedMedia,
+          },
+        });
+
+        form.setFieldValue("media", updatedMedia);
+
+        return;
+      } else {
+        await api.deleteVideo(item.video?.bunnyVideoId as string);
+        return;
+      }
+    },
     onSuccess: () => {
       const updatedMedia = project.media.filter(
         (media) => media?._id !== item?._id
@@ -260,7 +380,13 @@ export const VideoItem: React.FC<VideoItemProps> = ({
       <Col xs={24} sm={24} md={6} lg={4} xl={6}>
         <Image
           width="100%"
-          src={item.video?.status == "done" ? previewUrl : ""}
+          src={
+            item.video?.isYoutube
+              ? item.video.thumbnailUrl
+              : item.video?.status === "done"
+              ? previewUrl
+              : ""
+          }
           fallback="/img-plchlder.png"
           alt={item._id}
           style={{
@@ -273,7 +399,13 @@ export const VideoItem: React.FC<VideoItemProps> = ({
       </Col>
       <Col xs={24} sm={24} md={18} lg={20} xl={18}>
         <Flex vertical justify="center" gap={15} style={{ height: "100%" }}>
-          {item.video?.status == "done" ? (
+          {item.video?.isYoutube ? (
+            <Flex>
+              <Tag icon={<CheckCircleOutlined />} color="blue">
+                YouTube Video
+              </Tag>
+            </Flex>
+          ) : item.video?.status == "done" ? (
             <Flex>
               <Tag icon={<CheckCircleOutlined />} color="green">
                 Processing complete
@@ -328,13 +460,23 @@ export const VideoItem: React.FC<VideoItemProps> = ({
             </Form.Item>
 
             <Flex wrap="wrap" gap={10}>
-              <a
-                href={item.video?.directPlayUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button>Play Video</Button>
-              </a>
+              {item.video?.isYoutube ? (
+                <a
+                  href={item.video?.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button>Watch on YouTube</Button>
+                </a>
+              ) : (
+                <a
+                  href={item.video?.directPlayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button>Play Video</Button>
+                </a>
+              )}
 
               <Button
                 disabled={deleteVideo.isPending}
@@ -358,6 +500,8 @@ export const VideoItem: React.FC<VideoItemProps> = ({
           <Form.Item name={["media", index, "video", "directPlayUrl"]} hidden />
           <Form.Item name={["media", index, "video", "thumbnailUrl"]} hidden />
           <Form.Item name={["media", index, "video", "previewUrl"]} hidden />
+          <Form.Item name={["media", index, "video", "isYoutube"]} hidden />
+          <Form.Item name={["media", index, "video", "youtubeUrl"]} hidden />
         </Flex>
       </Col>
     </Row>
