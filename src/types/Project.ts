@@ -62,6 +62,11 @@ export interface IInfo {
     haversineDistance: number;
   };
   refinedContent: any;
+  unitConfigWithPricing: any;
+  rate: {
+    minimumUnitCost: number,
+    minimumUnitSize: number
+  }
 }
 
 export interface ILand {

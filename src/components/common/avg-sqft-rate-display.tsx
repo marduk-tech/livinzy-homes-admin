@@ -40,8 +40,7 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
 
   if (projects && recordCorridors.length > 0) {
     projects.forEach((project) => {
-      const costingDetails = record.info.refinedContent
-        .costingDetails as unknown as
+      const costingDetails = record.info.rate as unknown as
         | {
             minimumUnitCost: number;
             minimumUnitSize: number;
@@ -69,11 +68,10 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
       );
 
       if (hasCommonCorridor) {
-        const projectCostingDetails = project.info?.refinedContent
-          .costingDetails as unknown as
+        const projectCostingDetails = project.info?.rate as
           | {
-              minimumUnitCost: string;
-              minimumUnitSize: string;
+              minimumUnitCost: number;
+              minimumUnitSize: number;
             }
           | undefined;
 
@@ -107,10 +105,10 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
             <Typography.Text style={{color:"white", paddingBottom: 4, borderBottom: "1px solid", marginBottom: 4}}>
               Corridor median: ₹{medianRate.toLocaleString()}/sqft
             </Typography.Text>
-            {details.configurations.map((config) => {
+            {record.info.unitConfigWithPricing.map((config: any) => {
               return (
                 <Typography.Text style={{color:"white"}}>
-                  {config.config}: ₹{config.cost}
+                  {config.config}: ₹{config.price}
                 </Typography.Text>
               );
             })}

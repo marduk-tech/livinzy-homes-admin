@@ -1,8 +1,10 @@
 import {
+  CheckCircleOutlined,
   DeleteOutlined,
   EditOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
+  SyncOutlined,
 } from "@ant-design/icons";
 import {
   App as AntApp,
@@ -93,7 +95,13 @@ export const ProjectsList: React.FC = () => {
             padding: 2,
           }}
         >
-          <Tag color={record.info.status == "active" ? COLORS.greenIdentifier : "default"}>
+          <Tag
+            color={
+              record.info.status == "active"
+                ? COLORS.greenIdentifier
+                : "default"
+            }
+          >
             <Flex gap={4} align="center">
               <Typography.Text>{name}</Typography.Text>
               {record.info?.location?.lat && record.info?.location?.lng && (
@@ -135,7 +143,18 @@ export const ProjectsList: React.FC = () => {
                 (corr) => corr._id == c.corridorId
               );
               if (corridorObj) {
-                return <Tag style={{fontSize: 10, padding: "4px 2px", height: 18, lineHeight: "70%"}}>{corridorObj.name}</Tag>;
+                return (
+                  <Tag
+                    style={{
+                      fontSize: 10,
+                      padding: "4px 2px",
+                      height: 18,
+                      lineHeight: "70%",
+                    }}
+                  >
+                    {corridorObj.name}
+                  </Tag>
+                );
               }
             })}
           </Flex>
@@ -157,22 +176,17 @@ export const ProjectsList: React.FC = () => {
 
     {
       title: "Sqft Rate",
-      dataIndex: ["info", "refinedContent", "costingDetails"],
+      dataIndex: ["info", "rate"],
       key: "averageSqftRate",
       width: "150px",
       responsive: ["lg", "xl"],
 
       sorter: (a: any, b: any) => {
-        const calculateRate = (details: any) => {
-          if (!details?.singleUnitCost || !details?.singleUnitSize) return 0;
-          const cost = Number(details.singleUnitCost);
-          const size = Number(details.singleUnitSize);
-          if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
-          return Math.round(cost / size);
-        };
-        const aRate = calculateRate(a.ui?.costingDetails);
-        const bRate = calculateRate(b.ui?.costingDetails);
-        return aRate - bRate;
+        if (!a?.minimumUnitCost || !a?.minimumUnitSize) return 0;
+        const cost = Number(a.minimumUnitCost);
+        const size = Number(a.minimumUnitSize);
+        if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
+        return Math.round(cost / size);
       },
 
       render: (details: any, record: Project) => {
@@ -288,7 +302,7 @@ export const ProjectsList: React.FC = () => {
         record.forEach((media) => {
           let tags =
             media.type === "image" ? media.image?.tags : media.video?.tags;
-            tags = tags && tags.length ? tags : ["all"];
+          tags = tags && tags.length ? tags : ["all"];
           tags?.forEach((tag: string) => {
             if (!mediaByTag[tag]) {
               mediaByTag[tag] = { images: [], videos: 0 };
@@ -331,10 +345,17 @@ export const ProjectsList: React.FC = () => {
                     </Flex>
                   }
                 >
-                 
-                    <Tag style={{fontSize: 8, padding: 2, height: 12, lineHeight: '90%', margin: 0 }}>
-                      {tag} ({counts.images.length + counts.videos})
-                    </Tag>
+                  <Tag
+                    style={{
+                      fontSize: 8,
+                      padding: 2,
+                      height: 12,
+                      lineHeight: "90%",
+                      margin: 0,
+                    }}
+                  >
+                    {tag} ({counts.images.length + counts.videos})
+                  </Tag>
                 </Tooltip>
               ))}
           </Flex>
@@ -392,6 +413,68 @@ export const ProjectsList: React.FC = () => {
             | "villament"
             | "apartment"
             | "penthouse"
+        );
+      },
+    },
+    {
+      title: "Issues",
+      dataIndex: "internalChecks",
+      key: "internalChecks",
+      render: (internalChecks: any) => {
+        if (!internalChecks || !internalChecks.lastChecked) {
+          return <Tag icon={<SyncOutlined />}></Tag>
+        }
+        if (
+          !!internalChecks &&
+          !internalChecks.checks.length &&
+          internalChecks.lastChecked
+        ) {
+          return (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              All Ok
+            </Tag>
+          );
+        }
+        const severeIssues = internalChecks.checks.filter(
+          (c: any) => c.severity == 5
+        );
+        const nonSevereIssues = internalChecks.checks.filter(
+          (c: any) => c.severity !== 5
+        );
+        const getIssuesLabel = (issues: any[], color: string) => {
+          return    <Tooltip
+              title={
+                issues && issues.length ?
+                <Flex vertical gap={2}>
+                  {issues.map((i: any) => {
+                    return (
+                      <Tag>
+                        <Flex vertical gap={0}>
+                          <Typography.Text
+                            style={{ fontSize: 11, fontWeight: "bold" }}
+                          >
+                            {i.field}
+                          </Typography.Text>
+                          <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
+                            {i.issue}
+                          </Typography.Text>
+                        </Flex>
+                      </Tag>
+                    );
+                  })}
+                </Flex>: null
+              }
+            >
+              <Tag color={color} bordered={false}>
+                {issues.length ? issues.length : 0}
+              </Tag>
+            </Tooltip>
+        }
+        return (
+          <Flex>
+           {severeIssues.length ? getIssuesLabel(severeIssues,  "error"): null}
+           {nonSevereIssues.length ? getIssuesLabel(nonSevereIssues, "warning"): null}
+          </Flex>
         );
       },
     },
