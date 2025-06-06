@@ -12,10 +12,10 @@ import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
 import { useFetchDevelopers } from "./real-estate-developer-hooks";
 
-export function useGetAllProjects() {
+export function useGetAllProjects(searchKeyword?: string) {
   return useQuery({
     queryKey: [queryKeys.projects],
-    queryFn: () => api.getAllProjects({ source: "admin" }),
+    queryFn: () => api.getAllProjects({ source: "admin", searchKeyword }),
   });
 }
 

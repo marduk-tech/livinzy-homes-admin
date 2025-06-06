@@ -12,6 +12,7 @@ import {
   Col,
   Dropdown,
   Flex,
+  Input,
   MenuProps,
   notification,
   Progress,
@@ -43,6 +44,7 @@ import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
 import Paragraph from "antd/es/skeleton/Paragraph";
+const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
@@ -51,7 +53,10 @@ export const ProjectsList: React.FC = () => {
   const { data: corridors, isLoading: isCorridorsDataLoading } =
     useFetchCorridors();
 
-  const { data: projects, isLoading: projectIsLoading } = useGetAllProjects();
+  const [searchKeyword, setSearchKeyword] = useState<string>();
+
+  const { data: projects, isLoading: projectIsLoading, refetch: refetchProjects } =
+    useGetAllProjects(searchKeyword);
 
   const deleteProjectMutation = useDeleteProjectMutation();
 
@@ -422,7 +427,7 @@ export const ProjectsList: React.FC = () => {
       key: "internalChecks",
       render: (internalChecks: any) => {
         if (!internalChecks || !internalChecks.lastChecked) {
-          return <Tag icon={<SyncOutlined />}></Tag>
+          return <Tag icon={<SyncOutlined />}></Tag>;
         }
         if (
           !!internalChecks &&
@@ -442,38 +447,45 @@ export const ProjectsList: React.FC = () => {
           (c: any) => c.severity !== 5
         );
         const getIssuesLabel = (issues: any[], color: string) => {
-          return    <Tooltip
+          return (
+            <Tooltip
               title={
-                issues && issues.length ?
-                <Flex vertical gap={2}>
-                  {issues.map((i: any) => {
-                    return (
-                      <Tag>
-                        <Flex vertical gap={0}>
-                          <Typography.Text
-                            style={{ fontSize: 11, fontWeight: "bold" }}
-                          >
-                            {i.field}
-                          </Typography.Text>
-                          <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
-                            {i.issue}
-                          </Typography.Text>
-                        </Flex>
-                      </Tag>
-                    );
-                  })}
-                </Flex>: null
+                issues && issues.length ? (
+                  <Flex vertical gap={2}>
+                    {issues.map((i: any) => {
+                      return (
+                        <Tag>
+                          <Flex vertical gap={0}>
+                            <Typography.Text
+                              style={{ fontSize: 11, fontWeight: "bold" }}
+                            >
+                              {i.field}
+                            </Typography.Text>
+                            <Typography.Text
+                              style={{ fontSize: 11, textWrap: "wrap" }}
+                            >
+                              {i.issue}
+                            </Typography.Text>
+                          </Flex>
+                        </Tag>
+                      );
+                    })}
+                  </Flex>
+                ) : null
               }
             >
               <Tag color={color} bordered={false}>
                 {issues.length ? issues.length : 0}
               </Tag>
             </Tooltip>
-        }
+          );
+        };
         return (
           <Flex>
-           {severeIssues.length ? getIssuesLabel(severeIssues,  "error"): null}
-           {nonSevereIssues.length ? getIssuesLabel(nonSevereIssues, "warning"): null}
+            {severeIssues.length ? getIssuesLabel(severeIssues, "error") : null}
+            {nonSevereIssues.length
+              ? getIssuesLabel(nonSevereIssues, "warning")
+              : null}
           </Flex>
         );
       },
@@ -560,9 +572,16 @@ export const ProjectsList: React.FC = () => {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Typography.Title level={5} style={{ margin: 0 }}>
-            All Projects
-          </Typography.Title>
+          <Search
+          loading={projectIsLoading}
+            placeholder="Search for a project"
+            onSearch={(value: string) => {
+              setSearchKeyword(value);
+              refetchProjects();
+            }}
+            enterButton="Search"
+            style={{ width: 300 }}
+          />
         </Col>
         <Col>
           <Dropdown menu={{ items }} placement="bottomRight" arrow>
