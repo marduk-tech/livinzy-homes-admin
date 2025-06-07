@@ -212,11 +212,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         projectData.info.corridors
       ) {
         values.info = {
+          ...projectData.info,
           ...values.info,
-          corridors: projectData.info.corridors,
-          reraProjectId: projectData.info.reraProjectId,
-          developerId: projectData.info.developerId,
-          refinedContent: projectData.info.refinedContent,
         };
       }
 

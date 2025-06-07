@@ -16,6 +16,8 @@ import {
   MenuProps,
   notification,
   Progress,
+  Radio,
+  RadioChangeEvent,
   Row,
   Table,
   TableColumnType,
@@ -23,7 +25,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { COLORS } from "../theme/colors";
 
 import { useQuery } from "@tanstack/react-query";
@@ -53,14 +55,16 @@ export const ProjectsList: React.FC = () => {
   const { data: corridors, isLoading: isCorridorsDataLoading } =
     useFetchCorridors();
 
-  const [searchKeyword, setSearchKeyword] = useState<string>();
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [issueSeverity, setIssueSeverity] = useState<string>("");
 
-  const { data: projects, isLoading: projectIsLoading, refetch: refetchProjects } =
-    useGetAllProjects(searchKeyword);
+  const {
+    data: projects,
+    isFetching: projectsLoading,
+    refetch: refetchProjects,
+  } = useGetAllProjects({ searchKeyword, issueSeverity });
 
   const deleteProjectMutation = useDeleteProjectMutation();
-
-  const { projectFields } = useProjectForm();
 
   const handleDelete = async ({
     projectId,
@@ -564,6 +568,18 @@ export const ProjectsList: React.FC = () => {
       return 0;
     });
 
+  useEffect(() => {
+    if (searchKeyword && !projectsLoading) {
+      refetchProjects();
+    }
+  }, [searchKeyword]);
+
+  useEffect(() => {
+    if (issueSeverity && !projectsLoading) {
+      refetchProjects();
+    }
+  }, [issueSeverity]);
+
   return (
     <>
       <Row
@@ -572,17 +588,75 @@ export const ProjectsList: React.FC = () => {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Search
-          loading={projectIsLoading}
-            placeholder="Search for a project"
-            onSearch={(value: string) => {
-              setSearchKeyword(value);
-              refetchProjects();
-            }}
-            enterButton="Search"
-            style={{ width: 300 }}
-          />
+          <Flex gap={8}>
+            <Search
+              loading={projectsLoading}
+              placeholder="Search for a project"
+              onSearch={(value: string) => {
+                setSearchKeyword(value);
+              }}
+              enterButton="Search"
+              style={{ width: 300 }}
+            />
+            <Radio.Group
+              block
+              onChange={({ target: { value } }: RadioChangeEvent) => {
+                setIssueSeverity(value);
+              }}
+              buttonStyle="solid"
+              options={[
+                {
+                  label: (
+                    <Typography.Text
+                      style={{
+                        color: issueSeverity == "ok"
+                          ? "white"
+                          : COLORS.greenIdentifier,
+                      }}
+                    >
+                      All good
+                    </Typography.Text>
+                  ),
+                  value: "ok",
+                },
+                {
+                  label: (
+                    <Typography.Text
+                      style={{
+                        color:
+                          issueSeverity == "blocker"
+                            ? "white"
+                            : COLORS.redIdentifier,
+                      }}
+                    >
+                      Blocker
+                    </Typography.Text>
+                  ),
+                  value: "blocker",
+                },
+                {
+                  label: (
+                    <Typography.Text
+                      style={{
+                        color:
+                          issueSeverity == "review"
+                            ? "white"
+                            : COLORS.yellowIdentifier,
+                      }}
+                    >
+                      Review
+                    </Typography.Text>
+                  ),
+                  value: "review",
+                },
+              ]}
+              style={{ width: 300 }}
+              defaultValue=""
+              optionType="button"
+            />
+          </Flex>
         </Col>
+
         <Col>
           <Dropdown menu={{ items }} placement="bottomRight" arrow>
             <Button type="primary">Create New Project</Button>
@@ -594,7 +668,7 @@ export const ProjectsList: React.FC = () => {
         dataSource={sortedProjects}
         columns={columns}
         rowKey="_id"
-        loading={projectIsLoading || isCorridorsDataLoading}
+        loading={projectsLoading || isCorridorsDataLoading}
         pagination={{
           current: currentPage,
           onChange: (page) => {
