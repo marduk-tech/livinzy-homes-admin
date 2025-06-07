@@ -16,6 +16,7 @@ export function useGetAllProjects(params: {searchKeyword: string, issueSeverity:
   return useQuery({
     queryKey: [queryKeys.projects],
     queryFn: () => api.getAllProjects({ source: "admin", ...params }),
+    refetchOnWindowFocus: false
   });
 }
 
