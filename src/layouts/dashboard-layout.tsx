@@ -20,8 +20,8 @@ export const DashboardLayout: React.FC = () => {
               <Link to="/">
                 <Image
                   preview={false}
-                  src="/logo-name.png"
-                  style={{ height: 35, width: "auto" }}
+                  src="/brickfi-logo.png"
+                  style={{ height: 20, width: "auto" }}
                 ></Image>
               </Link>
 
