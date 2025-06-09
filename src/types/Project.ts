@@ -62,11 +62,16 @@ export interface IInfo {
     haversineDistance: number;
   };
   refinedContent: any;
-  unitConfigWithPricing: any;
+  unitConfigWithPricing: Array<{
+    _id?: string;
+    config: string;
+    price: number;
+    floorplans: string[];
+  }>;
   rate: {
-    minimumUnitCost: number,
-    minimumUnitSize: number
-  }
+    minimumUnitCost: number;
+    minimumUnitSize: number;
+  };
 }
 
 export interface ILand {
@@ -193,7 +198,12 @@ export interface ProjectField {
   mustHave?: boolean;
   hide?: boolean;
 
-  type?: "single_select" | "text" | "multi_select" | "json";
+  type?:
+    | "single_select"
+    | "text"
+    | "multi_select"
+    | "json"
+    | "unit_config_list";
 
   options?: { label: string; value: string }[];
 }

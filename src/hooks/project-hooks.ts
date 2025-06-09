@@ -12,11 +12,14 @@ import { queryClient } from "../libs/query-client";
 import { Project, ProjectStructure } from "../types/Project";
 import { useFetchDevelopers } from "./real-estate-developer-hooks";
 
-export function useGetAllProjects(params: {searchKeyword: string, issueSeverity: string}) {
+export function useGetAllProjects(params: {
+  searchKeyword: string;
+  issueSeverity: string;
+}) {
   return useQuery({
     queryKey: [queryKeys.projects],
     queryFn: () => api.getAllProjects({ source: "admin", ...params }),
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -222,10 +225,10 @@ export function useProjectForm() {
         fieldDescription: "Explain financial plan in detail",
       },
       {
-        dbField: "configWithPricing",
-        type: "text",
-        fieldDisplayName: "Unit configs and pricing",
-        fieldDescription: "List all unit configuration along with base price",
+        dbField: "unitConfigsWithPricing",
+        type: "unit_config_list",
+        fieldDisplayName: "Unit Configurations",
+        fieldDescription: "Add or manage unit configurations and pricing",
       },
     ],
   };

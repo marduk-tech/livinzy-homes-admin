@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { UnitConfigList } from "./unit-config-list";
 
 import {
   Button,
@@ -124,7 +125,24 @@ const RenderFields: React.FC<{
                   ] || []
                 }
               >
-                {type === "single_select" || type == "multi_select" ? (
+                {type === "unit_config_list" ? (
+                  <UnitConfigList
+                    value={form.getFieldValue(
+                      Array.isArray(dbField)
+                        ? [category, ...dbField]
+                        : [category, dbField]
+                    )}
+                    onChange={(value) => {
+                      form.setFieldValue(
+                        Array.isArray(dbField)
+                          ? [category, ...dbField]
+                          : [category, dbField],
+                        value
+                      );
+                    }}
+                    media={form.getFieldValue("media") || []}
+                  />
+                ) : type === "single_select" || type == "multi_select" ? (
                   <Select
                     placeholder={fieldDescription}
                     options={options}
