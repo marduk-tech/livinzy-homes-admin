@@ -115,7 +115,7 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
           </Flex>
         }
       >
-        <Typography.Text type={deviation <= -0.25 ? "danger": undefined}>
+        <Typography.Text type={deviation <= -0.25 || deviation >= 0.35 ? "danger": undefined}>
           ₹{rate.toLocaleString()}
         </Typography.Text>
       </Tooltip>

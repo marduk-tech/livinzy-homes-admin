@@ -435,8 +435,9 @@ export const ProjectsList: React.FC = () => {
         }
         if (
           !!internalChecks &&
-          !internalChecks.checks.length &&
-          internalChecks.lastChecked
+          internalChecks.lastChecked &&
+          (!internalChecks.checks.length ||
+            !internalChecks.checks.filter((c: any) => c.severity > 2).length)
         ) {
           return (
             <Tag icon={<CheckCircleOutlined />} color="success">
@@ -448,7 +449,7 @@ export const ProjectsList: React.FC = () => {
           (c: any) => c.severity == 5
         );
         const nonSevereIssues = internalChecks.checks.filter(
-          (c: any) => c.severity !== 5
+          (c: any) => c.severity < 5 && c.severity > 2
         );
         const getIssuesLabel = (issues: any[], color: string) => {
           return (
@@ -609,9 +610,10 @@ export const ProjectsList: React.FC = () => {
                   label: (
                     <Typography.Text
                       style={{
-                        color: issueSeverity == "ok"
-                          ? "white"
-                          : COLORS.greenIdentifier,
+                        color:
+                          issueSeverity == "ok"
+                            ? "white"
+                            : COLORS.greenIdentifier,
                       }}
                     >
                       All good
