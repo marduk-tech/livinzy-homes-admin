@@ -78,6 +78,13 @@ export const ProjectsList: React.FC = () => {
     "ascend" | "descend" | undefined
   >();
 
+  const parseDateString = (dateStr: string) => {
+    const [day, month, year] = dateStr.includes("-")
+      ? dateStr.split("-")
+      : dateStr.split("/");
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  };
+
   const handleSorterChange = (order: "ascend" | "descend" | undefined) => {
     if (order === "ascend") {
       setSortOrder("descend");
@@ -249,10 +256,6 @@ export const ProjectsList: React.FC = () => {
           b.info?.reraProjectId?.projectDetails
             ?.listOfRegistrationsExtensions || [];
 
-        const parseDateString = (dateStr: string) => {
-          const [day, month, year] = dateStr.split("-");
-          return new Date(Number(year), Number(month) - 1, Number(day));
-        };
 
         const aEndDate =
           aExtensions.length > 0
@@ -271,11 +274,6 @@ export const ProjectsList: React.FC = () => {
       },
       render: (extensions: any[]) => {
         if (!extensions || extensions.length === 0) return "-";
-
-        const parseDateString = (dateStr: string) => {
-          const [day, month, year] = dateStr.split("-");
-          return new Date(Number(year), Number(month) - 1, Number(day));
-        };
 
         const startDate = parseDateString(extensions[0].startDate);
         const endDate = parseDateString(
