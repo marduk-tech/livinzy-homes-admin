@@ -17,7 +17,7 @@ import {
 import React, { useState } from "react";
 
 interface UnitConfig {
-  size: string;
+  config: string;
   price: number;
   floorplans?: string[];
 }
@@ -56,7 +56,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
     setIsModalVisible(true);
     form.resetFields();
     form.setFieldsValue({
-      size: undefined,
+      config: undefined,
       price: undefined,
       floorplans: [],
     });
@@ -134,7 +134,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               backgroundColor: "#fff",
             }}
           >
-            {/* left section - price and size */}
+            {/* left section - price and config */}
             <div style={{ flex: "0 0 200px" }}>
               <Typography.Text strong={true} style={{ fontSize: "18px" }}>
                 Rs. {item.price.toLocaleString()}
@@ -143,7 +143,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                 <Typography.Text
                   style={{ fontSize: "14px", color: "#666", marginTop: "4px" }}
                 >
-                  {item.size}
+                  {item.config}
                 </Typography.Text>
               </div>
             </div>
@@ -230,9 +230,11 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
           }}
         >
           <Form.Item
-            name="size"
+            name="config"
             label="Size"
-            rules={[{ required: true, message: "Please input the unit size!" }]}
+            rules={[
+              { required: true, message: "Please input the unit config!" },
+            ]}
           >
             <Input placeholder="e.g., 2 BHK - 1200 sq ft" />
           </Form.Item>

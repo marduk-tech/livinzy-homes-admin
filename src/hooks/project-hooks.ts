@@ -225,7 +225,7 @@ export function useProjectForm() {
         fieldDescription: "Explain financial plan in detail",
       },
       {
-        dbField: "unitConfigsWithPricing",
+        dbField: "unitConfigWithPricing",
         type: "unit_config_list",
         fieldDisplayName: "Unit Configurations",
         fieldDescription: "Add or manage unit configurations and pricing",
