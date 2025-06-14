@@ -10,6 +10,7 @@ export interface Developer {
   _id: string;
   name: string;
   developerProjects: DeveloperProject[];
+  externalWebsites?: string[];
   createdAt: string;
   updatedAt: string;
 }

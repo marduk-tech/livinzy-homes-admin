@@ -1,4 +1,4 @@
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, LinkOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Modal, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -23,17 +23,7 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
     if (data) {
       form.setFieldsValue({
         name: data.name,
-        developerProjects:
-          data.developerProjects.length > 0
-            ? data.developerProjects
-            : [
-                {
-                  name: "",
-                  reraNumber: "",
-                  promoterName: "",
-                  primaryProject: "",
-                },
-              ],
+        externalWebsites: data.externalWebsites || [],
       });
       setIsModalVisible(true);
     }
@@ -78,8 +68,6 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
         open={isModalVisible}
         onOk={() => form.submit()}
         onCancel={handleCancel}
-        width={800}
-        style={{ top: 20 }}
       >
         <Form
           form={form}
@@ -90,14 +78,7 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
               ? undefined
               : {
                   name: "",
-                  developerProjects: [
-                    {
-                      name: "",
-                      reraNumber: "",
-                      promoterName: "",
-                      primaryProject: "",
-                    },
-                  ],
+                  externalWebsites: [],
                 }
           }
         >
@@ -109,115 +90,69 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
             <Input placeholder="Enter developer name" />
           </Form.Item>
 
-          {/* developer projects edit form */}
-          <div style={{ marginBottom: 16 }}>
-            <Typography.Text strong>Developer Projects</Typography.Text>
-          </div>
+          <Form.List name="externalWebsites">
+            {(fields, { add, remove }) => (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  width: "100%",
+                }}
+              >
+                <Typography.Text strong>External Websites</Typography.Text>
 
-          <div
-            style={{
-              maxHeight: "calc(100vh - 300px)",
-              overflowY: "auto",
-              padding: "0 4px",
-            }}
-          >
-            <Form.List name="developerProjects">
-              {(fields, { add, remove }) => (
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
-                >
-                  {fields.map((field) => (
-                    <div
-                      key={field.key}
-                      style={{
-                        background: "#f5f5f5",
-                        padding: 16,
-                        borderRadius: 8,
-                      }}
-                    >
-                      <Space align="baseline" style={{ marginBottom: 8 }}>
-                        <Typography.Text>
-                          Project #{field.name + 1}
-                        </Typography.Text>
-                        {fields.length > 1 && (
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => remove(field.name)}
-                          />
-                        )}
-                      </Space>
-
+                {fields.map((field, index) => (
+                  <div
+                    key={field.key}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      width: "100%",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
                       <Form.Item
                         {...field}
-                        label="Project Name"
-                        name={[field.name, "name"]}
+                        validateTrigger={["onChange", "onBlur"]}
                         rules={[
                           {
                             required: true,
-                            message: "Please enter project name",
+                            whitespace: true,
+                            message:
+                              "Please input website URL or delete this field",
+                          },
+                          {
+                            type: "url",
+                            message: "Please enter a valid URL",
                           },
                         ]}
                       >
-                        <Input placeholder="Enter project name" />
-                      </Form.Item>
-
-                      <Form.Item
-                        {...field}
-                        label="RERA Number"
-                        name={[field.name, "reraNumber"]}
-                      >
-                        <Input placeholder="Enter RERA number" />
-                      </Form.Item>
-
-                      <Form.Item
-                        {...field}
-                        label="Promoter Name"
-                        name={[field.name, "promoterName"]}
-                      >
-                        <Input placeholder="Enter promoter name" />
-                      </Form.Item>
-
-                      <Form.Item
-                        {...field}
-                        label="Primary Project"
-                        name={[field.name, "primaryProject"]}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Input placeholder="Enter primary project" />
+                        <Input
+                          placeholder="https://example.com"
+                          prefix={<LinkOutlined />}
+                        />
                       </Form.Item>
                     </div>
-                  ))}
-                </div>
-              )}
-            </Form.List>
-          </div>
+                    <DeleteOutlined
+                      onClick={() => remove(index)}
+                      style={{ flexShrink: 0, marginTop: 5 }}
+                    />
+                  </div>
+                ))}
 
-          <div style={{ marginTop: 16 }}>
-            <Button
-              type="dashed"
-              onClick={() =>
-                form.getFieldValue("developerProjects")?.length < 10 &&
-                form.setFieldsValue({
-                  developerProjects: [
-                    ...(form.getFieldValue("developerProjects") || []),
-                    {
-                      name: "",
-                      reraNumber: "",
-                      promoterName: "",
-                      primaryProject: "",
-                    },
-                  ],
-                })
-              }
-              block
-              icon={<PlusOutlined />}
-              disabled={form.getFieldValue("developerProjects")?.length >= 10}
-            >
-              Add Project
-            </Button>
-          </div>
+                <Button
+                  type="dashed"
+                  onClick={() => add()}
+                  icon={<PlusOutlined />}
+                  style={{ width: "100%", marginTop: 8 }}
+                >
+                  Add Website
+                </Button>
+              </div>
+            )}
+          </Form.List>
         </Form>
       </Modal>
     </>

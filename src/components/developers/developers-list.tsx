@@ -13,6 +13,7 @@ import { useState } from "react";
 import {
   useDeleteDeveloperMutation,
   useGetAllDevelopers,
+  useUpdateDeveloperMutation,
 } from "../../hooks/developer-hooks";
 import { Developer } from "../../types/developer";
 import { ColumnSearch } from "../common/column-search";
@@ -32,6 +33,7 @@ export function DevelopersList() {
     number | undefined
   >();
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
+  const updateDeveloperMutation = useUpdateDeveloperMutation();
 
   const handleDelete = async (developerId: string): Promise<void> => {
     deleteDeveloperMutation.mutateAsync(developerId);
@@ -66,17 +68,46 @@ export function DevelopersList() {
       key: "projectActions",
       align: "right",
       render: (_, record, index) => (
-        <Button
-          type="default"
-          shape="default"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setSelectedDeveloper(
-              data?.find((dev) => dev.developerProjects.includes(record))
-            );
-            setSelectedProjectIndex(index);
-          }}
-        />
+        <>
+          <Button
+            type="default"
+            shape="default"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setSelectedDeveloper(
+                data?.find((dev) => dev.developerProjects.includes(record))
+              );
+              setSelectedProjectIndex(index);
+            }}
+          />
+
+          <DeletePopconfirm
+            handleOk={async () => {
+              const parentDeveloper = data?.find((dev) =>
+                dev.developerProjects.includes(record)
+              );
+              if (!parentDeveloper) return;
+              const updatedProjects = parentDeveloper.developerProjects.filter(
+                (_, i) => i !== index
+              );
+              return void updateDeveloperMutation.mutateAsync({
+                developerId: parentDeveloper._id,
+                developerData: {
+                  developerProjects: updatedProjects,
+                },
+              });
+            }}
+            isLoading={updateDeveloperMutation.isPending}
+            title="Delete Project"
+            description="Are you sure you want to delete this project?"
+          >
+            <Button
+              type="default"
+              shape="default"
+              icon={<DeleteOutlined />}
+            ></Button>
+          </DeletePopconfirm>
+        </>
       ),
     },
   ];
