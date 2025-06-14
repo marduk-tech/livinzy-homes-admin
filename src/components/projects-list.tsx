@@ -1,5 +1,6 @@
 import {
   CheckCircleOutlined,
+  CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   SortAscendingOutlined,
@@ -120,6 +121,15 @@ export const ProjectsList: React.FC = () => {
           >
             <Flex gap={4} align="center">
               <Typography.Text>{name}</Typography.Text>
+              <Typography.Text
+                copyable={{
+                  text: record._id,
+                  icon: <CopyOutlined />,
+                  tooltips: false,
+                }}
+              >
+              </Typography.Text>
+
               {record.info?.location?.lat && record.info?.location?.lng && (
                 <span
                   style={{ cursor: "pointer", marginTop: "5px" }}
@@ -255,7 +265,6 @@ export const ProjectsList: React.FC = () => {
         const bExtensions =
           b.info?.reraProjectId?.projectDetails
             ?.listOfRegistrationsExtensions || [];
-
 
         const aEndDate =
           aExtensions.length > 0
