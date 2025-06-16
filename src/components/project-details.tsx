@@ -222,6 +222,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     try {
       const values = await form.validateFields();
 
+      if (projectData && projectData.info && projectData.info.location) {
+        values.info.location = {
+          ...projectData.info.location,
+          ...values.info.location,
+        };
+      }
+
       // add corridors to info
       if (
         projectId &&
