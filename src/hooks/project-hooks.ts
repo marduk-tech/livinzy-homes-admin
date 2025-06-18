@@ -158,6 +158,47 @@ export function useUpdateProjectMutation({
   });
 }
 
+export function useResolveProjectIssueMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      issueField,
+      resolvedBy,
+      resolutionComments,
+    }: {
+      projectId: string;
+      issueField: string;
+      resolvedBy: string;
+      resolutionComments: string;
+    }) => {
+      return api.resolveProjectIssue(
+        projectId,
+        issueField,
+        resolvedBy,
+        resolutionComments
+      );
+    },
+
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({
+          message: `Project issue resolved successfully!`,
+        });
+      }
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `An unexpected error occurred. Please try again later.`,
+      });
+    },
+  });
+}
+
 export function useProjectForm() {
   const { data: developers = [] } = useFetchDevelopers();
 

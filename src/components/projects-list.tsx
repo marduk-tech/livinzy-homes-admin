@@ -13,6 +13,7 @@ import {
   Col,
   Dropdown,
   Flex,
+  Form,
   Input,
   MenuProps,
   Modal,
@@ -37,6 +38,7 @@ import {
   useDeleteProjectMutation,
   useGetAllProjects,
   useProjectForm,
+  useResolveProjectIssueMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
 import { queries } from "../libs/queries";
@@ -60,8 +62,17 @@ export const ProjectsList: React.FC = () => {
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [issueSeverity, setIssueSeverity] = useState<string>("");
-  const [issuesSelected, setIssuesSelected] = useState<any[]>();
+  const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
+    issues: any[];
+    projectName: string;
+    projectId: string;
+  }>();
+  const [selectedIssueToResolve, setsSelectedIssueToResolve] = useState<any>();
 
+  const resolveProjectIssue = useResolveProjectIssueMutation({
+    enableToasts: true,
+  });
+  const [resolveIssueForm] = Form.useForm();
   const { user, isAuthenticated, isLoading } = useAuth0();
 
   const {
@@ -440,7 +451,7 @@ export const ProjectsList: React.FC = () => {
       title: "Issues",
       dataIndex: "internalChecks",
       key: "internalChecks",
-      render: (internalChecks: any) => {
+      render: (internalChecks: any, record: Project) => {
         if (!internalChecks || !internalChecks.lastChecked) {
           return <Tag icon={<SyncOutlined />}></Tag>;
         }
@@ -463,43 +474,16 @@ export const ProjectsList: React.FC = () => {
           (c: any) => c.severity < 5 && c.severity > 2
         );
         const getIssuesLabel = (issues: any[], color: string) => {
-          // return (
-          //   <Tooltip
-          //     title={
-          //       issues && issues.length ? (
-          //         <Flex vertical gap={2}>
-          //           {issues.map((i: any) => {
-          //             return (
-          //               <Tag>
-          //                 <Flex vertical gap={0}>
-          //                   <Typography.Text
-          //                     style={{ fontSize: 11, fontWeight: "bold" }}
-          //                   >
-          //                     {i.field}
-          //                   </Typography.Text>
-          //                   <Typography.Text
-          //                     style={{ fontSize: 11, textWrap: "wrap" }}
-          //                   >
-          //                     {i.issue}
-          //                   </Typography.Text>
-          //                 </Flex>
-          //               </Tag>
-          //             );
-          //           })}
-          //         </Flex>
-          //       ) : null
-          //     }
-          //   >
-          //     <Tag color={color} bordered={false}>
-          //       {issues.length ? issues.length : 0}
-          //     </Tag>
-          //   </Tooltip>
-          // );
           return (
             <Tag
               onClick={() => {
-                setIssuesSelected(issues);
+                setProjectIssuesSelected({
+                  projectId: record._id,
+                  projectName: record.info.name,
+                  issues: issues,
+                });
               }}
+              style={{ cursor: "pointer" }}
               color={color}
               bordered={false}
             >
@@ -707,20 +691,19 @@ export const ProjectsList: React.FC = () => {
         setIsModalOpen={setIsJsonImportModalOpen}
       />
       <Modal
-        title="Review Project"
-        open={!!issuesSelected && !!issuesSelected.length}
+        title={projectIssuesSelected?.projectName}
+        open={!!projectIssuesSelected}
         onOk={() => {
-          setIssuesSelected([]);
+          setProjectIssuesSelected(undefined);
         }}
         onCancel={() => {
-          setIssuesSelected([]);
+          setProjectIssuesSelected(undefined);
         }}
         footer={null}
       >
-        <Typography.Text>{user?.email}</Typography.Text>
-        {issuesSelected && issuesSelected.length ? (
+        {projectIssuesSelected && projectIssuesSelected.issues ? (
           <Flex vertical gap={8} style={{ marginTop: 16 }}>
-            {issuesSelected.map((i: any) => {
+            {projectIssuesSelected.issues.map((i: any) => {
               return (
                 <Flex
                   style={{
@@ -731,19 +714,69 @@ export const ProjectsList: React.FC = () => {
                   gap={0}
                 >
                   <Flex vertical>
-                  <Typography.Text style={{ fontSize: 11, fontWeight: "bold" }}>
-                    {i.field}
-                  </Typography.Text>
-                  <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
-                    {i.issue}
-                  </Typography.Text>
+                    <Typography.Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "bold",
+                        color:
+                          i.severity == 5
+                            ? COLORS.redIdentifier
+                            : COLORS.yellowIdentifier,
+                      }}
+                    >
+                      {i.field}
+                    </Typography.Text>
+                    <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
+                      {i.issue}
+                    </Typography.Text>
                   </Flex>
-                  <Button size="small" style={{marginLeft: "auto"}}>Resolve</Button>
+                  {i.severity < 5 && (
+                    <Button
+                      size="small"
+                      style={{ marginLeft: "auto" }}
+                      onClick={() => {
+                        setsSelectedIssueToResolve(i);
+                      }}
+                    >
+                      Resolve
+                    </Button>
+                  )}
                 </Flex>
               );
             })}
           </Flex>
         ) : null}
+      </Modal>
+      <Modal
+        title="Resolve Issue"
+        open={!!selectedIssueToResolve}
+        onOk={async () => {
+          const values = await resolveIssueForm.validateFields();
+          await resolveProjectIssue.mutateAsync({
+            projectId: projectIssuesSelected!.projectId,
+            issueField: selectedIssueToResolve.field,
+            resolutionComments: values.resolutionComments,
+            resolvedBy: user!.email || "NA",
+          });
+          setsSelectedIssueToResolve(undefined);
+          setProjectIssuesSelected(undefined);
+          refetchProjects();
+        }}
+        okButtonProps={{loading: resolveProjectIssue.isPending}}
+        onCancel={() => {
+          setsSelectedIssueToResolve(undefined);
+        }}
+      >
+        <Form
+          form={resolveIssueForm}
+          layout="vertical"
+          style={{ marginTop: 20 }}
+          preserve={false}
+        >
+          <Form.Item name="resolutionComments" label="Comments">
+            <Input placeholder="Enter comments" required />
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );
