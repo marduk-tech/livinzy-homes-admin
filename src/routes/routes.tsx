@@ -14,10 +14,14 @@ import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
 import { UsersPage } from "../pages/users-page";
+import { AuthCallback } from "../components/auth/auth-callback";
+import { Unauthorized } from "../components/auth/unauthorized";
 
 export const Router = () => {
   return (
     <Routes>
+      <Route path="/auth-callback" element={<AuthCallback />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route element={<AuthenticationGuard component={DashboardLayout} />}>
         <Route path="/" element={<Navigate to="/projects" />} />
         <Route path="/projects" element={<ProjectsListPage />} />

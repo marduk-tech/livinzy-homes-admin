@@ -56,3 +56,17 @@ export const generateProjectUI = async (
       return response.data as any;
     });
 };
+
+// Update a project by ID
+export const resolveProjectIssue = async (
+  id: string,
+  issueField: any
+) => {
+  const endpoint = `/projects`;
+  return axiosApiInstance.post(endpoint, {
+    projectId: id, issueField
+  }).then((response) => {
+    return response.data as Project;
+  });
+};
+

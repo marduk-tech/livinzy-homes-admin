@@ -15,6 +15,7 @@ import {
   Flex,
   Input,
   MenuProps,
+  Modal,
   notification,
   Progress,
   Radio,
@@ -47,6 +48,7 @@ import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
 import Paragraph from "antd/es/skeleton/Paragraph";
+import { useAuth0 } from "@auth0/auth0-react";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
@@ -58,6 +60,9 @@ export const ProjectsList: React.FC = () => {
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [issueSeverity, setIssueSeverity] = useState<string>("");
+  const [issuesSelected, setIssuesSelected] = useState<any[]>();
+
+  const { user, isAuthenticated, isLoading } = useAuth0();
 
   const {
     data: projects,
@@ -127,8 +132,7 @@ export const ProjectsList: React.FC = () => {
                   icon: <CopyOutlined />,
                   tooltips: false,
                 }}
-              >
-              </Typography.Text>
+              ></Typography.Text>
 
               {record.info?.location?.lat && record.info?.location?.lng && (
                 <span
@@ -459,37 +463,48 @@ export const ProjectsList: React.FC = () => {
           (c: any) => c.severity < 5 && c.severity > 2
         );
         const getIssuesLabel = (issues: any[], color: string) => {
+          // return (
+          //   <Tooltip
+          //     title={
+          //       issues && issues.length ? (
+          //         <Flex vertical gap={2}>
+          //           {issues.map((i: any) => {
+          //             return (
+          //               <Tag>
+          //                 <Flex vertical gap={0}>
+          //                   <Typography.Text
+          //                     style={{ fontSize: 11, fontWeight: "bold" }}
+          //                   >
+          //                     {i.field}
+          //                   </Typography.Text>
+          //                   <Typography.Text
+          //                     style={{ fontSize: 11, textWrap: "wrap" }}
+          //                   >
+          //                     {i.issue}
+          //                   </Typography.Text>
+          //                 </Flex>
+          //               </Tag>
+          //             );
+          //           })}
+          //         </Flex>
+          //       ) : null
+          //     }
+          //   >
+          //     <Tag color={color} bordered={false}>
+          //       {issues.length ? issues.length : 0}
+          //     </Tag>
+          //   </Tooltip>
+          // );
           return (
-            <Tooltip
-              title={
-                issues && issues.length ? (
-                  <Flex vertical gap={2}>
-                    {issues.map((i: any) => {
-                      return (
-                        <Tag>
-                          <Flex vertical gap={0}>
-                            <Typography.Text
-                              style={{ fontSize: 11, fontWeight: "bold" }}
-                            >
-                              {i.field}
-                            </Typography.Text>
-                            <Typography.Text
-                              style={{ fontSize: 11, textWrap: "wrap" }}
-                            >
-                              {i.issue}
-                            </Typography.Text>
-                          </Flex>
-                        </Tag>
-                      );
-                    })}
-                  </Flex>
-                ) : null
-              }
+            <Tag
+              onClick={() => {
+                setIssuesSelected(issues);
+              }}
+              color={color}
+              bordered={false}
             >
-              <Tag color={color} bordered={false}>
-                {issues.length ? issues.length : 0}
-              </Tag>
-            </Tooltip>
+              {issues.length ? issues.length : 0}
+            </Tag>
           );
         };
         return (
@@ -691,6 +706,45 @@ export const ProjectsList: React.FC = () => {
         isModalOpen={isJsonImportModalOpen}
         setIsModalOpen={setIsJsonImportModalOpen}
       />
+      <Modal
+        title="Review Project"
+        open={!!issuesSelected && !!issuesSelected.length}
+        onOk={() => {
+          setIssuesSelected([]);
+        }}
+        onCancel={() => {
+          setIssuesSelected([]);
+        }}
+        footer={null}
+      >
+        <Typography.Text>{user?.email}</Typography.Text>
+        {issuesSelected && issuesSelected.length ? (
+          <Flex vertical gap={8} style={{ marginTop: 16 }}>
+            {issuesSelected.map((i: any) => {
+              return (
+                <Flex
+                  style={{
+                    paddingBottom: 8,
+                    borderBottom: "1px solid",
+                    borderColor: COLORS.borderColorDark,
+                  }}
+                  gap={0}
+                >
+                  <Flex vertical>
+                  <Typography.Text style={{ fontSize: 11, fontWeight: "bold" }}>
+                    {i.field}
+                  </Typography.Text>
+                  <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
+                    {i.issue}
+                  </Typography.Text>
+                  </Flex>
+                  <Button size="small" style={{marginLeft: "auto"}}>Resolve</Button>
+                </Flex>
+              );
+            })}
+          </Flex>
+        ) : null}
+      </Modal>
     </>
   );
 };

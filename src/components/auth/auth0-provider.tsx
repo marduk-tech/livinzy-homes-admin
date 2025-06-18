@@ -36,7 +36,9 @@ export const CustomAuth0Provider = ({ children }: { children: ReactNode }) => {
       clientId={clientId}
       authorizationParams={{
         redirect_uri: redirectUri,
+        scope: "openid profile email",
       }}
+      
       onRedirectCallback={onRedirectCallback}
     >
       {children}
