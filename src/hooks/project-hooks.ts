@@ -271,6 +271,11 @@ export function useProjectForm() {
         fieldDisplayName: "Unit Configurations",
         fieldDescription: "Add or manage unit configurations and pricing",
       },
+       {
+        dbField: "superProject",
+        fieldDisplayName: "Super Project",
+        fieldDescription: "Enter the parent project if any",
+      },
     ],
   };
 
