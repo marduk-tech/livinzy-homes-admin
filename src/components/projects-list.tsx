@@ -3,6 +3,7 @@ import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
+  EyeOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
   SyncOutlined,
@@ -51,6 +52,7 @@ import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
 import Paragraph from "antd/es/skeleton/Paragraph";
 import { useAuth0 } from "@auth0/auth0-react";
+import ReactJson from "react-json-view";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
@@ -68,6 +70,7 @@ export const ProjectsList: React.FC = () => {
     projectId: string;
   }>();
   const [selectedIssueToResolve, setsSelectedIssueToResolve] = useState<any>();
+  const [selectedReraProject, setSelectedReraProject] = useState<any>();
 
   const resolveProjectIssue = useResolveProjectIssueMutation({
     enableToasts: true,
@@ -517,9 +520,26 @@ export const ProjectsList: React.FC = () => {
       dataIndex: "_id",
       key: "_id",
 
-      render: (id: string, record) => {
+      render: (id: string, record: Project) => {
+        // Check if reraProjectId has data - it's populated with the full RERA project object
+        const hasReraData = !!record.info.reraProjectId;
+        
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
+            {hasReraData && (
+              <Tooltip title="View RERA Project Details">
+                <Button
+                  type="default"
+                  shape="default"
+                  icon={<EyeOutlined />}
+                  onClick={() => setSelectedReraProject({
+                    projectName: record.info.name,
+                    reraData: record.info.reraProjectId
+                  })}
+                />
+              </Tooltip>
+            )}
+            
             <Link to={`/projects/${id}/edit`}>
               <Button
                 type="default"
@@ -777,6 +797,59 @@ export const ProjectsList: React.FC = () => {
             <Input placeholder="Enter comments" required />
           </Form.Item>
         </Form>
+      </Modal>
+      
+      <Modal
+        title={
+          selectedReraProject?.projectName
+            ? `RERA Project Details - ${selectedReraProject.projectName}`
+            : "RERA Project Details"
+        }
+        open={!!selectedReraProject}
+        onCancel={() => setSelectedReraProject(undefined)}
+        footer={null}
+        width="90%"
+        style={{ maxWidth: '1200px', height: '80vh' }}
+        styles={{
+          body: {
+            height: 'calc(80vh - 108px)', // Subtract header and padding
+            overflow: 'hidden',
+            padding: 0
+          }
+        }}
+      >
+        {selectedReraProject?.reraData ? (
+          <div style={{ 
+            height: '100%', 
+            overflow: 'auto', 
+            padding: '10px',
+            backgroundColor: '#f8f9fa'
+          }}>
+            <ReactJson
+              src={selectedReraProject.reraData}
+              theme="rjv-default"
+              displayDataTypes={true}
+              displayObjectSize={true}
+              enableClipboard={true}
+              collapsed={1}
+              sortKeys={true}
+              name="reraProject"
+              indentWidth={4}
+              style={{ fontSize: '14px' }}
+            />
+          </div>
+        ) : (
+          <div style={{ 
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Typography.Text type="secondary">
+              No RERA project data available.
+            </Typography.Text>
+          </div>
+        )}
       </Modal>
     </>
   );

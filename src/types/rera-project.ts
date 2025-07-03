@@ -42,8 +42,11 @@ interface ProjectDetails {
 }
 
 export interface ReraProject {
-  id: string;
+  _id: string;
   projectDetails: ProjectDetails;
+  projectAmenities: Record<string, any>;
+  documents: Record<string, any>;
+  landDetails: Record<string, any>;
   complaints: Record<string, any>;
   createdAt: string;
   updatedAt: string;

@@ -1,4 +1,5 @@
 import { ILivIndexPlaces } from ".";
+import { ReraProject } from "./rera-project";
 
 export interface IMedia {
   _id: string;
@@ -56,7 +57,7 @@ export interface IInfo {
   >;
   status: "new" | "active" | "disabled";
   reraNumber?: string;
-  reraProjectId: string;
+  reraProjectId: string | ReraProject;
   corridors?: {
     corridorId: string;
     haversineDistance: number;
