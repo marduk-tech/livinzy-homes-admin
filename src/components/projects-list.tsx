@@ -608,6 +608,7 @@ export const ProjectsList: React.FC = () => {
             <Radio.Group
               block
               onChange={({ target: { value } }: RadioChangeEvent) => {
+                setSearchKeyword("");
                 setIssueSeverity(value);
               }}
               buttonStyle="solid"
