@@ -259,9 +259,11 @@ export const ProjectsList: React.FC = () => {
       ...ColumnSearch(["info", "reraNumber"]),
       render: (reraNumber: string) => {
         return (
+          <Tooltip title={reraNumber}>
           <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
             {reraNumber || "-"}
           </Typography.Text>
+          </Tooltip>
         );
       },
     },
