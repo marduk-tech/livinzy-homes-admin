@@ -10,3 +10,20 @@ body {
   background-color: #fafbfb;
   /* Add any other styles you want to reset or modify */
 }
+
+
+.reasoning {
+  line-height: 145%;
+  b {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .highlight {
+    font-weight: 500;
+    color: #0084d1;
+    background-color: rgba(43, 203, 242, 0.1);
+    padding: 0 4px;
+  }
+}

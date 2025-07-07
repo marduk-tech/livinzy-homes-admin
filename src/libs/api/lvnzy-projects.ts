@@ -6,3 +6,11 @@ export const getAllLvnzyProjects = async () => {
     return response.data;
   });
 };
+
+
+export const getLvnzyProjectById = async (id: string) => {
+  const endpoint = `/lvnzy-projects/${id}`;
+  return axiosApiInstance.get(endpoint).then((response) => {
+    return response.data;
+  });
+};

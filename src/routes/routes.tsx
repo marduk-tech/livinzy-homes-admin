@@ -16,6 +16,7 @@ import { ProjectsListPage } from "../pages/projects/projects-list";
 import { UsersPage } from "../pages/users-page";
 import { AuthCallback } from "../components/auth/auth-callback";
 import { Unauthorized } from "../components/auth/unauthorized";
+import { Brick360Full } from "../pages/brick360-projects/brick360-project";
 
 export const Router = () => {
   return (
@@ -37,6 +38,7 @@ export const Router = () => {
 
         <Route path="/projects/create" element={<CreateProjectPage />} />
 
+        <Route path="/brick360/:brick360ProjectId?" element={<Brick360Full></Brick360Full>}></Route>
         <Route path="/ask" element={<AskPage />} />
 
         <Route path="/users" element={<UsersPage />} />

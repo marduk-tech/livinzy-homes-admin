@@ -4,6 +4,7 @@ export const baseApiUrl = import.meta.env.VITE_API_URL;
 
 export const queryKeys = {
   projects: "projects",
+  lvnzyProjects: "lvnzyProjects",
   getProjectById: "getProjectById",
   getAllPlaces: "getAllPlaces",
   getAllDrivers: "getAllDrivers",
@@ -16,7 +17,7 @@ export const queryKeys = {
 
   getAllReraProjects: "getAllReraProjects",
   getReraProjectById: "getReraProjectById",
-
+  getLvnzyProjectById: "getLvnzyProjectById",
   getAllUsers: "getAllUsers",
 };
 export const LivIndexDrivers = [
