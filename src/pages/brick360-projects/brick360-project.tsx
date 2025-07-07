@@ -118,11 +118,12 @@ export function Brick360Full() {
     return <Loader></Loader>;
   }
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", marginTop: 0 }}>
       <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
       <h3 style={{ margin: 0, marginBottom: 24 }}>
         {brick360Project.meta.oneLiner}
       </h3>
+      <Flex vertical style={{height: "calc(100vh - 200px)", overflowY: "scroll"}}>
       {sections.map(({ key, label, content }) => {
         const sectionData = brick360Project["score"][key];
         if (!sectionData) return null;
@@ -134,6 +135,7 @@ export function Brick360Full() {
           </div>
         );
       })}
+      </Flex>
     </div>
   );
 }
