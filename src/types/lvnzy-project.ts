@@ -1,4 +1,5 @@
 export interface LvnzyProject {
+  _id: string;
   property: any;
   developer: any;
   investment: any;

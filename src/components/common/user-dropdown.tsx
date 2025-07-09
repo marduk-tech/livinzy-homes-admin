@@ -37,6 +37,8 @@ export function UserDropDown() {
     // { to: "/chroma-docs", label: "Chroma Docs" },
     { to: "/encyclopedia", label: "Encyclopedia" },
     { to: "/config", label: "Config" },
+    { to: "/brick360", label: "Brick360s" },
+
     // { to: "/livindex-scores", label: "Livindex Scores" },
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
     // { to: "/ask", label: "Ask Liv", icon: undefined },

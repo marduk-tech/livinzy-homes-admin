@@ -1,8 +1,12 @@
+import { Button, Flex } from "antd";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useFetchLvnzyProjectById } from "../../hooks/lvnzyprojects-hooks";
+import { EditScoreDialog } from "../../components/brick360/edit-score-dialog";
 import { Loader } from "../../components/common/loader";
-import { Flex } from "antd";
+import {
+  useFetchLvnzyProjectById,
+  useUpdateLvnzyProject,
+} from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 
 const containerStyle: React.CSSProperties = {
@@ -45,7 +49,7 @@ const HtmlList = ({
     >
       {rating && <p style={ratingStyle}>Rating: {rating}/100</p>}
       <Flex vertical className="reasoning">
-        {items.map((html, idx) => (
+        {items?.map((html, idx) => (
           <div
             key={idx}
             dangerouslySetInnerHTML={{ __html: html }}
@@ -66,11 +70,22 @@ export function Brick360Full() {
   const [brick360ProjectData, setBrick360ProjectData] =
     useState<LvnzyProject>();
 
+  const updateProjectMutation = useUpdateLvnzyProject();
+
   useEffect(() => {
     if (brick360Project) {
       setBrick360ProjectData(brick360Project);
     }
   }, [brick360Project]);
+
+  const handleSave = () => {
+    if (brick360ProjectData) {
+      updateProjectMutation.mutate({
+        id: brick360ProjectId!,
+        payload: brick360ProjectData,
+      });
+    }
+  };
 
   const scoreParams = [
     {
@@ -119,22 +134,45 @@ export function Brick360Full() {
   }
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", marginTop: 0 }}>
-      <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
+      <Flex justify="space-between" align="center">
+        <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
+        <Button
+          type="primary"
+          onClick={handleSave}
+          loading={updateProjectMutation.isPending}
+        >
+          Save
+        </Button>
+      </Flex>
       <h3 style={{ margin: 0, marginBottom: 24 }}>
         {brick360Project.meta.oneLiner}
       </h3>
-      <Flex vertical style={{height: "calc(100vh - 200px)", overflowY: "scroll"}}>
-      {sections.map(({ key, label, content }) => {
-        const sectionData = brick360Project["score"][key];
-        if (!sectionData) return null;
+      <Flex
+        vertical
+        style={{ height: "calc(100vh - 200px)", overflowY: "scroll" }}
+      >
+        {sections.map(({ key, label, content }) => {
+          const sectionData = brick360Project["score"][key];
+          if (!sectionData) return null;
 
-        return (
-          <div key={key} style={containerStyle}>
-            <div style={sectionTitleStyle}>{label}</div>
-            {content(sectionData)}
-          </div>
-        );
-      })}
+          return (
+            <div key={key} style={containerStyle}>
+              <Flex justify="space-between" align="center">
+                <div style={sectionTitleStyle}>{label}</div>
+                <EditScoreDialog
+                  sectionData={sectionData}
+                  sectionKey={key}
+                  onSave={(updatedData) => {
+                    const newProjectData = { ...brick360ProjectData };
+                    newProjectData.score[key] = updatedData;
+                    setBrick360ProjectData(newProjectData as LvnzyProject);
+                  }}
+                />
+              </Flex>
+              {content(sectionData)}
+            </div>
+          );
+        })}
       </Flex>
     </div>
   );
