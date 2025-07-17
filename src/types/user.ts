@@ -47,8 +47,6 @@ export interface CreateUserPayload {
 export interface UpdateUserPayload {
   mobile: string;
   countryCode: string;
-  profile: {
-    name: string;
-  };
+  profile: UserProfile;
   savedLvnzyProjects: SavedLvnzyProject[];
 }

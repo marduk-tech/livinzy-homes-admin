@@ -80,6 +80,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           mobile: combinedNumber,
           countryCode: countryCode,
           profile: {
+            ...data.profile,
             name: values.name,
           },
           savedLvnzyProjects,
