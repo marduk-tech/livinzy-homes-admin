@@ -284,6 +284,7 @@ export const VideoItem: React.FC<VideoItemProps> = ({
 }) => {
   const { isMobile } = useDevice();
   const [previewUrl, setPreviewUrl] = useState(item.video?.previewUrl);
+
   const updateProject = useUpdateProjectMutation({
     projectId: project._id,
     enableToasts: false,
@@ -326,21 +327,12 @@ export const VideoItem: React.FC<VideoItemProps> = ({
   const deleteVideo = useMutation<void, Error>({
     mutationFn: async () => {
       if (item.video?.isYoutube) {
-        const updatedMedia = project.media.filter(
-          (media) => media?._id !== item?._id
-        );
-
-        updateProject.mutate({
-          projectData: {
-            media: updatedMedia,
-          },
-        });
-
-        form.setFieldValue("media", updatedMedia);
-
+        return;
+      } else if (item.video?.bunnyVideoId) {
+        await api.deleteVideo(item.video.bunnyVideoId);
         return;
       } else {
-        await api.deleteVideo(item.video?.bunnyVideoId as string);
+        console.warn("Video has no bunnyVideoId, skipping Bunny deletion");
         return;
       }
     },
@@ -479,8 +471,8 @@ export const VideoItem: React.FC<VideoItemProps> = ({
               )}
 
               <Button
-                disabled={deleteVideo.isPending}
-                loading={deleteVideo.isPending}
+                disabled={deleteVideo.isPending || updateProject.isPending}
+                loading={deleteVideo.isPending || updateProject.isPending}
                 onClick={() => {
                   deleteVideo.mutate();
                 }}
