@@ -257,13 +257,31 @@ export const ProjectsList: React.FC = () => {
       },
       sortDirections: ["ascend", "descend"],
       ...ColumnSearch(["info", "reraNumber"]),
-      render: (reraNumber: string) => {
+      render: (reraNumber: string, record: Project) => {
+        const hasReraData = !!record.info.reraProjectId;
+        
         return (
-          <Tooltip title={reraNumber}>
-          <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
-            {reraNumber || "-"}
-          </Typography.Text>
-          </Tooltip>
+          <Flex align="center" gap={4}>
+            <Tooltip title={reraNumber}>
+              <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
+                {reraNumber || "-"}
+              </Typography.Text>
+            </Tooltip>
+            {hasReraData && (
+              <Tooltip title="View RERA Project Details">
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => setSelectedReraProject({
+                    projectName: record.info.name,
+                    reraData: record.info.reraProjectId
+                  })}
+                  style={{ padding: 0, height: 'auto', minWidth: 'auto' }}
+                />
+              </Tooltip>
+            )}
+          </Flex>
         );
       },
     },
@@ -383,10 +401,10 @@ export const ProjectsList: React.FC = () => {
                 >
                   <Tag
                     style={{
-                      fontSize: 8,
-                      padding: 2,
-                      height: 12,
-                      lineHeight: "90%",
+                      fontSize: 10,
+                      padding: "4px 6px",
+                      height: 20,
+                      lineHeight: "100%",
                       margin: 0,
                     }}
                   >
@@ -528,27 +546,14 @@ export const ProjectsList: React.FC = () => {
         
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
-            {hasReraData && (
-              <Tooltip title="View RERA Project Details">
-                <Button
-                  type="default"
-                  shape="default"
-                  icon={<EyeOutlined />}
-                  onClick={() => setSelectedReraProject({
-                    projectName: record.info.name,
-                    reraData: record.info.reraProjectId
-                  })}
-                />
-              </Tooltip>
-            )}
-            
-            <Link to={`/projects/${id}/edit`}>
+            <Tooltip title="Edit Project">
               <Button
                 type="default"
                 shape="default"
                 icon={<EditOutlined />}
-              ></Button>
-            </Link>
+                onClick={() => window.open(`/projects/${id}/edit`, '_blank')}
+              />
+            </Tooltip>
 
             <DeletePopconfirm
               handleOk={() => handleDelete({ projectId: id })}
