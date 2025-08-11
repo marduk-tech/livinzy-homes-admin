@@ -107,3 +107,39 @@ export const calculateFieldStatus = (
     badgeStatus,
   };
 };
+
+export function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+
+  try {
+    // Handle different YouTube URL formats using RegExp constructor to avoid escaping issues
+
+    const youtubeRegex = new RegExp(
+      '(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/\\s]{11})',
+      "i"
+    );
+    const match = url.match(youtubeRegex);
+
+    if (match && match[1]) {
+      return match[1];
+    }
+
+    // Fallback: try to parse as URL and extract v parameter
+    const urlObj = new URL(url);
+    const videoId = urlObj.searchParams.get("v");
+    if (videoId) {
+      return videoId;
+    }
+
+    return null;
+  } catch (error) {
+    // If URL parsing fails, try the regex approach
+
+    const youtubeRegex = new RegExp(
+      '(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/)([^"&?/\\s]{11})',
+      "i"
+    );
+    const match = url.match(youtubeRegex);
+    return match && match[1] ? match[1] : null;
+  }
+}
