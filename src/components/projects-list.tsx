@@ -126,20 +126,21 @@ export const ProjectsList: React.FC = () => {
       ...ColumnSearch(["info", "name"]),
       render: (name: string, record: Project) => (
         <Flex
-          align="center"
           style={{
             padding: 2,
           }}
+          gap={1}
+          align="center"
         >
           <Tag
-            color={
-              record.info.status == "report-verified"
-                ? COLORS.greenIdentifier
-                : "default"
-            }
+           
           >
             <Flex gap={4} align="center">
-              <Typography.Text>{name}</Typography.Text>
+              <Tooltip title={name}>
+                <Typography.Text>
+                  {name.length > 20 ? `${name.substring(0, 20)}..` : name}
+                </Typography.Text>
+              </Tooltip>
               <Typography.Text
                 copyable={{
                   text: record._id,
@@ -169,6 +170,15 @@ export const ProjectsList: React.FC = () => {
               )}
             </Flex>
           </Tag>
+          <Flex>
+            <Tag style={{ textTransform: "capitalize" }}  color={
+              record.info.status == "report-verified"
+                ? COLORS.greenIdentifier
+                : "default"
+            }>
+              {record.info.status.replace("-", " ")}
+            </Tag>
+          </Flex>
         </Flex>
       ),
     },
@@ -259,7 +269,7 @@ export const ProjectsList: React.FC = () => {
       ...ColumnSearch(["info", "reraNumber"]),
       render: (reraNumber: string, record: Project) => {
         const hasReraData = !!record.info.reraProjectId;
-        
+
         return (
           <Flex align="center" gap={4}>
             <Tooltip title={reraNumber}>
@@ -273,11 +283,13 @@ export const ProjectsList: React.FC = () => {
                   type="text"
                   size="small"
                   icon={<EyeOutlined />}
-                  onClick={() => setSelectedReraProject({
-                    projectName: record.info.name,
-                    reraData: record.info.reraProjectId
-                  })}
-                  style={{ padding: 0, height: 'auto', minWidth: 'auto' }}
+                  onClick={() =>
+                    setSelectedReraProject({
+                      projectName: record.info.name,
+                      reraData: record.info.reraProjectId,
+                    })
+                  }
+                  style={{ padding: 0, height: "auto", minWidth: "auto" }}
                 />
               </Tooltip>
             )}
@@ -543,7 +555,7 @@ export const ProjectsList: React.FC = () => {
       render: (id: string, record: Project) => {
         // Check if reraProjectId has data - it's populated with the full RERA project object
         const hasReraData = !!record.info.reraProjectId;
-        
+
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
             <Tooltip title="Edit Project">
@@ -551,7 +563,7 @@ export const ProjectsList: React.FC = () => {
                 type="default"
                 shape="default"
                 icon={<EditOutlined />}
-                onClick={() => window.open(`/projects/${id}/edit`, '_blank')}
+                onClick={() => window.open(`/projects/${id}/edit`, "_blank")}
               />
             </Tooltip>
 
@@ -778,7 +790,7 @@ export const ProjectsList: React.FC = () => {
           setProjectIssuesSelected(undefined);
           refetchProjects();
         }}
-        okButtonProps={{loading: resolveProjectIssue.isPending}}
+        okButtonProps={{ loading: resolveProjectIssue.isPending }}
         onCancel={() => {
           setsSelectedIssueToResolve(undefined);
         }}
@@ -794,7 +806,7 @@ export const ProjectsList: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-      
+
       <Modal
         title={
           selectedReraProject?.projectName
@@ -805,22 +817,24 @@ export const ProjectsList: React.FC = () => {
         onCancel={() => setSelectedReraProject(undefined)}
         footer={null}
         width="90%"
-        style={{ maxWidth: '1200px', height: '80vh' }}
+        style={{ maxWidth: "1200px", height: "80vh" }}
         styles={{
           body: {
-            height: 'calc(80vh - 108px)', // Subtract header and padding
-            overflow: 'hidden',
-            padding: 0
-          }
+            height: "calc(80vh - 108px)", // Subtract header and padding
+            overflow: "hidden",
+            padding: 0,
+          },
         }}
       >
         {selectedReraProject?.reraData ? (
-          <div style={{ 
-            height: '100%', 
-            overflow: 'auto', 
-            padding: '10px',
-            backgroundColor: '#f8f9fa'
-          }}>
+          <div
+            style={{
+              height: "100%",
+              overflow: "auto",
+              padding: "10px",
+              backgroundColor: "#f8f9fa",
+            }}
+          >
             <ReactJson
               src={selectedReraProject.reraData}
               theme="rjv-default"
@@ -831,16 +845,18 @@ export const ProjectsList: React.FC = () => {
               sortKeys={true}
               name="reraProject"
               indentWidth={4}
-              style={{ fontSize: '14px' }}
+              style={{ fontSize: "14px" }}
             />
           </div>
         ) : (
-          <div style={{ 
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div
+            style={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Typography.Text type="secondary">
               No RERA project data available.
             </Typography.Text>
