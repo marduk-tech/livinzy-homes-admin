@@ -218,21 +218,11 @@ export function useProjectForm() {
           "The location of the project identified by Google maps url.",
       },
       {
-        dbField: "externalWebsites",
-        fieldDisplayName: "External websites",
-        fieldDescription: "Website for the project.",
+        dbField: "reraNumber",
+        fieldDisplayName: "Rera Number",
+        fieldDescription: "Provide relevant details.",
       },
-      {
-        dbField: "status",
-        fieldDisplayName: "Status",
-        fieldDescription: "Current status of the project",
-        type: "single_select",
-        options: [
-          { label: "New", value: "new" },
-          { label: "Active", value: "active" },
-          { label: "Disabled", value: "disabled" },
-        ],
-      },
+
       {
         dbField: "homeType",
         fieldDisplayName: "Home Type",
@@ -249,10 +239,22 @@ export function useProjectForm() {
         ],
       },
       {
-        dbField: "reraNumber",
-        fieldDisplayName: "Rera Number",
-        fieldDescription: "Provide relevant details.",
+        dbField: "status",
+        fieldDisplayName: "Status",
+        fieldDescription: "Current status of the project",
+        type: "single_select",
+        options: [
+          { label: "New", value: "new" },
+          { label: "Active", value: "active" },
+          { label: "Disabled", value: "disabled" },
+        ],
       },
+      {
+        dbField: "externalWebsites",
+        fieldDisplayName: "External websites",
+        fieldDescription: "Website for the project.",
+      },
+
       {
         dbField: "amenities",
         type: "text",
@@ -271,7 +273,7 @@ export function useProjectForm() {
         fieldDisplayName: "Unit Configurations",
         fieldDescription: "Add or manage unit configurations and pricing",
       },
-       {
+      {
         dbField: "superProject",
         fieldDisplayName: "Super Project",
         fieldDescription: "Enter the parent project if any",

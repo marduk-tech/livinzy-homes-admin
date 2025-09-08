@@ -1,6 +1,9 @@
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getVideoStatus = async (id: string) => {
+  if (!id) {
+    return null;
+  }
   const endpoint = `/upload/video/${id}`;
   return axiosApiInstance.get(endpoint).then((response) => {
     return response.data as VideoInfo;

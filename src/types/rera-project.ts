@@ -36,6 +36,7 @@ interface ProjectDetails {
   projectContractors: string;
   farSanctioned: string;
   totalTowers: number;
+  projectExpectedCompletionDate: string;
   listOfRegistrationsExtensions: RegistrationExtension[];
   unitsBreakup: UnitBreakup[];
   towers: Tower[];
@@ -47,6 +48,7 @@ export interface ReraProject {
   projectAmenities: Record<string, any>;
   documents: Record<string, any>;
   landDetails: Record<string, any>;
+  
   complaints: Record<string, any>;
   createdAt: string;
   updatedAt: string;
