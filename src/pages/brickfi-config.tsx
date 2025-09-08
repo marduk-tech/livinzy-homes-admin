@@ -11,17 +11,17 @@ export function BrickfiConfig() {
       <Tabs.TabPane tab="Drivers" key="1">
         <LivindexList />
       </Tabs.TabPane>
-      <Tabs.TabPane tab="Driver Config" key="2">
+      {/* <Tabs.TabPane tab="Driver Config" key="2">
         <LivindexDriversList />
-      </Tabs.TabPane>
-      <Tabs.TabPane tab="Corridors" key="3">
-        <CorridorsList />
-      </Tabs.TabPane>
+      </Tabs.TabPane> */}
       <Tabs.TabPane tab="Developers" key="4">
         <DevelopersList />
       </Tabs.TabPane>
       <Tabs.TabPane tab="Rera Projects" key="5">
         <ReraProjectsList />
+      </Tabs.TabPane>
+       <Tabs.TabPane tab="Corridors" key="3">
+        <CorridorsList />
       </Tabs.TabPane>
     </Tabs>
   );
