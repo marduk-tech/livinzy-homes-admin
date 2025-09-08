@@ -219,12 +219,20 @@ export function useProjectForm() {
       },
       {
         dbField: "reraNumber",
+        mustHave: true,
         fieldDisplayName: "Rera Number",
         fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: "otherPhasesRera",
+        fieldDisplayName: "Other Phases Rera Numbers",
+        fieldDescription:
+          "Comma separated list of rera numbers of other phases",
       },
 
       {
         dbField: "homeType",
+        mustHave: true,
         fieldDisplayName: "Home Type",
         fieldDescription: "Provide relevant details",
         type: "multi_select",
@@ -240,13 +248,17 @@ export function useProjectForm() {
       },
       {
         dbField: "status",
+        mustHave: true,
         fieldDisplayName: "Status",
         fieldDescription: "Current status of the project",
         type: "single_select",
         options: [
-          { label: "New", value: "new" },
-          { label: "Active", value: "active" },
           { label: "Disabled", value: "disabled" },
+          { label: "New", value: "new" },
+          { label: "Data Populated", value: "data-populated" },
+          { label: "Data Verified", value: "data-verified" },
+          { label: "Report Ready", value: "report-ready" },
+          { label: "Report Verified", value: "report-verified" },
         ],
       },
       {

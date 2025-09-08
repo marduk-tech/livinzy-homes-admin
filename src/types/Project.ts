@@ -55,7 +55,13 @@ export interface IInfo {
     | "apartment"
     | "penthouse"
   >;
-  status: "new" | "active" | "disabled";
+  status:
+    | "new"
+    | "data-populated"
+    | "data-verified"
+    | "report-ready"
+    | "report-verified"
+    | "disabled";
   reraNumber?: string;
   reraProjectId: string | ReraProject;
   corridors?: {

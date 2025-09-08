@@ -133,7 +133,7 @@ export const ProjectsList: React.FC = () => {
         >
           <Tag
             color={
-              record.info.status == "active"
+              record.info.status == "report-verified"
                 ? COLORS.greenIdentifier
                 : "default"
             }
