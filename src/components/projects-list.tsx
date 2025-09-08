@@ -590,18 +590,6 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
-  const sortedProjects = projects
-    // fix old project doc dosn't have name which causes undefined errors
-    ?.filter((project) => project.info?.name)
-    ?.sort((a, b) => {
-      const nameA = a.info?.name?.toLowerCase();
-      const nameB = b.info?.name?.toLowerCase();
-
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
-      return 0;
-    });
-
   useEffect(() => {
     if (searchKeyword && !projectsLoading) {
       refetchProjects();
@@ -701,7 +689,7 @@ export const ProjectsList: React.FC = () => {
       </Row>
 
       <Table
-        dataSource={sortedProjects}
+        dataSource={projects}
         columns={columns}
         rowKey="_id"
         loading={projectsLoading || isCorridorsDataLoading}
