@@ -57,6 +57,7 @@ export interface IInfo {
   >;
   status:
     | "new"
+    | "basic-details-ready"
     | "data-populated"
     | "data-verified"
     | "report-ready"

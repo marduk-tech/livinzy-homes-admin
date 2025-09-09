@@ -255,6 +255,7 @@ export function useProjectForm() {
         options: [
           { label: "Disabled", value: "disabled" },
           { label: "New", value: "new" },
+           { label: "Basic Details Ready", value: "basic-details-ready" },
           { label: "Data Populated", value: "data-populated" },
           { label: "Data Verified", value: "data-verified" },
           { label: "Report Ready", value: "report-ready" },
