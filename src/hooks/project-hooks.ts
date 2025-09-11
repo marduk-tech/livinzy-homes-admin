@@ -15,6 +15,7 @@ import { useFetchDevelopers } from "./real-estate-developer-hooks";
 export function useGetAllProjects(params: {
   searchKeyword: string;
   issueSeverity: string;
+  statusFilter: string;
 }) {
   return useQuery({
     queryKey: [queryKeys.projects],

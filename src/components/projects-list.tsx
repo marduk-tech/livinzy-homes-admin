@@ -23,6 +23,7 @@ import {
   Radio,
   RadioChangeEvent,
   Row,
+  Select,
   Table,
   TableColumnType,
   Tag,
@@ -63,6 +64,8 @@ export const ProjectsList: React.FC = () => {
     useFetchCorridors();
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState<string>("");
+
   const [issueSeverity, setIssueSeverity] = useState<string>("");
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
@@ -82,7 +85,11 @@ export const ProjectsList: React.FC = () => {
     data: projects,
     isFetching: projectsLoading,
     refetch: refetchProjects,
-  } = useGetAllProjects({ searchKeyword, issueSeverity });
+  } = useGetAllProjects({
+    searchKeyword,
+    issueSeverity,
+    statusFilter: projectStatusFilter,
+  });
 
   const deleteProjectMutation = useDeleteProjectMutation();
 
@@ -132,9 +139,7 @@ export const ProjectsList: React.FC = () => {
           gap={1}
           align="center"
         >
-          <Tag
-           
-          >
+          <Tag>
             <Flex gap={4} align="center">
               <Tooltip title={name}>
                 <Typography.Text>
@@ -171,11 +176,14 @@ export const ProjectsList: React.FC = () => {
             </Flex>
           </Tag>
           <Flex>
-            <Tag style={{ textTransform: "capitalize" }}  color={
-              record.info.status == "report-verified"
-                ? COLORS.greenIdentifier
-                : "default"
-            }>
+            <Tag
+              style={{ textTransform: "capitalize" }}
+              color={
+                record.info.status == "report-verified"
+                  ? COLORS.greenIdentifier
+                  : "default"
+              }
+            >
               {record.info.status.replace("-", " ")}
             </Tag>
           </Flex>
@@ -603,16 +611,13 @@ export const ProjectsList: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (searchKeyword && !projectsLoading) {
+    if (
+      (issueSeverity || searchKeyword || projectStatusFilter) &&
+      !projectsLoading
+    ) {
       refetchProjects();
     }
-  }, [searchKeyword]);
-
-  useEffect(() => {
-    if (issueSeverity && !projectsLoading) {
-      refetchProjects();
-    }
-  }, [issueSeverity]);
+  }, [issueSeverity, searchKeyword, projectStatusFilter]);
 
   return (
     <>
@@ -632,10 +637,27 @@ export const ProjectsList: React.FC = () => {
               enterButton="Search"
               style={{ width: 300 }}
             />
+
+            <Select
+              onChange={(value) => {
+                setProjectStatusFilter(value);
+              }}
+              placeholder="Filter by status"
+              options={[
+                { label: "Basic Details Ready", value: "basic-details-ready" },
+                { label: "Data Populated", value: "data-populated" },
+                { label: "Data Verified", value: "data-verified" },
+                { label: "Report Ready", value: "report-ready" },
+                { label: "Report Verified", value: "report-verified" },
+                { label: "Disabled", value: "disabled" },
+                { label: "New", value: "new" },
+              ]}
+            />
             <Radio.Group
               block
               onChange={({ target: { value } }: RadioChangeEvent) => {
                 setSearchKeyword("");
+                setProjectStatusFilter("");
                 setIssueSeverity(value);
               }}
               buttonStyle="solid"
