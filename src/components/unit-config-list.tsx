@@ -102,7 +102,14 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
-    form.setFieldsValue(value[index]);
+    form.resetFields();
+    form.setFieldsValue({
+      sizeBuiltup: value[index].sizeBuiltup || undefined,
+      sizeCarpet: value[index].sizeCarpet || undefined,
+      type: value[index].type || undefined,
+      price: value[index].price || undefined,
+      floorplans: value[index].floorplans || [],
+    });
     setIsModalVisible(true);
   };
 
