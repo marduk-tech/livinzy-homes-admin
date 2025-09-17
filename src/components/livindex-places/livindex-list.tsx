@@ -25,6 +25,8 @@ import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { CorridorsList } from "../corridors/corridors-list";
 import { EditLivIndexPlace } from "./edit-livindex-place";
 import { EditPlaceDetails } from "./edit-place-details";
+import { FONT_SIZES } from "../../theme/font-sizes";
+import { COLORS } from "../../theme/colors";
 
 export function LivindexList() {
   const { isMobile } = useDevice();
@@ -129,8 +131,7 @@ export function LivindexList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Flex gap={8} align="center">
-            <Typography.Title level={4}>All Drivers</Typography.Title>
+          <Flex gap={16} align="flex-end">
             <Search
               loading={isLoading}
               placeholder="Search drivers by name or type"
@@ -140,6 +141,7 @@ export function LivindexList() {
               enterButton="Search"
               style={{ width: 300 }}
             />
+            <Typography.Text style={{fontSize: FONT_SIZES.SUB_TEXT, color: COLORS.textColorLight}}>Showing 10 recently updated items</Typography.Text>
           </Flex>
         </Col>
         <Col>

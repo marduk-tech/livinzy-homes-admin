@@ -1,5 +1,17 @@
 import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Col, DatePicker, Flex, Input, Modal, Row, Table, TableColumnType, Tooltip, Typography } from "antd";
+import {
+  Button,
+  Col,
+  DatePicker,
+  Flex,
+  Input,
+  Modal,
+  Row,
+  Table,
+  TableColumnType,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useState } from "react";
 
 const { Search } = Input;
@@ -14,21 +26,28 @@ import dayjs, { Dayjs } from "dayjs";
 const { RangePicker } = DatePicker;
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { FONT_SIZES } from "../../theme/font-sizes";
+import { COLORS } from "../../theme/colors";
 
 export function ReraProjectsList() {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const { data, isLoading, isError } = useGetAllReraProjects({
     keyword: searchKeyword,
   });
-  const [selectedReraProject, setSelectedReraProject] = useState<{
-    projectName: string;
-    reraData: ReraProject;
-  } | undefined>();
+  const [selectedReraProject, setSelectedReraProject] = useState<
+    | {
+        projectName: string;
+        reraData: ReraProject;
+      }
+    | undefined
+  >();
 
-    const [selectedRange, setSelectedRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [selectedRange, setSelectedRange] = useState<
+    [dayjs.Dayjs, dayjs.Dayjs] | null
+  >(null);
 
   const parseDateString = (dateStr: string | undefined | null) => {
-    if (!dateStr || typeof dateStr !== 'string') {
+    if (!dateStr || typeof dateStr !== "string") {
       return new Date(); // Return current date as fallback
     }
     const [day, month, year] = dateStr.includes("-")
@@ -57,16 +76,20 @@ export function ReraProjectsList() {
         const aExtensions = a.projectDetails.listOfRegistrationsExtensions;
         const bExtensions = b.projectDetails.listOfRegistrationsExtensions;
 
-        const aDate = aExtensions && aExtensions.length > 0
-          ? aExtensions[aExtensions.length - 1].completionDate
-          : null;
-        const bDate = bExtensions && bExtensions.length > 0
-          ? bExtensions[bExtensions.length - 1].completionDate
-          : null;
+        const aDate =
+          aExtensions && aExtensions.length > 0
+            ? aExtensions[aExtensions.length - 1].completionDate
+            : null;
+        const bDate =
+          bExtensions && bExtensions.length > 0
+            ? bExtensions[bExtensions.length - 1].completionDate
+            : null;
 
         if (!aDate || !bDate) return 0;
-        return parseDateString(aDate).getTime() - parseDateString(bDate).getTime();
-       },
+        return (
+          parseDateString(aDate).getTime() - parseDateString(bDate).getTime()
+        );
+      },
       filterDropdown: ({ confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
           <RangePicker
@@ -97,22 +120,26 @@ export function ReraProjectsList() {
       onFilter: (_, record) => {
         if (!selectedRange || selectedRange.length !== 2) return true;
         const extensions = record.projectDetails.listOfRegistrationsExtensions;
-        const completionDate = extensions && extensions.length > 0
-          ? extensions[extensions.length - 1].completionDate
-          : null;
+        const completionDate =
+          extensions && extensions.length > 0
+            ? extensions[extensions.length - 1].completionDate
+            : null;
         if (!completionDate) return false;
         const recordDate = dayjs(completionDate);
-        return recordDate.isSameOrAfter(selectedRange[0], "day") &&
-               recordDate.isSameOrBefore(selectedRange[1], "day");
+        return (
+          recordDate.isSameOrAfter(selectedRange[0], "day") &&
+          recordDate.isSameOrBefore(selectedRange[1], "day")
+        );
       },
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
       render: (_, record) => {
         const extensions = record.projectDetails.listOfRegistrationsExtensions;
-        const completionDate = extensions && extensions.length > 0
-          ? extensions[extensions.length - 1].completionDate
-          : null;
+        const completionDate =
+          extensions && extensions.length > 0
+            ? extensions[extensions.length - 1].completionDate
+            : null;
 
         if (!completionDate) {
           return (
@@ -144,10 +171,16 @@ export function ReraProjectsList() {
       width: "50px",
       responsive: ["lg", "xl"],
       sorter: (a, b) => {
-        if (!a.projectDetails.projectRegistrationNumber && !b.projectDetails.projectRegistrationNumber) return 0;
+        if (
+          !a.projectDetails.projectRegistrationNumber &&
+          !b.projectDetails.projectRegistrationNumber
+        )
+          return 0;
         if (!a.projectDetails.projectRegistrationNumber) return -1;
         if (!b.projectDetails.projectRegistrationNumber) return 1;
-        return a.projectDetails.projectRegistrationNumber.localeCompare(b.projectDetails.projectRegistrationNumber);
+        return a.projectDetails.projectRegistrationNumber.localeCompare(
+          b.projectDetails.projectRegistrationNumber
+        );
       },
       sortDirections: ["ascend", "descend"],
       ...ColumnSearch(["projectDetails", "projectRegistrationNumber"]),
@@ -172,10 +205,12 @@ export function ReraProjectsList() {
                 type="default"
                 shape="default"
                 icon={<EyeOutlined />}
-                onClick={() => setSelectedReraProject({
-                  projectName: record.projectDetails.projectName,
-                  reraData: record
-                })}
+                onClick={() =>
+                  setSelectedReraProject({
+                    projectName: record.projectDetails.projectName,
+                    reraData: record,
+                  })
+                }
               />
             </Tooltip>
           </Flex>
@@ -194,8 +229,7 @@ export function ReraProjectsList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Flex gap={8} align="center">
-            <Typography.Title level={4}>RERA Projects</Typography.Title>
+          <Flex gap={8} align="flex-end">
             <Search
               loading={isLoading}
               placeholder="Search RERA projects by name"
@@ -205,6 +239,14 @@ export function ReraProjectsList() {
               enterButton="Search"
               style={{ width: 300 }}
             />
+            <Typography.Text
+              style={{
+                fontSize: FONT_SIZES.SUB_TEXT,
+                color: COLORS.textColorLight,
+              }}
+            >
+              Showing 10 recently updated items
+            </Typography.Text>
           </Flex>
         </Col>
       </Row>
@@ -215,7 +257,7 @@ export function ReraProjectsList() {
         loading={isLoading}
         rowKey="id"
       />
-      
+
       <Modal
         title={
           selectedReraProject?.projectName

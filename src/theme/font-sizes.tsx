@@ -1,0 +1,8 @@
+export const FONT_SIZES = {
+  SUB_TEXT: 12,
+  PARA: 14,
+  HEADING_1: 32,
+  HEADING_2: 21,
+  HEADING_3: 18,
+  HEADING_4: 15,
+};

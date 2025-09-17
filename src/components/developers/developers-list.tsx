@@ -23,6 +23,8 @@ import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { DeveloperForm } from "./developer-form";
 import ProjectForm from "./project-form";
+import { FONT_SIZES } from "../../theme/font-sizes";
+import { COLORS } from "../../theme/colors";
 
 export function DevelopersList() {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -178,8 +180,7 @@ export function DevelopersList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Flex gap={8} align="center">
-            <Typography.Title level={4}>All Developers</Typography.Title>
+          <Flex gap={8} align="flex-end">
             <Search
               loading={isLoading}
               placeholder="Search for a developer by name"
@@ -187,8 +188,16 @@ export function DevelopersList() {
                 setSearchKeyword(value);
               }}
               enterButton="Search"
-              style={{ width: 300 }}
+              style={{ width: 400 }}
             />
+            <Typography.Text
+              style={{
+                fontSize: FONT_SIZES.SUB_TEXT,
+                color: COLORS.textColorLight,
+              }}
+            >
+              Showing 10 recently updated items
+            </Typography.Text>
           </Flex>
         </Col>
         <Col>
