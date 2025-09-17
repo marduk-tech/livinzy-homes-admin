@@ -257,7 +257,7 @@ export function useProjectForm() {
         options: [
           { label: "Disabled", value: "disabled" },
           { label: "New", value: "new" },
-           { label: "Basic Details Ready", value: "basic-details-ready" },
+          { label: "Basic Details Ready", value: "basic-details-ready" },
           { label: "Data Populated", value: "data-populated" },
           { label: "Data Verified", value: "data-verified" },
           { label: "Report Ready", value: "report-ready" },
@@ -265,12 +265,7 @@ export function useProjectForm() {
         ],
       },
     ],
-    otherInfo: [
-      {
-        dbField: "externalWebsites",
-        fieldDisplayName: "External websites",
-        fieldDescription: "Website for the project.",
-      },
+    otherDetails: [
       {
         dbField: "amenities",
         type: "text",
@@ -280,7 +275,7 @@ export function useProjectForm() {
       {
         dbField: "financialPlan",
         type: "text",
-        fieldDisplayName: "Finacial plan",
+        fieldDisplayName: "Financial plan",
         fieldDescription: "Explain financial plan in detail",
       },
       {
@@ -290,10 +285,11 @@ export function useProjectForm() {
         fieldDescription: "Add or manage unit configurations and pricing",
       },
       {
-        dbField: "superProject",
-        fieldDisplayName: "Super Project",
-        fieldDescription: "Enter the parent project if any",
-      },
+        dbField: "externalWebsites",
+        type: "text",
+        fieldDisplayName: "External websites",
+        fieldDescription: "Website for the project.",
+      }
     ],
   };
 

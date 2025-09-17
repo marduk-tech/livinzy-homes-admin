@@ -97,7 +97,7 @@ const RenderFields: React.FC<{
                 }
                 label={
                   <Flex gap={8} align="center">
-                    <Typography.Text>{fieldDisplayName}</Typography.Text>
+                    <Typography.Text style={{fontWeight: "bold"}}>{fieldDisplayName}</Typography.Text>
                     {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
                     {type === "json" && (
                       <JsonEditor
@@ -457,26 +457,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             return (
               <TabPane
                 tab={
-                  <span>
+                  <Typography.Text style={{fontSize: 16}}>
                     {key
                       .replace(/([A-Z])/g, " $1")
                       .replace(/^./, (str) => str.toUpperCase())}{" "}
-                    <Tag
-                      style={{
-                        borderRadius: "100px",
-                        marginLeft: 5,
-                      }}
-                      color={
-                        fieldStatus.badgeStatus === "success"
-                          ? "green"
-                          : fieldStatus.badgeStatus === "warning"
-                          ? "orange"
-                          : "red"
-                      }
-                    >
-                      {`${fieldStatus.filledFieldsCount}/${fieldStatus.totalVisibleFields}`}
-                    </Tag>
-                  </span>
+                   
+                  </Typography.Text>
                 }
                 key={key}
                 disabled={!projectId && index !== 0}
@@ -502,7 +488,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             )}
           </TabPane> */}
 
-          <TabPane tab={"Media"} key={"media"} disabled={!projectId}>
+          <TabPane tab={<Typography.Text style={{fontSize: 16}}>Media</Typography.Text>} key={"media"} disabled={!projectId}>
             <Tabs defaultActiveKey="images">
               <TabPane tab={"Images"} key={"images"}>
                 <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>

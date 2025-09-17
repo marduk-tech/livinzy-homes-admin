@@ -3,6 +3,7 @@ import {
   Button,
   Checkbox,
   Col,
+  Flex,
   Form,
   Image,
   Input,
@@ -149,23 +150,25 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
 
   return (
     <div>
-      <div
+      <Flex
+        
+        align="center"
         style={{
-          display: "flex",
-          justifyContent: "flex-end",
           marginBottom: 16,
         }}
+        gap={8}
       >
-        <Button icon={<PlusOutlined />} onClick={handleAdd}>
+        <Typography.Text style={{fontSize: 14}}>Total {value.length} configurations</Typography.Text>
+        <Button style={{marginLeft: "auto"}} icon={<PlusOutlined />} onClick={handleAdd}>
           Add Unit Configuration
         </Button>
-      </div>
+      </Flex>
 
       <List
         itemLayout="horizontal"
         dataSource={value}
         style={{
-          maxHeight: "500px",
+          maxHeight: "300px",
           overflowY: "auto",
           padding: "4px",
         }}
