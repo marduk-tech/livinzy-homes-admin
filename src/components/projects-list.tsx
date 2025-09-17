@@ -501,8 +501,7 @@ export const ProjectsList: React.FC = () => {
         if (
           !!internalChecks &&
           internalChecks.lastChecked &&
-          (!internalChecks.checks.length ||
-            !internalChecks.checks.filter((c: any) => c.severity > 2).length)
+          !internalChecks.checks.length
         ) {
           return (
             <Tag icon={<CheckCircleOutlined />} color="success">
@@ -510,11 +509,14 @@ export const ProjectsList: React.FC = () => {
             </Tag>
           );
         }
+        const resolvedIssues = internalChecks.checks.filter(
+          (c: any) => c.resolved
+        );
         const severeIssues = internalChecks.checks.filter(
-          (c: any) => c.severity == 5
+          (c: any) => !c.resolved && c.severity == 5
         );
         const nonSevereIssues = internalChecks.checks.filter(
-          (c: any) => c.severity < 5 && c.severity > 2
+          (c: any) => !c.resolved && c.severity < 5
         );
         const getIssuesLabel = (issues: any[], color: string) => {
           return (
@@ -536,6 +538,7 @@ export const ProjectsList: React.FC = () => {
         };
         return (
           <Flex>
+            {resolvedIssues.length ? getIssuesLabel(resolvedIssues, "default") : null}
             {severeIssues.length ? getIssuesLabel(severeIssues, "error") : null}
             {nonSevereIssues.length
               ? getIssuesLabel(nonSevereIssues, "warning")
@@ -780,7 +783,7 @@ export const ProjectsList: React.FC = () => {
                       {i.issue}
                     </Typography.Text>
                   </Flex>
-                  {i.severity < 5 && (
+                  { 
                     <Button
                       size="small"
                       style={{ marginLeft: "auto" }}
@@ -790,7 +793,7 @@ export const ProjectsList: React.FC = () => {
                     >
                       Resolve
                     </Button>
-                  )}
+                  }
                 </Flex>
               );
             })}
