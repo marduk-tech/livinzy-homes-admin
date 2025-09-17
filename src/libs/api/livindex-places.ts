@@ -1,9 +1,17 @@
 import { ILivIndexPlaces } from "../../types";
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export const getAllLivIndexPlaces = async () => {
+export const getAllLivIndexPlaces = async (params?: {
+  keyword?: string;
+  limit?: number;
+  sort?: object;
+}) => {
   const endpoint = `/livindex-places`;
-  return axiosApiInstance.post(endpoint).then((response) => {
+  return axiosApiInstance.post(endpoint, {
+    driverIds: [],
+    driverTypes: [],
+    ...params
+  }).then((response) => {
     return response.data as ILivIndexPlaces[];
   });
 };

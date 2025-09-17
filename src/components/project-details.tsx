@@ -40,6 +40,8 @@ import { useDevice } from "../hooks/use-device";
 import { baseApiUrl, MediaTags } from "../libs/constants";
 import { queries } from "../libs/queries";
 import { calculateFieldStatus } from "../libs/utils";
+import { COLORS } from "../theme/colors";
+import DynamicReactIcon from "./common/dynamic-react-icon";
 import {
   IMedia,
   Project,
@@ -114,6 +116,27 @@ const RenderFields: React.FC<{
                           );
                         }}
                       />
+                    )}
+                    {Array.isArray(dbField) &&
+                     dbField[0] === "location" &&
+                     dbField[1] === "mapLink" &&
+                     form.getFieldValue([category, ...dbField]) && (
+                      <span
+                        style={{ cursor: "pointer", marginTop: "2px" }}
+                        onClick={() => {
+                          const mapLink = form.getFieldValue([category, ...dbField]);
+                          if (mapLink) {
+                            window.open(mapLink, "_blank");
+                          }
+                        }}
+                      >
+                        <DynamicReactIcon
+                          color={COLORS.textColorDark}
+                          iconName="IoNavigateCircleSharp"
+                          iconSet="io5"
+                          size={20}
+                        />
+                      </span>
                     )}
                   </Flex>
                 }
@@ -374,7 +397,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     ) as ProjectStructure;
 
     setVisibleTabs(filteredFields);
-  }, [watchHomeType, form]);
+  }, [watchHomeType, form, projectFields]);
 
   useEffect(() => {
     if (!projectData && project) {
@@ -423,11 +446,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           </Typography.Title>
         )}
 
-        <Tabs defaultActiveKey="info">
+        <Tabs defaultActiveKey="basicInfo">
           {Object.entries(visibleTabs || {}).map(([key, fields], index) => {
             const fieldStatus = calculateFieldStatus(
               fields as FieldType[],
-              key,
+              "info",
               form
             );
 
@@ -436,8 +459,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 tab={
                   <span>
                     {key
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (str) => str.toUpperCase())}{" "}
                     <Tag
                       style={{
                         borderRadius: "100px",
@@ -461,7 +484,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 <RenderFields
                   form={form}
                   fields={fields as FieldType[]}
-                  category={key}
+                  category="info"
                   isMobile={isMobile}
                   fieldRules={fieldRules}
                 />

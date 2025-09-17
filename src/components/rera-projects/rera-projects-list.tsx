@@ -1,6 +1,8 @@
 import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Col, DatePicker, Flex, Modal, Row, Table, TableColumnType, Tooltip, Typography } from "antd";
+import { Button, Col, DatePicker, Flex, Input, Modal, Row, Table, TableColumnType, Tooltip, Typography } from "antd";
 import { useState } from "react";
+
+const { Search } = Input;
 import ReactJson from "react-json-view";
 import {
   useDeleteReraProjectMutation,
@@ -14,7 +16,10 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
 export function ReraProjectsList() {
-  const { data, isLoading, isError } = useGetAllReraProjects();
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const { data, isLoading, isError } = useGetAllReraProjects({
+    keyword: searchKeyword,
+  });
   const [selectedReraProject, setSelectedReraProject] = useState<{
     projectName: string;
     reraData: ReraProject;
@@ -22,7 +27,10 @@ export function ReraProjectsList() {
 
     const [selectedRange, setSelectedRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
-  const parseDateString = (dateStr: string) => {
+  const parseDateString = (dateStr: string | undefined | null) => {
+    if (!dateStr || typeof dateStr !== 'string') {
+      return new Date(); // Return current date as fallback
+    }
     const [day, month, year] = dateStr.includes("-")
       ? dateStr.split("-")
       : dateStr.split("/");
@@ -44,14 +52,20 @@ export function ReraProjectsList() {
     },
     {
       title: "Completion",
-      dataIndex: ["projectDetails", "projectExpectedCompletionDate"],
+      key: "completionDate",
       sorter: (a: any, b: any) => {
-        if (!a.projectDetails.projectExpectedCompletionDate || !b.projectDetails.projectExpectedCompletionDate) return 0;
-        return parseDateString(
-          a.projectDetails.projectExpectedCompletionDate
-        ).getTime() - parseDateString(
-          b.projectDetails.projectExpectedCompletionDate
-        ).getTime()
+        const aExtensions = a.projectDetails.listOfRegistrationsExtensions;
+        const bExtensions = b.projectDetails.listOfRegistrationsExtensions;
+
+        const aDate = aExtensions && aExtensions.length > 0
+          ? aExtensions[aExtensions.length - 1].completionDate
+          : null;
+        const bDate = bExtensions && bExtensions.length > 0
+          ? bExtensions[bExtensions.length - 1].completionDate
+          : null;
+
+        if (!aDate || !bDate) return 0;
+        return parseDateString(aDate).getTime() - parseDateString(bDate).getTime();
        },
       filterDropdown: ({ confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
@@ -82,25 +96,40 @@ export function ReraProjectsList() {
       ),
       onFilter: (_, record) => {
         if (!selectedRange || selectedRange.length !== 2) return true;
-        const recordDate = dayjs(record.projectDetails.projectExpectedCompletionDate);
+        const extensions = record.projectDetails.listOfRegistrationsExtensions;
+        const completionDate = extensions && extensions.length > 0
+          ? extensions[extensions.length - 1].completionDate
+          : null;
+        if (!completionDate) return false;
+        const recordDate = dayjs(completionDate);
         return recordDate.isSameOrAfter(selectedRange[0], "day") &&
                recordDate.isSameOrBefore(selectedRange[1], "day");
       },
       filterIcon: (filtered) => (
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
-      key: "completionDate",
-      render: (completionDate: string) => {
-        const compDate = parseDateString(
-          completionDate
-        );
+      render: (_, record) => {
+        const extensions = record.projectDetails.listOfRegistrationsExtensions;
+        const completionDate = extensions && extensions.length > 0
+          ? extensions[extensions.length - 1].completionDate
+          : null;
+
+        if (!completionDate) {
+          return (
+            <Typography.Text style={{ width: 100 }} ellipsis={{}}>
+              -
+            </Typography.Text>
+          );
+        }
+
+        const compDate = parseDateString(completionDate);
 
         const formatDate = (date: Date) => {
           return date.toLocaleDateString("en-US", {
             month: "short",
             year: "numeric",
           });
-        }; 
+        };
         return (
           <Typography.Text copyable style={{ width: 100 }} ellipsis={{}}>
             {formatDate(compDate)}
@@ -165,7 +194,18 @@ export function ReraProjectsList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Typography.Title level={4}>RERA Projects</Typography.Title>
+          <Flex gap={8} align="center">
+            <Typography.Title level={4}>RERA Projects</Typography.Title>
+            <Search
+              loading={isLoading}
+              placeholder="Search RERA projects by name"
+              onSearch={(value: string) => {
+                setSearchKeyword(value);
+              }}
+              enterButton="Search"
+              style={{ width: 300 }}
+            />
+          </Flex>
         </Col>
       </Row>
 

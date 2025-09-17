@@ -11,10 +11,15 @@ import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { ILivIndexPlaces, PlaceType } from "../types";
 
-export function useFetchLivindexPlaces({ type }: { type?: PlaceType }) {
+export function useFetchLivindexPlaces(params?: {
+  type?: PlaceType;
+  keyword?: string;
+  limit?: number;
+  sort?: object;
+}) {
   return useQuery({
-    queryKey: [queryKeys.getAllPlaces],
-    queryFn: () => getAllLivIndexPlaces(),
+    queryKey: [queryKeys.getAllPlaces, params],
+    queryFn: () => getAllLivIndexPlaces(params),
   });
 }
 

@@ -15,10 +15,10 @@ import {
   UpdateDeveloperPayload,
 } from "../types/developer";
 
-export function useGetAllDevelopers() {
+export function useGetAllDevelopers(params?: { keyword?: string }) {
   return useQuery({
-    queryKey: [queryKeys.getAllDevelopers],
-    queryFn: getAllDevelopers,
+    queryKey: [queryKeys.getAllDevelopers, params],
+    queryFn: () => getAllDevelopers(params),
   });
 }
 

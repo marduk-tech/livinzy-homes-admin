@@ -15,10 +15,10 @@ import {
   UpdateReraProjectPayload,
 } from "../types/rera-project";
 
-export function useGetAllReraProjects() {
+export function useGetAllReraProjects(params?: { keyword?: string }) {
   return useQuery({
-    queryKey: [queryKeys.getAllReraProjects],
-    queryFn: getAllReraProjects,
+    queryKey: [queryKeys.getAllReraProjects, params],
+    queryFn: () => getAllReraProjects(params),
   });
 }
 

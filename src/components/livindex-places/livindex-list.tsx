@@ -3,12 +3,16 @@ import {
   Button,
   Col,
   Flex,
+  Input,
   Row,
   Table,
   TableColumnType,
   Tabs,
   Typography,
 } from "antd";
+import { useState } from "react";
+
+const { Search } = Input;
 import { useFetchCorridors } from "../../hooks/corridors-hooks";
 import {
   useDeletePlaceMutation,
@@ -24,7 +28,12 @@ import { EditPlaceDetails } from "./edit-place-details";
 
 export function LivindexList() {
   const { isMobile } = useDevice();
-  const { data, isLoading, isError } = useFetchLivindexPlaces({});
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const { data, isLoading, isError } = useFetchLivindexPlaces({
+    keyword: searchKeyword,
+    limit: 10,
+    sort: { updatedAt: -1 }
+  });
 
   const { data: corridorsData, isLoading: corridorLoading } =
     useFetchCorridors();
@@ -119,6 +128,20 @@ export function LivindexList() {
         align="middle"
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
+        <Col>
+          <Flex gap={8} align="center">
+            <Typography.Title level={4}>All Drivers</Typography.Title>
+            <Search
+              loading={isLoading}
+              placeholder="Search drivers by name or type"
+              onSearch={(value: string) => {
+                setSearchKeyword(value);
+              }}
+              enterButton="Search"
+              style={{ width: 300 }}
+            />
+          </Flex>
+        </Col>
         <Col>
           <EditLivIndexPlace />
         </Col>

@@ -242,5 +242,6 @@ interface Livestment {
 }
 
 export interface ProjectStructure {
-  info: ProjectField[];
+  basicInfo: ProjectField[];
+  otherInfo: ProjectField[];
 }

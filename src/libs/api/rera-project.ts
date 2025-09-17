@@ -5,8 +5,16 @@ import {
 } from "../../types/rera-project";
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export async function getAllReraProjects(): Promise<ReraProject[]> {
-  const { data } = await axiosApiInstance.get<ReraProject[]>("/rera-projects");
+export async function getAllReraProjects(params?: {
+  keyword?: string;
+}): Promise<ReraProject[]> {
+  const { data } = await axiosApiInstance.get<ReraProject[]>("/rera-projects", {
+    params: {
+      ...params,
+      // apply limit for admin to get recent 10 projects
+      limit: 10,
+    },
+  });
   return data;
 }
 

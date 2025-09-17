@@ -3,6 +3,7 @@ import {
   Button,
   Col,
   Flex,
+  Input,
   Row,
   Table,
   TableColumnType,
@@ -10,6 +11,8 @@ import {
   Typography,
 } from "antd";
 import { useState } from "react";
+
+const { Search } = Input;
 import {
   useDeleteDeveloperMutation,
   useGetAllDevelopers,
@@ -22,7 +25,10 @@ import { DeveloperForm } from "./developer-form";
 import ProjectForm from "./project-form";
 
 export function DevelopersList() {
-  const { data, isLoading, isError } = useGetAllDevelopers();
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const { data, isLoading, isError } = useGetAllDevelopers({
+    keyword: searchKeyword,
+  });
   const [developerToEdit, setDeveloperToEdit] = useState<
     Developer | undefined
   >();
@@ -172,7 +178,18 @@ export function DevelopersList() {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Typography.Title level={4}>All Developers</Typography.Title>
+          <Flex gap={8} align="center">
+            <Typography.Title level={4}>All Developers</Typography.Title>
+            <Search
+              loading={isLoading}
+              placeholder="Search for a developer by name"
+              onSearch={(value: string) => {
+                setSearchKeyword(value);
+              }}
+              enterButton="Search"
+              style={{ width: 300 }}
+            />
+          </Flex>
         </Col>
         <Col>
           <DeveloperForm developers={data || []} />

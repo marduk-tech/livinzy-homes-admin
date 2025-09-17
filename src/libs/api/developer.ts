@@ -5,9 +5,18 @@ import {
 } from "../../types/developer";
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export const getAllDevelopers = async (): Promise<Developer[]> => {
+export const getAllDevelopers = async (params?: {
+  keyword?: string;
+}): Promise<Developer[]> => {
   const { data } = await axiosApiInstance.get<Developer[]>(
-    "/real-estate-developer"
+    "/real-estate-developer",
+    {
+      params: {
+        ...params,
+        // limit for admin to get recent 10 developers
+        limit: 10,
+      },
+    }
   );
   return data;
 };

@@ -10,8 +10,31 @@ export const createProject = async (projectData: Partial<Project>) => {
 };
 
 // Get all projects
-export const getAllProjects = async ({ source = "admin", searchKeyword = "", issueSeverity = "", statusFilter = "" }) => {
-  const endpoint = `/projects?source=${source}&keyword=${searchKeyword}&severity=${issueSeverity}&statusFilter=${statusFilter}`;
+export const getAllProjects = async ({
+  source = "admin",
+  searchKeyword = "",
+  issueSeverity = "",
+  statusFilter = "",
+  limit,
+  sortBy
+}: {
+  source?: string;
+  searchKeyword?: string;
+  issueSeverity?: string;
+  statusFilter?: string;
+  limit?: number;
+  sortBy?: string;
+}) => {
+  let endpoint = `/projects?source=${source}&keyword=${searchKeyword}&severity=${issueSeverity}&statusFilter=${statusFilter}`;
+
+  if (limit) {
+    endpoint += `&limit=${limit}`;
+  }
+
+  if (sortBy) {
+    endpoint += `&sortBy=${sortBy}`;
+  }
+
   return axiosApiInstance.get(endpoint).then((response) => {
     return response.data as Project[];
   });

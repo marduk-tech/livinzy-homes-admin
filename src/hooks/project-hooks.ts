@@ -16,6 +16,8 @@ export function useGetAllProjects(params: {
   searchKeyword: string;
   issueSeverity: string;
   statusFilter: string;
+  limit?: number;
+  sortBy?: string;
 }) {
   return useQuery({
     queryKey: [queryKeys.projects],
@@ -204,7 +206,7 @@ export function useProjectForm() {
   const { data: developers = [] } = useFetchDevelopers();
 
   const projectStructure: ProjectStructure = {
-    info: [
+    basicInfo: [
       {
         dbField: "name",
         mustHave: true,
@@ -230,7 +232,6 @@ export function useProjectForm() {
         fieldDescription:
           "Comma separated list of rera numbers of other phases",
       },
-
       {
         dbField: "homeType",
         mustHave: true,
@@ -263,12 +264,13 @@ export function useProjectForm() {
           { label: "Report Verified", value: "report-verified" },
         ],
       },
+    ],
+    otherInfo: [
       {
         dbField: "externalWebsites",
         fieldDisplayName: "External websites",
         fieldDescription: "Website for the project.",
       },
-
       {
         dbField: "amenities",
         type: "text",

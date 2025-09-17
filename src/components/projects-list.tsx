@@ -4,12 +4,9 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-  SortAscendingOutlined,
-  SortDescendingOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import {
-  App as AntApp,
   Button,
   Col,
   Dropdown,
@@ -18,8 +15,6 @@ import {
   Input,
   MenuProps,
   Modal,
-  notification,
-  Progress,
   Radio,
   RadioChangeEvent,
   Row,
@@ -33,33 +28,26 @@ import {
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../theme/colors";
 
-import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useDeleteProjectMutation,
   useGetAllProjects,
-  useProjectForm,
   useResolveProjectIssueMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
-import { queries } from "../libs/queries";
-import { calculateProgress } from "../libs/utils";
-import { IMedia, Project, ProjectStructure } from "../types/Project";
+import { IMedia, Project } from "../types/Project";
 import { AVGSQFTRateDisplay } from "./common/avg-sqft-rate-display";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
-import Paragraph from "antd/es/skeleton/Paragraph";
 import { useAuth0 } from "@auth0/auth0-react";
 import ReactJson from "react-json-view";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentPage = Number(searchParams.get("page")) || 1;
   const { data: corridors, isLoading: isCorridorsDataLoading } =
     useFetchCorridors();
 
@@ -79,7 +67,7 @@ export const ProjectsList: React.FC = () => {
     enableToasts: true,
   });
   const [resolveIssueForm] = Form.useForm();
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user } = useAuth0();
 
   const {
     data: projects,
@@ -89,6 +77,8 @@ export const ProjectsList: React.FC = () => {
     searchKeyword,
     issueSeverity,
     statusFilter: projectStatusFilter,
+    limit: 10,
+    sortBy: "updatedAt:desc",
   });
 
   const deleteProjectMutation = useDeleteProjectMutation();
@@ -101,9 +91,6 @@ export const ProjectsList: React.FC = () => {
     deleteProjectMutation.mutate({ projectId: projectId });
   };
 
-  const [sortOrder, setSortOrder] = useState<
-    "ascend" | "descend" | undefined
-  >();
 
   const parseDateString = (dateStr: string) => {
     const [day, month, year] = dateStr.includes("-")
@@ -112,15 +99,6 @@ export const ProjectsList: React.FC = () => {
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
 
-  const handleSorterChange = (order: "ascend" | "descend" | undefined) => {
-    if (order === "ascend") {
-      setSortOrder("descend");
-    } else if (order === "descend") {
-      setSortOrder(undefined);
-    } else {
-      setSortOrder("descend");
-    }
-  };
 
   const columns: TableColumnType<Project>[] = [
     {
@@ -244,11 +222,14 @@ export const ProjectsList: React.FC = () => {
       responsive: ["lg", "xl"],
 
       sorter: (a: any, b: any) => {
-        if (!a?.minimumUnitCost || !a?.minimumUnitSize) return 0;
-        const cost = Number(a.minimumUnitCost);
-        const size = Number(a.minimumUnitSize);
-        if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
-        return Math.round(cost / size);
+        const getRate = (record: any) => {
+          if (!record?.minimumUnitCost || !record?.minimumUnitSize) return 0;
+          const cost = Number(record.minimumUnitCost);
+          const size = Number(record.minimumUnitSize);
+          if (isNaN(cost) || isNaN(size) || size <= 0) return 0;
+          return Math.round(cost / size);
+        };
+        return getRate(a) - getRate(b);
       },
 
       render: (details: any, record: Project) => {
@@ -561,9 +542,6 @@ export const ProjectsList: React.FC = () => {
       key: "_id",
 
       render: (id: string, record: Project) => {
-        // Check if reraProjectId has data - it's populated with the full RERA project object
-        const hasReraData = !!record.info.reraProjectId;
-
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
             <Tooltip title="Edit Project">
@@ -611,10 +589,7 @@ export const ProjectsList: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (
-      (issueSeverity || searchKeyword || projectStatusFilter) &&
-      !projectsLoading
-    ) {
+    if (!projectsLoading) {
       refetchProjects();
     }
   }, [issueSeverity, searchKeyword, projectStatusFilter]);
@@ -631,6 +606,13 @@ export const ProjectsList: React.FC = () => {
             <Search
               loading={projectsLoading}
               placeholder="Search for a project"
+              allowClear
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setSearchKeyword("");
+                }
+              }}
               onSearch={(value: string) => {
                 setSearchKeyword(value);
               }}
@@ -727,14 +709,7 @@ export const ProjectsList: React.FC = () => {
         columns={columns}
         rowKey="_id"
         loading={projectsLoading || isCorridorsDataLoading}
-        pagination={{
-          current: currentPage,
-          onChange: (page) => {
-            const newParams = new URLSearchParams(searchParams);
-            newParams.set("page", page.toString());
-            setSearchParams(newParams);
-          },
-        }}
+        pagination={false}
       />
       <JsonProjectImport
         isModalOpen={isJsonImportModalOpen}
