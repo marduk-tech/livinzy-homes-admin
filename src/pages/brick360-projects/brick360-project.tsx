@@ -133,7 +133,7 @@ export function Brick360Full() {
     return <Loader></Loader>;
   }
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", marginTop: 0 }}>
+    <div style={{ maxWidth: "1200px", margin: "0 auto", marginTop: 0 }}>
       <Flex justify="space-between" align="center">
         <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
         <Button

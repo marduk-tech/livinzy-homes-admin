@@ -75,8 +75,8 @@ export const ProjectsList: React.FC = () => {
     refetch: refetchProjects,
   } = useGetAllProjects({
     searchKeyword,
-    issueSeverity,
-    statusFilter: projectStatusFilter,
+    issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
+    statusFilter: projectStatusFilter == "all" ? "" : projectStatusFilter,
     limit: 10,
     sortBy: "updatedAt:desc",
   });
@@ -91,14 +91,12 @@ export const ProjectsList: React.FC = () => {
     deleteProjectMutation.mutate({ projectId: projectId });
   };
 
-
   const parseDateString = (dateStr: string) => {
     const [day, month, year] = dateStr.includes("-")
       ? dateStr.split("-")
       : dateStr.split("/");
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
-
 
   const columns: TableColumnType<Project>[] = [
     {
@@ -519,7 +517,9 @@ export const ProjectsList: React.FC = () => {
         };
         return (
           <Flex>
-            {resolvedIssues.length ? getIssuesLabel(resolvedIssues, "default") : null}
+            {resolvedIssues.length
+              ? getIssuesLabel(resolvedIssues, "default")
+              : null}
             {severeIssues.length ? getIssuesLabel(severeIssues, "error") : null}
             {nonSevereIssues.length
               ? getIssuesLabel(nonSevereIssues, "warning")
@@ -629,6 +629,7 @@ export const ProjectsList: React.FC = () => {
               }}
               placeholder="Filter by status"
               options={[
+                { label: "All", value: "all" },
                 { label: "Basic Details Ready", value: "basic-details-ready" },
                 { label: "Data Populated", value: "data-populated" },
                 { label: "Data Verified", value: "data-verified" },
@@ -638,22 +639,35 @@ export const ProjectsList: React.FC = () => {
                 { label: "New", value: "new" },
               ]}
             />
-            <Radio.Group
-              block
-              onChange={({ target: { value } }: RadioChangeEvent) => {
+            <Select
+              onChange={(value) => {
                 setSearchKeyword("");
-                setProjectStatusFilter("");
                 setIssueSeverity(value);
               }}
-              buttonStyle="solid"
+              placeholder="Filter by issue"
               options={[
+                 {
+                  label: (
+                    <Typography.Text
+                      style={{
+                        color:
+                          issueSeverity == "all"
+                            ? COLORS.textColorDark
+                            : COLORS.textColorDark,
+                      }}
+                    >
+                     All
+                    </Typography.Text>
+                  ),
+                  value: "all",
+                },
                 {
                   label: (
                     <Typography.Text
                       style={{
                         color:
                           issueSeverity == "ok"
-                            ? "white"
+                            ? COLORS.textColorDark
                             : COLORS.greenIdentifier,
                       }}
                     >
@@ -668,7 +682,7 @@ export const ProjectsList: React.FC = () => {
                       style={{
                         color:
                           issueSeverity == "blocker"
-                            ? "white"
+                            ? COLORS.textColorDark
                             : COLORS.redIdentifier,
                       }}
                     >
@@ -683,7 +697,7 @@ export const ProjectsList: React.FC = () => {
                       style={{
                         color:
                           issueSeverity == "review"
-                            ? "white"
+                            ? COLORS.textColorDark
                             : COLORS.yellowIdentifier,
                       }}
                     >
@@ -693,9 +707,6 @@ export const ProjectsList: React.FC = () => {
                   value: "review",
                 },
               ]}
-              style={{ width: 300 }}
-              defaultValue=""
-              optionType="button"
             />
           </Flex>
         </Col>
@@ -758,7 +769,7 @@ export const ProjectsList: React.FC = () => {
                       {i.issue}
                     </Typography.Text>
                   </Flex>
-                  { 
+                  {
                     <Button
                       size="small"
                       style={{ marginLeft: "auto" }}

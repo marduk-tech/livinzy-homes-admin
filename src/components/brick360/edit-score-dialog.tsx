@@ -82,6 +82,7 @@ export function EditScoreDialog({
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={handleClose}
+        width={1200}
       >
         <Form
           form={form}
@@ -116,7 +117,7 @@ export function EditScoreDialog({
                       { required: true, message: "Please enter reasoning" },
                     ]}
                   >
-                    <Input.TextArea rows={4} />
+                    <Input.TextArea rows={7} style={{fontSize: 16}} />
                   </Form.Item>
                 </div>
               ) : null
