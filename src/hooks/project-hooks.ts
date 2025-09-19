@@ -267,12 +267,6 @@ export function useProjectForm() {
     ],
     layout: [
       {
-        dbField: "unitConfigWithPricing",
-        type: "unit_config_list",
-        fieldDisplayName: "Unit Configurations",
-        fieldDescription: "Add or manage unit configurations and pricing",
-      },
-      {
         dbField: ["layout", "unitCount"],
         fieldDisplayName: "Unit Count",
         fieldDescription: "Total number of units in the project",
@@ -287,6 +281,13 @@ export function useProjectForm() {
         fieldDisplayName: "Open Area %",
         fieldDescription: "Percentage of open area in the project",
       },
+      {
+        dbField: "unitConfigWithPricing",
+        type: "unit_config_list",
+        fieldDisplayName: "Unit Configurations",
+        fieldDescription: "Add or manage unit configurations and pricing",
+      }
+      
     ],
     otherDetails: [
       {

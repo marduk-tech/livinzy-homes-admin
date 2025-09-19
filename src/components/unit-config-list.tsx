@@ -11,6 +11,7 @@ import {
   List,
   Modal,
   Row,
+  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -168,7 +169,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
         itemLayout="horizontal"
         dataSource={value}
         style={{
-          maxHeight: "300px",
+          maxHeight: "400px",
           overflowY: "auto",
           padding: "4px",
         }}
@@ -185,21 +186,22 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             }}
           >
             {/* left section - price and details */}
-            <div style={{ flex: "0 0 250px" }}>
+            <div>
               <Typography.Text strong={true} style={{ fontSize: "18px" }}>
                 Rs. {item.price.toLocaleString()}
               </Typography.Text>
-              <div style={{ marginTop: "4px" }}>
+              <Flex align="flex-end" style={{ marginTop: "4px" }}>
                 {item.type && (
-                  <Typography.Text
+                  <Tag
                     style={{
                       fontSize: "14px",
                       color: "#666",
                       display: "block",
+                       marginRight: 4
                     }}
                   >
                     {item.type}
-                  </Typography.Text>
+                  </Tag>
                 )}
                 {item.sizeBuiltup && (
                   <Typography.Text
@@ -218,9 +220,10 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                       fontSize: "12px",
                       color: "#888",
                       display: "block",
+                      marginLeft: 4
                     }}
                   >
-                    Carpet: {item.sizeCarpet} sq ft
+                  | Carpet: {item.sizeCarpet} sq ft
                   </Typography.Text>
                 )}
                 {/* Fallback to old config field if new fields are not available */}
@@ -235,7 +238,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                     {item.config}
                   </Typography.Text>
                 )}
-              </div>
+              </Flex>
             </div>
 
             {/* middle section floorplan images */}
