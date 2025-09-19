@@ -76,6 +76,11 @@ export interface IInfo {
     price: number;
     floorplans: string[];
   }>;
+  layout?: {
+    unitCount?: number;
+    landArea?: number;
+    openArea?: number;
+  };
   rate: {
     minimumUnitCost: number;
     minimumUnitSize: number;
@@ -243,5 +248,6 @@ interface Livestment {
 
 export interface ProjectStructure {
   basicInfo: ProjectField[];
+  layout: ProjectField[];
   otherDetails: ProjectField[];
 }

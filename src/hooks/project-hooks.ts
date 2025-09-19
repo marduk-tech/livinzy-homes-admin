@@ -265,6 +265,29 @@ export function useProjectForm() {
         ],
       },
     ],
+    layout: [
+      {
+        dbField: "unitConfigWithPricing",
+        type: "unit_config_list",
+        fieldDisplayName: "Unit Configurations",
+        fieldDescription: "Add or manage unit configurations and pricing",
+      },
+      {
+        dbField: ["layout", "unitCount"],
+        fieldDisplayName: "Unit Count",
+        fieldDescription: "Total number of units in the project",
+      },
+      {
+        dbField: ["layout", "landArea"],
+        fieldDisplayName: "Land Area",
+        fieldDescription: "Total land area of the project",
+      },
+      {
+        dbField: ["layout", "openArea"],
+        fieldDisplayName: "Open Area %",
+        fieldDescription: "Percentage of open area in the project",
+      },
+    ],
     otherDetails: [
       {
         dbField: "amenities",
@@ -277,12 +300,6 @@ export function useProjectForm() {
         type: "text",
         fieldDisplayName: "Financial plan",
         fieldDescription: "Explain financial plan in detail",
-      },
-      {
-        dbField: "unitConfigWithPricing",
-        type: "unit_config_list",
-        fieldDisplayName: "Unit Configurations",
-        fieldDescription: "Add or manage unit configurations and pricing",
       },
       {
         dbField: "externalWebsites",
