@@ -254,6 +254,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }
       }
 
+      // Preserving other layout values. 
+      if (projectData?.info.layout) {
+        values.info.layout = {
+          ...projectData.info.layout,
+          ...values.info.layout
+        }
+      }
+
       // add corridors to info
       if (
         projectId &&
