@@ -77,7 +77,7 @@ export const ProjectsList: React.FC = () => {
     searchKeyword,
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
     statusFilter: projectStatusFilter == "all" ? "" : projectStatusFilter,
-    limit: 25,
+    limit: 50,
     sortBy: "updatedAt:desc",
   });
 
