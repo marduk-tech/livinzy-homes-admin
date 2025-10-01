@@ -58,3 +58,23 @@ export interface IChromaDoc {
 export interface IChromaMetaData {
   [key: string]: any;
 }
+
+export interface IGlossary {
+  _id: string;
+  type: string;
+  content: {
+    title?: string;
+    description?: string;
+    content?: string;
+    pageLink?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IGhostPage {
+  id: string;
+  title: string;
+  slug: string;
+  status?: string;
+}

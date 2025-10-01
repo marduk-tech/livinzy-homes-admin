@@ -19,6 +19,7 @@ export const queryKeys = {
   getReraProjectById: "getReraProjectById",
   getLvnzyProjectById: "getLvnzyProjectById",
   getAllUsers: "getAllUsers",
+  getAllGlossary: "getAllGlossary",
 };
 export const LivIndexDrivers = [
   "road",
