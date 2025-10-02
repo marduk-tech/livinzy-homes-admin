@@ -646,7 +646,7 @@ export const ProjectsList: React.FC = () => {
               }}
               placeholder="Filter by issue"
               options={[
-                 {
+                {
                   label: (
                     <Typography.Text
                       style={{
@@ -656,7 +656,7 @@ export const ProjectsList: React.FC = () => {
                             : COLORS.textColorDark,
                       }}
                     >
-                     All
+                      All
                     </Typography.Text>
                   ),
                   value: "all",
@@ -769,7 +769,9 @@ export const ProjectsList: React.FC = () => {
                       {i.issue}
                     </Typography.Text>
                   </Flex>
-                  {
+                  {i.issue.resolved ? (
+                    "Resolved"
+                  ) : (
                     <Button
                       size="small"
                       style={{ marginLeft: "auto" }}
@@ -779,7 +781,7 @@ export const ProjectsList: React.FC = () => {
                     >
                       Resolve
                     </Button>
-                  }
+                  )}
                 </Flex>
               );
             })}
