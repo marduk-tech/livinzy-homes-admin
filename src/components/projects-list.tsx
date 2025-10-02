@@ -44,6 +44,7 @@ import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
 import { useAuth0 } from "@auth0/auth0-react";
 import ReactJson from "react-json-view";
+import { FONT_SIZES } from "../theme/font-sizes";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
@@ -769,8 +770,11 @@ export const ProjectsList: React.FC = () => {
                       {i.issue}
                     </Typography.Text>
                   </Flex>
-                  {i.issue.resolved ? (
-                    "Resolved"
+                  {i.resolved ? (
+                    <Flex vertical style={{marginLeft: "auto"}}> 
+                    <Typography.Text>Resolved</Typography.Text>
+                    <Typography.Text style={{fontSize: FONT_SIZES.SUB_TEXT, color: COLORS.textColorLight}}>{i.resolutionComments}</Typography.Text>
+                    </Flex>
                   ) : (
                     <Button
                       size="small"
