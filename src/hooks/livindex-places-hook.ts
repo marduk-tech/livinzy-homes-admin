@@ -16,6 +16,7 @@ export function useFetchLivindexPlaces(params?: {
   keyword?: string;
   limit?: number;
   sort?: object;
+  driverType?: string;
 }) {
   return useQuery({
     queryKey: [queryKeys.getAllPlaces, params],

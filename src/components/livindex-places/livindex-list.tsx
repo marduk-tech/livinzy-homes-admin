@@ -5,6 +5,7 @@ import {
   Flex,
   Input,
   Row,
+  Select,
   Table,
   TableColumnType,
   Tabs,
@@ -31,8 +32,10 @@ import { COLORS } from "../../theme/colors";
 export function LivindexList() {
   const { isMobile } = useDevice();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [driverTypeFilter, setDriverTypeFilter] = useState<string>("");
   const { data, isLoading, isError } = useFetchLivindexPlaces({
     keyword: searchKeyword,
+    driverType: driverTypeFilter,
     limit: 10,
     sort: { updatedAt: -1 }
   });
@@ -140,6 +143,29 @@ export function LivindexList() {
               }}
               enterButton="Search"
               style={{ width: 300 }}
+            />
+            <Select
+              onChange={(value) => {
+                setDriverTypeFilter(value);
+              }}
+              placeholder="Filter by driver type"
+              style={{ width: 200 }}
+              options={[
+                { label: "All", value: "all" },
+                { label: "Highway", value: "highway" },
+                { label: "Lake", value: "lake" },
+                { label: "School", value: "school" },
+                { label: "University", value: "university" },
+                { label: "Hospital", value: "hospital" },
+                { label: "Leisure", value: "leisure" },
+                { label: "Commercial", value: "commercial" },
+                { label: "Food", value: "food" },
+                { label: "Industrial Hi-Tech", value: "industrial-hitech" },
+                { label: "Industrial General", value: "industrial-general" },
+                { label: "Airport", value: "airport" },
+                { label: "Transit", value: "transit" },
+                { label: "Micro Market", value: "micro-market" },
+              ]}
             />
             <Typography.Text style={{fontSize: FONT_SIZES.SUB_TEXT, color: COLORS.textColorLight}}>Showing 10 recently updated items</Typography.Text>
           </Flex>
