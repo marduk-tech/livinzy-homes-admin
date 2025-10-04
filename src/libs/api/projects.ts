@@ -15,6 +15,7 @@ export const getAllProjects = async ({
   searchKeyword = "",
   issueSeverity = "",
   statusFilter = "",
+  issueType = "",
   limit,
   sortBy
 }: {
@@ -22,10 +23,11 @@ export const getAllProjects = async ({
   searchKeyword?: string;
   issueSeverity?: string;
   statusFilter?: string;
+  issueType?: string;
   limit?: number;
   sortBy?: string;
 }) => {
-  let endpoint = `/projects?source=${source}&keyword=${searchKeyword}&severity=${issueSeverity}&statusFilter=${statusFilter}`;
+  let endpoint = `/projects?source=${source}&keyword=${searchKeyword}&severity=${issueSeverity}&statusFilter=${statusFilter}&issueType=${issueType}`;
 
   if (limit) {
     endpoint += `&limit=${limit}`;

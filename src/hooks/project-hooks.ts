@@ -16,6 +16,7 @@ export function useGetAllProjects(params: {
   searchKeyword: string;
   issueSeverity: string;
   statusFilter: string;
+  issueType: string;
   limit?: number;
   sortBy?: string;
 }) {

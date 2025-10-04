@@ -56,6 +56,7 @@ export const ProjectsList: React.FC = () => {
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>("");
 
   const [issueSeverity, setIssueSeverity] = useState<string>("");
+  const [issueType, setIssueType] = useState<string>("");
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
     projectName: string;
@@ -78,6 +79,7 @@ export const ProjectsList: React.FC = () => {
     searchKeyword,
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
     statusFilter: projectStatusFilter == "all" ? "" : projectStatusFilter,
+    issueType: issueType == "all" ? "" : issueType,
     limit: 50,
     sortBy: "updatedAt:desc",
   });
@@ -596,7 +598,7 @@ export const ProjectsList: React.FC = () => {
     if (!projectsLoading) {
       refetchProjects();
     }
-  }, [issueSeverity, searchKeyword, projectStatusFilter]);
+  }, [issueSeverity, searchKeyword, projectStatusFilter, issueType]);
 
   return (
     <>
@@ -707,6 +709,29 @@ export const ProjectsList: React.FC = () => {
                   ),
                   value: "review",
                 },
+              ]}
+            />
+            <Select
+              onChange={(value) => {
+                setIssueType(value);
+              }}
+              placeholder="Filter by issue type"
+              style={{ width: 200 }}
+              options={[
+                { label: "All", value: "all" },
+                { label: "RERA Number", value: "RERA Number" },
+                { label: "RERA Mapping", value: "RERA Mapping" },
+                { label: "Developer Mapping", value: "Developer Mapping" },
+                { label: "Location", value: "Location" },
+                { label: "Locality", value: "Locality" },
+                { label: "Amenities", value: "Amenities" },
+                { label: "Project Density", value: "Project Density" },
+                { label: "Media", value: "Media" },
+                { label: "Open Area", value: "Open Area" },
+                { label: "Unit Config/Pricing", value: "Unit Config/Pricing" },
+                { label: "Sqft Pricing", value: "Sqft Pricing" },
+                { label: "Home Types", value: "Home Types" },
+                { label: "Error", value: "Error" },
               ]}
             />
           </Flex>
