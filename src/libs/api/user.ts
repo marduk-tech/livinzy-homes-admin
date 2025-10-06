@@ -26,3 +26,14 @@ export const updateUser = async (
   );
   return data;
 };
+
+export const sendReportEmail = async (
+  userId: string,
+  projectIds: string[]
+): Promise<{ success: boolean; message: string }> => {
+  const { data } = await axiosApiInstance.post(
+    `/user/${userId}/send-report-email`,
+    { projectIds }
+  );
+  return data;
+};

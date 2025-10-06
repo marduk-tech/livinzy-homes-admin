@@ -1,7 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
-import { createUser, getAllUsers, updateUser } from "../libs/api/user";
+import {
+  createUser,
+  getAllUsers,
+  sendReportEmail,
+  updateUser,
+} from "../libs/api/user";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { CreateUserPayload, UpdateUserPayload } from "../types/user";
@@ -70,6 +75,33 @@ export function useUpdateUserMutation() {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllUsers],
       });
+    },
+  });
+}
+
+export function useSendReportEmailMutation() {
+  return useMutation({
+    mutationFn: ({
+      userId,
+      projectIds,
+    }: {
+      userId: string;
+      projectIds: string[];
+    }) => {
+      return sendReportEmail(userId, projectIds);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: `Report email sent successfully!`,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to send email. Please try again later.`,
+      });
+      console.log(error);
     },
   });
 }
