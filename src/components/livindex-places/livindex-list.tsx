@@ -36,7 +36,7 @@ export function LivindexList() {
   const { data, isLoading, isError } = useFetchLivindexPlaces({
     keyword: searchKeyword,
     driverType: driverTypeFilter,
-    limit: 10,
+    limit: 50,
     sort: { updatedAt: -1 }
   });
 
