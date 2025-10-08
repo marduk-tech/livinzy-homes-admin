@@ -24,6 +24,12 @@ export interface CreateSavedLvnzyProject {
   projects: string[];
 }
 
+export interface RequestedReport {
+  projectName: string;
+  reraId: string;
+  requestDate: string;
+}
+
 export interface User {
   _id: string;
   mobile: string;
@@ -32,6 +38,7 @@ export interface User {
   savedProjects: string[];
   savedLvnzyProjects: SavedLvnzyProject[];
   chatSessions: ChatSession[];
+  requestedReports?: RequestedReport[];
   createdAt: string;
   updatedAt: string;
   __v: number;

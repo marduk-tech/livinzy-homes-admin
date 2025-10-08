@@ -57,12 +57,39 @@ export function UsersList() {
       ...ColumnSearch(["profile", "name"]),
       render: (name: string, record) => record.profile?.name || "-",
     },
-
+    {
+      title: "Created",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (createdAt: string) =>
+        new Date(createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
     {
       title: "Mobile",
       key: "mobile",
       ...ColumnSearch("mobile"),
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
+    },
+    {
+      title: "Email",
+      dataIndex: ["profile", "email"],
+      key: "email",
+      ...ColumnSearch(["profile", "email"]),
+      render: (_, record) => record.profile?.email || "-",
+    },
+    {
+      title: "Requested Reports",
+      key: "requestedReports",
+      render: (_, record) =>
+        record.requestedReports && record.requestedReports.length > 0
+          ? record.requestedReports.map((r) => r.projectName).join(", ")
+          : "-",
     },
     {
       title: "Collections",
