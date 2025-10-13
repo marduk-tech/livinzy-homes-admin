@@ -667,8 +667,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   allTags={MediaTags}
                 />
               </TabPane>
+            </Tabs>
+          </TabPane>
 
-              <TabPane tab={"Project Documents"} key={"documents"}>
+          <TabPane tab={<Typography.Text style={{fontSize: 16}}>Documents</Typography.Text>} key={"documents"} disabled={!projectId}>
+            <Tabs defaultActiveKey="project-documents">
+              <TabPane tab={"Project Documents"} key={"project-documents"}>
                 <DocumentsList
                   project={project!}
                   onUploadComplete={onUploadComplete}

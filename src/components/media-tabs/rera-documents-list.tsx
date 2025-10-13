@@ -1,7 +1,8 @@
-import { DownloadOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { DownloadOutlined, FilePdfOutlined, SearchOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Empty, Flex, Radio, Spin, Table, Typography } from "antd";
+import { Button, Empty, Flex, Input, Radio, Space, Spin, Table, Typography } from "antd";
 import { useState } from "react";
+import { FilterDropdownProps } from "antd/es/table/interface";
 
 import { getReraProjectById } from "../../libs/api/rera-project";
 import { ReraDocument, ReraProject } from "../../types/rera-project";
@@ -101,6 +102,54 @@ export const ReraDocumentsList = ({
           {
             title: "Document Name",
             key: "name",
+            filterDropdown: ({
+              setSelectedKeys,
+              selectedKeys,
+              confirm,
+              clearFilters,
+            }: FilterDropdownProps) => (
+              <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+                <Input
+                  placeholder="Search document name"
+                  value={selectedKeys[0]}
+                  onChange={(e) =>
+                    setSelectedKeys(e.target.value ? [e.target.value] : [])
+                  }
+                  onPressEnter={() => confirm()}
+                  style={{ marginBottom: 8, display: "block" }}
+                />
+                <Space>
+                  <Button
+                    type="primary"
+                    onClick={() => confirm()}
+                    icon={<SearchOutlined />}
+                    size="small"
+                  >
+                    Search
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (clearFilters) {
+                        clearFilters();
+                        setSelectedKeys([]);
+                        confirm();
+                      }
+                    }}
+                    size="small"
+                  >
+                    Reset
+                  </Button>
+                </Space>
+              </div>
+            ),
+            filterIcon: (filtered: boolean) => (
+              <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+            ),
+            onFilter: (value, record) => {
+              const searchValue = (value as string).toLowerCase();
+              const docName = (record.name || "").toLowerCase();
+              return docName.includes(searchValue);
+            },
             render: (_, record: ReraDocument) => {
               return (
                 <Flex align="center" gap={16}>
