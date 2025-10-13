@@ -110,7 +110,7 @@ export const ReraDocumentsList = ({
             }: FilterDropdownProps) => (
               <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
                 <Input
-                  placeholder="Search document name"
+                  placeholder="Search document name or URL text"
                   value={selectedKeys[0]}
                   onChange={(e) =>
                     setSelectedKeys(e.target.value ? [e.target.value] : [])
@@ -148,7 +148,8 @@ export const ReraDocumentsList = ({
             onFilter: (value, record) => {
               const searchValue = (value as string).toLowerCase();
               const docName = (record.name || "").toLowerCase();
-              return docName.includes(searchValue);
+              const urlText = (record.urlText || "").toLowerCase();
+              return docName.includes(searchValue) || urlText.includes(searchValue);
             },
             render: (_, record: ReraDocument) => {
               return (
