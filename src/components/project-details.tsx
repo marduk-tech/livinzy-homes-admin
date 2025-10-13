@@ -51,6 +51,7 @@ import {
 import { FileUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 import { DocumentsList } from "./media-tabs/documents-list";
+import { ReraDocumentsList } from "./media-tabs/rera-documents-list";
 import { VideoUpload } from "./media-tabs/video-tab";
 import { JsonEditor } from "./update-json-modal";
 
@@ -667,11 +668,17 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 />
               </TabPane>
 
-              <TabPane tab={"Documents"} key={"documents"}>
+              <TabPane tab={"Project Documents"} key={"documents"}>
                 <DocumentsList
                   project={project!}
                   onUploadComplete={onUploadComplete}
                   handleDeleteMedia={handleDeleteMedia}
+                />
+              </TabPane>
+
+              <TabPane tab={"RERA Documents"} key={"rera-documents"}>
+                <ReraDocumentsList
+                  reraProjectId={project?.info?.reraProjectId}
                 />
               </TabPane>
             </Tabs>

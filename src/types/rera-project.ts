@@ -42,13 +42,19 @@ interface ProjectDetails {
   towers: Tower[];
 }
 
+export interface ReraDocument {
+  url: string;
+  name: string;
+  urlText: string;
+}
+
 export interface ReraProject {
   _id: string;
   projectDetails: ProjectDetails;
   projectAmenities: Record<string, any>;
-  documents: Record<string, any>;
+  documents: ReraDocument[];
   landDetails: Record<string, any>;
-  
+
   complaints: Record<string, any>;
   createdAt: string;
   updatedAt: string;
