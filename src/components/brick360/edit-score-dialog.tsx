@@ -1,6 +1,14 @@
-import { EditOutlined } from "@ant-design/icons";
-import { Button, Form, Input, InputNumber, Modal, Typography } from "antd";
-import { useState } from "react";
+import { EditOutlined, HighlightOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Typography,
+  message,
+} from "antd";
+import { useRef, useState } from "react";
 
 interface EditScoreDialogProps {
   sectionData: any;
@@ -15,6 +23,10 @@ export function EditScoreDialog({
 }: EditScoreDialogProps) {
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTextAreaField, setActiveTextAreaField] = useState<string | null>(
+    null
+  );
+  const textAreaRefs = useRef<{ [key: string]: any }>({});
 
   const handleSubmit = async () => {
     try {
@@ -71,6 +83,42 @@ export function EditScoreDialog({
   const handleClose = () => {
     setIsModalOpen(false);
     form.resetFields();
+    setActiveTextAreaField(null);
+  };
+
+  const handleHighlight = () => {
+    if (!activeTextAreaField) {
+      message.warning("Please focus on a text area first");
+      return;
+    }
+
+    const textArea = textAreaRefs.current[activeTextAreaField];
+    if (!textArea || !textArea.resizableTextArea?.textArea) {
+      message.error("Text area not found");
+      return;
+    }
+
+    const textarea = textArea.resizableTextArea.textArea;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    if (!selectedText) {
+      message.warning("Please select some text first");
+      return;
+    }
+
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+    const newText = `${beforeText}<span class='highlight'>${selectedText}</span>${afterText}`;
+
+    // update form field value handle both simple and nested fields
+    const fieldPath = activeTextAreaField.includes(".")
+      ? activeTextAreaField.split(".")
+      : activeTextAreaField;
+    form.setFieldValue(fieldPath, newText);
+
+    message.success("Text highlighted successfully");
   };
 
   return (
@@ -83,6 +131,21 @@ export function EditScoreDialog({
         onOk={handleSubmit}
         onCancel={handleClose}
         width={1200}
+        footer={[
+          <Button
+            key="highlight"
+            icon={<HighlightOutlined />}
+            onClick={handleHighlight}
+          >
+            Highlight Selected Text
+          </Button>,
+          <Button key="cancel" onClick={handleClose}>
+            Cancel
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleSubmit}>
+            OK
+          </Button>,
+        ]}
       >
         <Form
           form={form}
@@ -92,10 +155,18 @@ export function EditScoreDialog({
           {sectionKey === "summary" ? (
             <>
               <Form.Item label="Pros" name="pros">
-                <Input.TextArea rows={4} />
+                <Input.TextArea
+                  rows={4}
+                  ref={(el) => (textAreaRefs.current["pros"] = el)}
+                  onFocus={() => setActiveTextAreaField("pros")}
+                />
               </Form.Item>
               <Form.Item label="Cons" name="cons">
-                <Input.TextArea rows={4} />
+                <Input.TextArea
+                  rows={4}
+                  ref={(el) => (textAreaRefs.current["cons"] = el)}
+                  onFocus={() => setActiveTextAreaField("cons")}
+                />
               </Form.Item>
             </>
           ) : (
@@ -117,7 +188,16 @@ export function EditScoreDialog({
                       { required: true, message: "Please enter reasoning" },
                     ]}
                   >
-                    <Input.TextArea rows={7} style={{fontSize: 16}} />
+                    <Input.TextArea
+                      rows={7}
+                      style={{ fontSize: 16 }}
+                      ref={(el) =>
+                        (textAreaRefs.current[`${subKey}.reasoning`] = el)
+                      }
+                      onFocus={() =>
+                        setActiveTextAreaField(`${subKey}.reasoning`)
+                      }
+                    />
                   </Form.Item>
                 </div>
               ) : null

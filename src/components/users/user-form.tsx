@@ -39,6 +39,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
 
       form.setFieldsValue({
         name: data.profile?.name || "",
+        email: data.profile?.email || "",
         mobileNumber: {
           countryCode: Number(data.countryCode || "91"),
           phoneNumber: mobile,
@@ -82,6 +83,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           profile: {
             ...data.profile,
             name: values.name,
+            email: values.email || data.profile?.email,
           },
           savedLvnzyProjects,
         };
@@ -97,6 +99,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           countryCode: countryCode,
           profile: {
             name: values.name,
+            email: values.email,
           },
           savedLvnzyProjects,
         };
@@ -147,6 +150,16 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
             rules={[{ required: true, message: "Please enter user name" }]}
           >
             <Input placeholder="Enter user name" />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { type: "email", message: "Please enter a valid email" },
+            ]}
+          >
+            <Input placeholder="Enter email address" />
           </Form.Item>
 
           <Form.Item
