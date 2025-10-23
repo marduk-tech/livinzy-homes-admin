@@ -27,7 +27,7 @@ import { useUpdateProjectMutation } from "../../hooks/project-hooks";
 import { useBunnyUploader } from "../../hooks/use-bunny-uploader";
 import { useDevice } from "../../hooks/use-device";
 import { api } from "../../libs/api";
-import { extractYouTubeVideoId } from "../../libs/utils";
+import { cleanYouTubeUrl, extractYouTubeVideoId } from "../../libs/utils";
 import { IMedia, Project } from "../../types/Project";
 
 interface VideoUploadProps {
@@ -63,14 +63,15 @@ export function VideoUpload({
   const handleYoutubeSave = () => {
     if (!youtubeLink) return;
 
-    const videoId = extractYouTubeVideoId(youtubeLink);
-    if (!videoId) {
+    const cleanedUrl = cleanYouTubeUrl(youtubeLink);
+    if (!cleanedUrl) {
       notification.error({
         message: "Invalid YouTube URL or could not extract video ID",
       });
       return;
     }
 
+    const videoId = extractYouTubeVideoId(cleanedUrl);
     const currentMedia = form.getFieldValue("media") || [];
 
     // Add new YouTube video media
@@ -80,7 +81,7 @@ export function VideoUpload({
         tags: [],
         caption: "",
         isYoutube: true,
-        youtubeUrl: youtubeLink,
+        youtubeUrl: cleanedUrl,
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/0.jpg`,
       },
     };

@@ -143,3 +143,12 @@ export function extractYouTubeVideoId(url: string): string | null {
     return match && match[1] ? match[1] : null;
   }
 }
+
+export function cleanYouTubeUrl(url: string): string | null {
+  if (!url) return null;
+
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) return null;
+
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
