@@ -308,7 +308,13 @@ export function useProjectForm() {
         type: "text",
         fieldDisplayName: "External websites",
         fieldDescription: "Website for the project.",
-      }
+      },
+       {
+        dbField: "expertInfo",
+        type: "text",
+        fieldDisplayName: "Expert Info",
+        fieldDescription: "Any specific expert analysis to be provided",
+      },
     ],
   };
 
