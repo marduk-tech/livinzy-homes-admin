@@ -14,6 +14,8 @@ export function useGetAllLvnzyProjects() {
   return useQuery({
     queryKey: [queryKeys.lvnzyProjects],
     queryFn: () => getAllLvnzyProjects(),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
   });
 }
 
