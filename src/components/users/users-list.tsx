@@ -1,9 +1,10 @@
-import { EditOutlined, MailOutlined, MessageOutlined } from "@ant-design/icons";
+import { CopyOutlined, EditOutlined, MailOutlined, MessageOutlined } from "@ant-design/icons";
 import {
   Button,
   Col,
   Divider,
   Flex,
+  Input,
   Modal,
   notification,
   Row,
@@ -20,7 +21,7 @@ import {
   useGetAllUsers,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
-import { User } from "../../types/user";
+import { User, UtmEntry } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 
@@ -32,6 +33,7 @@ export function UsersList() {
   const [userToEdit, setUserToEdit] = useState<User | undefined>();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [msgModalOpen, setMsgModalOpen] = useState(false);
+  const [isUtmModalOpen, setIsUtmModalOpen] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
@@ -60,7 +62,18 @@ export function UsersList() {
       dataIndex: ["profile", "name"],
       key: "name",
       ...ColumnSearch(["profile", "name"]),
-      render: (name: string, record) => record.profile?.name || "-",
+      render: (name: string, record) => (
+        <Space>
+          {record.profile?.name || "-"}
+          <Typography.Text
+            copyable={{
+              text: record._id,
+              icon: <CopyOutlined />,
+              tooltips: false,
+            }}
+          ></Typography.Text>
+        </Space>
+      ),
     },
     {
       title: "Created",
@@ -90,6 +103,60 @@ export function UsersList() {
       key: "email",
       ...ColumnSearch(["profile", "email"]),
       render: (_, record) => record.profile?.email || "-",
+    },
+    {
+      title: "UTM Source",
+      key: "utmSource",
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search UTM Source"
+            value={selectedKeys[0] as string}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block', width: 188 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button onClick={() => clearFilters?.()} size="small" style={{ width: 90 }}>
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => {
+        const utmSource = record.metrics?.utm?.[record.metrics.utm.length - 1]?.utm_source;
+        return utmSource ? utmSource.toLowerCase().includes(String(value).toLowerCase()) : false;
+      },
+      sorter: (a, b) => {
+        const aSource = a.metrics?.utm?.[a.metrics.utm.length - 1]?.utm_source || "";
+        const bSource = b.metrics?.utm?.[b.metrics.utm.length - 1]?.utm_source || "";
+        return aSource.localeCompare(bSource);
+      },
+      render: (_, record) => {
+        const mostRecentUtm = record.metrics?.utm?.[record.metrics.utm.length - 1];
+        const utmSource = mostRecentUtm?.utm_source;
+
+        if (!utmSource) return "-";
+
+        return (
+          <Typography.Link
+            onClick={() => {
+              setSelectedUser(record);
+              setIsUtmModalOpen(true);
+            }}
+          >
+            {utmSource}
+          </Typography.Link>
+        );
+      },
     },
     {
       title: "Requested Reports",
@@ -299,6 +366,105 @@ _If you need any kind of assistance with regards to ${
               value: project._id,
               label: project.meta?.projectName || project._id,
             }))}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        title="UTM Tracking History"
+        open={isUtmModalOpen}
+        onCancel={() => {
+          setIsUtmModalOpen(false);
+          setSelectedUser(undefined);
+        }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              setIsUtmModalOpen(false);
+              setSelectedUser(undefined);
+            }}
+          >
+            Close
+          </Button>,
+        ]}
+        width={900}
+      >
+        <div style={{ marginTop: 20 }}>
+          <Typography.Text strong>
+            UTM tracking data for {selectedUser?.profile?.name || "user"}
+          </Typography.Text>
+          <Table
+            dataSource={
+              selectedUser?.metrics?.utm
+                ? [...selectedUser.metrics.utm].reverse()
+                : []
+            }
+            columns={[
+              {
+                title: "Captured At",
+                dataIndex: "capturedAt",
+                key: "capturedAt",
+                render: (date: string) =>
+                  new Date(date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  }),
+                width: 160,
+              },
+              {
+                title: "Source",
+                dataIndex: "utm_source",
+                key: "utm_source",
+                render: (source?: string) => source || "-",
+              },
+              {
+                title: "Medium",
+                dataIndex: "utm_medium",
+                key: "utm_medium",
+                render: (medium?: string) => medium || "-",
+              },
+              {
+                title: "Campaign",
+                dataIndex: "utm_campaign",
+                key: "utm_campaign",
+                render: (campaign?: string) => campaign || "-",
+              },
+              {
+                title: "Term",
+                dataIndex: "utm_term",
+                key: "utm_term",
+                render: (term?: string) => term || "-",
+              },
+              {
+                title: "Content",
+                dataIndex: "utm_content",
+                key: "utm_content",
+                render: (content?: string) => content || "-",
+              },
+              {
+                title: "Landing Page",
+                dataIndex: "landingPage",
+                key: "landingPage",
+                render: (page?: string) =>
+                  page ? (
+                    <Typography.Link href={`${import.meta.env.VITE_BRICKFI_APP_URL}${page}`} target="_blank">
+                      {page.length > 30 ? `${page.substring(0, 30)}...` : page}
+                    </Typography.Link>
+                  ) : (
+                    "-"
+                  ),
+                width: 200,
+              },
+            ]}
+            pagination={{ pageSize: 5 }}
+            rowKey={(record, index) => `${record.capturedAt}-${index}`}
+            scroll={{ x: true }}
+            style={{ marginTop: 16 }}
           />
         </div>
       </Modal>

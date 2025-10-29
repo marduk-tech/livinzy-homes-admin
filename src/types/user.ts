@@ -30,6 +30,16 @@ export interface RequestedReport {
   requestDate: string;
 }
 
+export interface UtmEntry {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  landingPage?: string;
+  capturedAt: string;
+}
+
 export interface User {
   _id: string;
   mobile: string;
@@ -39,6 +49,9 @@ export interface User {
   savedLvnzyProjects: SavedLvnzyProject[];
   chatSessions: ChatSession[];
   requestedReports?: RequestedReport[];
+  metrics?: {
+    utm?: UtmEntry[];
+  };
   createdAt: string;
   updatedAt: string;
   __v: number;
