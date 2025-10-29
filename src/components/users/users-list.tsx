@@ -5,6 +5,7 @@ import {
   Divider,
   Flex,
   Modal,
+  notification,
   Row,
   Select,
   Space,
@@ -151,25 +152,29 @@ export function UsersList() {
   ];
 
   function getMsgText() {
-  const projects = lvnzyProjects?.filter((p: any) =>
-    selectedProjectIds.includes(p._id)
-  );
-  if (!projects || !projects.length) {
-    return "";
-  }
+    const projects = lvnzyProjects?.filter((p: any) =>
+      selectedProjectIds.includes(p._id)
+    );
+    if (!projects || !projects.length) {
+      return "";
+    }
 
-  const projectNames = projects.map((p: any) => p.meta.projectName).join(", ");
-  const projectSlug =
-    projects.length === 1 ? `/brick360/${projects[0].slug}` : "";
+    const projectNames = projects
+      .map((p: any) => p.meta.projectName)
+      .join(", ");
+    const projectSlug =
+      projects.length === 1 ? `/brick360/${projects[0].slug}` : "";
 
-  return `Hi ${selectedUser?.profile.name?.split(" ")[0]}👋
+    return `Hi ${selectedUser?.profile.name?.split(" ")[0]}👋
 As per your request, the Brick360 report for *${projectNames}* is ready.
 
 Click below 👇 to login to your account & access the report:
 https://brickfi.in/app${projectSlug}
 
-_If you need any kind of assistance with regards to ${projectNames.length > 1 ? `these properties`: `this property` } or other projects, please feel free to drop a message here._`;
-}
+_If you need any kind of assistance with regards to ${
+      projects.length > 1 ? `these properties` : `this property`
+    } or other projects, please feel free to drop a message here._`;
+  }
 
   if (isError) return <div>Error fetching users data</div>;
 
@@ -214,6 +219,9 @@ _If you need any kind of assistance with regards to ${projectNames.length > 1 ? 
           const txt = getMsgText();
           if (txt) {
             navigator.clipboard.writeText(getMsgText());
+            notification.success({
+              message: `Message copied to clipboard!`,
+            });
           }
         }}
         okText="Copy Message"
@@ -246,12 +254,11 @@ _If you need any kind of assistance with regards to ${projectNames.length > 1 ? 
             }))}
           />
           <Divider></Divider>
-           <Flex style={{ padding: 2 }}>
-        <Typography.Text style={{ whiteSpace: "pre-line" }}>
-          {getMsgText()}
-        </Typography.Text>
-        </Flex>
-          
+          <Flex style={{ padding: 2 }}>
+            <Typography.Text style={{ whiteSpace: "pre-line" }}>
+              {getMsgText()}
+            </Typography.Text>
+          </Flex>
         </div>
       </Modal>
 
