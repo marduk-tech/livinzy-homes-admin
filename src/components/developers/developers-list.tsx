@@ -183,12 +183,12 @@ export function DevelopersList() {
           <Flex gap={8} align="flex-end">
             <Search
               loading={isLoading}
-              placeholder="Search for a developer by name"
+              placeholder="Search by developer name, project name, or RERA number"
               onSearch={(value: string) => {
                 setSearchKeyword(value);
               }}
               enterButton="Search"
-              style={{ width: 400 }}
+              style={{ width: 500 }}
             />
             <Typography.Text
               style={{
