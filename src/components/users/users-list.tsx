@@ -76,13 +76,13 @@ export function UsersList() {
       ),
     },
     {
-      title: "Created",
-      dataIndex: "createdAt",
-      key: "createdAt",
+      title: "Updated",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
       sorter: (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (createdAt: string) =>
-        new Date(createdAt).toLocaleDateString("en-US", {
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      render: (updatedAt: string) =>
+        new Date(updatedAt).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
