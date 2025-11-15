@@ -20,6 +20,7 @@ export const queryKeys = {
   getLvnzyProjectById: "getLvnzyProjectById",
   getAllUsers: "getAllUsers",
   getAllGlossary: "getAllGlossary",
+  getAllTraces: "getAllTraces",
 };
 export const LivIndexDrivers = [
   "road",

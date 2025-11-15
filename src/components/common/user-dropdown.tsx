@@ -44,6 +44,7 @@ export function UserDropDown() {
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
     // { to: "/ask", label: "Ask Liv", icon: undefined },
     { to: "/users", label: "Users", icon: undefined },
+    { to: "/traces", label: "Traces", icon: undefined },
   ];
 
   return (
