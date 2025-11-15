@@ -10,6 +10,7 @@ export interface IMedia {
     caption?: string;
   };
   isPreview: boolean;
+  hasWatermark: boolean;
   video?: {
     url?: string;
     tags: string[];

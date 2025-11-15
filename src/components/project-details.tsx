@@ -25,6 +25,7 @@ import {
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
+  DeleteRowOutlined,
   DownloadOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
@@ -98,7 +99,9 @@ const RenderFields: React.FC<{
                 }
                 label={
                   <Flex gap={8} align="center">
-                    <Typography.Text style={{fontWeight: "bold"}}>{fieldDisplayName}</Typography.Text>
+                    <Typography.Text style={{ fontWeight: "bold" }}>
+                      {fieldDisplayName}
+                    </Typography.Text>
                     {mustHave ? <Tag color="volcano">Must Have</Tag> : null}
                     {type === "json" && (
                       <JsonEditor
@@ -119,26 +122,29 @@ const RenderFields: React.FC<{
                       />
                     )}
                     {Array.isArray(dbField) &&
-                     dbField[0] === "location" &&
-                     dbField[1] === "mapLink" &&
-                     form.getFieldValue([category, ...dbField]) && (
-                      <span
-                        style={{ cursor: "pointer", marginTop: "2px" }}
-                        onClick={() => {
-                          const mapLink = form.getFieldValue([category, ...dbField]);
-                          if (mapLink) {
-                            window.open(mapLink, "_blank");
-                          }
-                        }}
-                      >
-                        <DynamicReactIcon
-                          color={COLORS.textColorDark}
-                          iconName="IoNavigateCircleSharp"
-                          iconSet="io5"
-                          size={20}
-                        />
-                      </span>
-                    )}
+                      dbField[0] === "location" &&
+                      dbField[1] === "mapLink" &&
+                      form.getFieldValue([category, ...dbField]) && (
+                        <span
+                          style={{ cursor: "pointer", marginTop: "2px" }}
+                          onClick={() => {
+                            const mapLink = form.getFieldValue([
+                              category,
+                              ...dbField,
+                            ]);
+                            if (mapLink) {
+                              window.open(mapLink, "_blank");
+                            }
+                          }}
+                        >
+                          <DynamicReactIcon
+                            color={COLORS.textColorDark}
+                            iconName="IoNavigateCircleSharp"
+                            iconSet="io5"
+                            size={20}
+                          />
+                        </span>
+                      )}
                   </Flex>
                 }
                 rules={
@@ -216,6 +222,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     ...queries.getProjectById(projectId as string),
     enabled: !!projectId,
     throwOnError: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
   });
 
   // const { data: allProjects, isLoading: allProjectsLoading } = useQuery({
@@ -255,12 +263,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         }
       }
 
-      // Preserving other layout values. 
+      // Preserving other layout values.
       if (projectData?.info.layout) {
         values.info.layout = {
           ...projectData.info.layout,
-          ...values.info.layout
-        }
+          ...values.info.layout,
+        };
       }
 
       // add corridors to info
@@ -466,11 +474,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             return (
               <TabPane
                 tab={
-                  <Typography.Text style={{fontSize: 16}}>
+                  <Typography.Text style={{ fontSize: 16 }}>
                     {key
                       .replace(/([A-Z])/g, " $1")
                       .replace(/^./, (str) => str.toUpperCase())}{" "}
-                   
                   </Typography.Text>
                 }
                 key={key}
@@ -497,10 +504,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             )}
           </TabPane> */}
 
-          <TabPane tab={<Typography.Text style={{fontSize: 16}}>Media</Typography.Text>} key={"media"} disabled={!projectId}>
+          <TabPane
+            tab={
+              <Typography.Text style={{ fontSize: 16 }}>Media</Typography.Text>
+            }
+            key={"media"}
+            disabled={!projectId}
+          >
             <Tabs defaultActiveKey="images">
               <TabPane tab={"Images"} key={"images"}>
-                <Flex justify="end" style={{ marginBottom: 16, gap: 20 }}>
+                <Flex justify="end" style={{ marginBottom: 16, gap: 8 }}>
                   <FileUpload
                     onUploadComplete={(
                       urls: string[],
@@ -516,40 +529,45 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   />
                 </Flex>
 
-                {project?.media?.map((item: IMedia, index) => {
-                  if (item?.type === "image") {
-                    return (
-                      <Row
-                        gutter={[16, 16]}
-                        key={item._id}
-                        style={{
-                          marginBottom: 24,
-                          alignItems: "stretch",
-                          borderBottom: "1px solid #f0f0f0",
-                          paddingBottom: 24,
-                        }}
-                      >
-                        <Col xs={24} sm={24} md={6} lg={4} xl={4}>
-                          <Image
-                            width="100%"
-                            src={item.image?.url}
-                            alt={item._id}
-                            style={{
-                              borderRadius: 10,
-                              objectFit: "cover",
-                              aspectRatio: "1 / 1",
-                            }}
-                          />
-                        </Col>
-                        <Col xs={24} sm={24} md={18} lg={20} xl={20}>
+                <Flex gap={48} style={{ width: "100%" }} wrap="wrap">
+                  {project?.media?.map((item: IMedia, index) => {
+                    if (item?.type === "image") {
+                      return (
+                        <Flex
+                          gap={8}
+                          style={{
+                            border: item.hasWatermark
+                              ? `2px solid ${COLORS.redIdentifier}`
+                              : "none",
+                            borderRadius: 8,
+                            padding: 8
+                          }}
+                        >
+                          <Flex>
+                            <Image
+                              width={150}
+                              src={item.image?.url}
+                              alt={item._id}
+                              style={{
+                                borderRadius: 10,
+                                objectFit: "cover",
+                                aspectRatio: "1 / 1",
+                              }}
+                            />
+                          </Flex>
                           <Flex
                             vertical
                             justify="center"
-                            style={{ height: "100%" }}
+                            style={{ width: 300 }}
                           >
                             <Form.Item
                               name={["media", index, "type"]}
                               label="Type"
+                              hidden
+                            ></Form.Item>
+                             <Form.Item
+                              name={["media", index, "hasWatermark"]}
+                              label="Has Watermark ?"
                               hidden
                             ></Form.Item>
                             <Form.Item
@@ -557,53 +575,55 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               label="Tags"
                               hidden
                             ></Form.Item>
-                            <Form.Item
-                              name={["media", index, "image", "tags"]}
-                              label="Tags"
-                              style={{ width: "100%" }}
-                            >
-                              <Select
-                                style={{
-                                  width: "100%",
-                                  maxWidth: screens.lg ? "600px" : "100%",
-                                }}
-                                placeholder="Enter tags"
-                                options={MediaTags.map((tag) => ({
-                                  value: tag,
-                                  label: tag,
-                                }))}
-                              />
-                            </Form.Item>
-
-                            <Form.Item
-                              name={["media", index, "image", "caption"]}
-                              label="Caption"
-                              style={{ width: "100%" }}
-                            >
-                              <Input
-                                style={{
-                                  width: "100%",
-                                  maxWidth: screens.lg ? "600px" : "100%",
-                                }}
-                                placeholder="Enter caption"
-                              />
-                            </Form.Item>
-
-                            <Form.Item name={["media", index, "isPreview"]}>
-                              <Checkbox
-                                checked={index === previewImageIndex}
-                                onChange={(e) =>
-                                  handlePreviewImageChange(
-                                    index,
-                                    e.target.checked
-                                  )
-                                }
+                            <Flex gap={8}>
+                              <Form.Item
+                                name={["media", index, "image", "tags"]}
+                                label="Tags"
+                                style={{ width: "100%" }}
                               >
-                                Preview Image
-                              </Checkbox>
-                            </Form.Item>
+                                <Select
+                                  style={{
+                                    width: "100%",
+                                    maxWidth: screens.lg ? "600px" : "100%",
+                                  }}
+                                  placeholder="Enter tags"
+                                  options={MediaTags.map((tag) => ({
+                                    value: tag,
+                                    label: tag,
+                                  }))}
+                                />
+                              </Form.Item>
 
-                            <Flex wrap="wrap">
+                              <Form.Item
+                                name={["media", index, "image", "caption"]}
+                                label="Caption"
+                                style={{ width: "100%" }}
+                              >
+                                <Input
+                                  style={{
+                                    width: "100%",
+                                    maxWidth: screens.lg ? "600px" : "100%",
+                                  }}
+                                  placeholder="Enter caption"
+                                />
+                              </Form.Item>
+                            </Flex>
+
+                            <Flex>
+                              <Form.Item name={["media", index, "isPreview"]}>
+                                <Checkbox
+                                  checked={index === previewImageIndex}
+                                  onChange={(e) =>
+                                    handlePreviewImageChange(
+                                      index,
+                                      e.target.checked
+                                    )
+                                  }
+                                >
+                                  Preview
+                                </Checkbox>
+                              </Form.Item>
+
                               <FileUpload
                                 onUploadComplete={(
                                   urls: string[],
@@ -619,20 +639,21 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                 fileType="image"
                                 isMultiple={false}
                                 button={{
-                                  label: "Update Image",
+                                  label: "",
                                 }}
                               />
 
-                              <Button onClick={() => handleDeleteMedia(index)}>
-                                Delete Image
-                              </Button>
+                              <Button
+                                icon={<DeleteOutlined />}
+                                onClick={() => handleDeleteMedia(index)}
+                              ></Button>
                             </Flex>
                           </Flex>
-                        </Col>
-                      </Row>
-                    );
-                  }
-                })}
+                        </Flex>
+                      );
+                    }
+                  })}
+                </Flex>
 
                 {/* Hot fix for video getting deleted on image save  */}
                 <div
@@ -670,7 +691,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             </Tabs>
           </TabPane>
 
-          <TabPane tab={<Typography.Text style={{fontSize: 16}}>Documents</Typography.Text>} key={"documents"} disabled={!projectId}>
+          <TabPane
+            tab={
+              <Typography.Text style={{ fontSize: 16 }}>
+                Documents
+              </Typography.Text>
+            }
+            key={"documents"}
+            disabled={!projectId}
+          >
             <Tabs defaultActiveKey="project-documents">
               <TabPane tab={"Project Documents"} key={"project-documents"}>
                 <DocumentsList
@@ -688,8 +717,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             </Tabs>
           </TabPane>
         </Tabs>
-
-        <Button
+          <Button
           type="primary"
           onClick={handleSave}
           loading={createProject.isPending || updateProject.isPending}

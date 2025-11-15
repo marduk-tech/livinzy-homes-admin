@@ -779,26 +779,47 @@ export const ProjectsList: React.FC = () => {
                   gap={0}
                 >
                   <Flex vertical>
-                    <Typography.Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: "bold",
-                        color:
-                          i.severity == 5
-                            ? COLORS.redIdentifier
-                            : COLORS.yellowIdentifier,
-                      }}
-                    >
-                      {i.field}
-                    </Typography.Text>
-                    <Typography.Text style={{ fontSize: 11, textWrap: "wrap" }}>
-                      {i.issue}
-                    </Typography.Text>
+                    <Flex>
+                      <Typography.Text
+                        style={{
+                          fontSize: FONT_SIZES.PARA,
+                          fontWeight: "bold",
+                          color:
+                            i.severity == 5
+                              ? COLORS.redIdentifier
+                              : COLORS.yellowIdentifier,
+                        }}
+                      >
+                        {i.field}
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{ fontSize: FONT_SIZES.PARA, textWrap: "wrap" }}
+                      >
+                        : {i.issue}
+                      </Typography.Text>
+                    </Flex>
+                    {i.description ? (
+                      <Typography.Text
+                        style={{
+                          fontSize: FONT_SIZES.SUB_TEXT,
+                          textWrap: "wrap",
+                        }}
+                      >
+                        {i.description}
+                      </Typography.Text>
+                    ) : null}
                   </Flex>
                   {i.resolved ? (
-                    <Flex vertical style={{marginLeft: "auto"}}> 
-                    <Typography.Text>Resolved</Typography.Text>
-                    <Typography.Text style={{fontSize: FONT_SIZES.SUB_TEXT, color: COLORS.textColorLight}}>{i.resolutionComments}</Typography.Text>
+                    <Flex vertical style={{ marginLeft: "auto" }}>
+                      <Typography.Text>Resolved</Typography.Text>
+                      <Typography.Text
+                        style={{
+                          fontSize: FONT_SIZES.SUB_TEXT,
+                          color: COLORS.textColorLight,
+                        }}
+                      >
+                        {i.resolutionComments}
+                      </Typography.Text>
                     </Flex>
                   ) : (
                     <Button
