@@ -76,6 +76,22 @@ export function UsersList() {
       ),
     },
     {
+      title: "Created",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (createdAt: string) =>
+        new Date(createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+    },
+    {
       title: "Updated",
       dataIndex: "updatedAt",
       key: "updatedAt",
