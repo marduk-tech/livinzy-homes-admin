@@ -11,6 +11,40 @@ body {
   /* Add any other styles you want to reset or modify */
 }
 
+// for WYSIWYG editor
+.highlight {
+  font-weight: 500;
+  color: #0084d1;
+  background-color: rgba(43, 203, 242, 0.1);
+  padding: 0 4px;
+}
+
+// WYSIWYG editor styles
+.rsw-editor {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 16px;
+
+  &:hover {
+    border-color: #4096ff;
+  }
+
+  &:focus-within {
+    border-color: #4096ff;
+    box-shadow: 0 0 0 2px rgba(64, 150, 255, 0.1);
+  }
+}
+
+.rsw-ce {
+  min-height: 200px;
+  padding: 8px 12px;
+  line-height: 1.6;
+}
+
+.rsw-toolbar {
+  border-bottom: 1px solid #d9d9d9;
+  padding: 8px;
+}
 
 .reasoning {
   line-height: 145%;
