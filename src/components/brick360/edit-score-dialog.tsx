@@ -120,7 +120,7 @@ function WysiwygEditor({ value, onChange, placeholder }: WysiwygEditorProps) {
         <BtnUndo />
         <BtnRedo />
         <Separator />
-        <BtnBold />
+        {/* <BtnBold />
         <BtnItalic />
         <BtnUnderline />
         <BtnStrikeThrough />
@@ -129,8 +129,7 @@ function WysiwygEditor({ value, onChange, placeholder }: WysiwygEditorProps) {
         <BtnNumberedList />
         <Separator />
         <BtnLink />
-        <Separator />
-
+        <Separator /> */}
         <BtnHighlight />
       </Toolbar>
     </Editor>
