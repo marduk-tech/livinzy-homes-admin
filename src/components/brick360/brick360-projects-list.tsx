@@ -1,4 +1,4 @@
-import { EditOutlined, LinkOutlined } from "@ant-design/icons";
+import { ContainerOutlined, DatabaseOutlined, EditOutlined, FileTextOutlined, LinkOutlined } from "@ant-design/icons";
 import { Button, Flex, Table, TableColumnType } from "antd";
 import { Link } from "react-router-dom";
 
@@ -71,11 +71,18 @@ export const Brick360ProjectsList: React.FC = () => {
       render: (id: string) => {
         return (
           <Flex gap={15} justify="end">
-            <Link to={`/brick360/${id}`}>
+            <Link to={`/brick360/${id}`} target="_blank">
               <Button
                 type="default"
                 shape="default"
                 icon={<EditOutlined />}
+              ></Button>
+            </Link>
+             <Link to={`/brick360Data/${id}`} target="_blank">
+              <Button
+                type="default"
+                shape="default"
+                icon={<FileTextOutlined />}
               ></Button>
             </Link>
           </Flex>
