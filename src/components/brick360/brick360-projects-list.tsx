@@ -27,6 +27,7 @@ export const Brick360ProjectsList: React.FC = () => {
     {
       title: "Date Created",
       dataIndex: "createdAt",
+      defaultSortOrder: "descend",
       key: "createdAt",
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -47,9 +48,12 @@ export const Brick360ProjectsList: React.FC = () => {
       dataIndex: "slug",
       key: "slug",
       ...ColumnSearch(["slug"]),
-      render: (slug: string) => {
+      render: (slug: string, record: LvnzyProject) => {
         if (!slug) return "-";
         const reportUrl = `${brickfiAppUrl}/app/brick360/${slug}`;
+        if (!record.score) {
+          return "Report Missing";
+        }
         return (
           <a href={reportUrl} target="_blank" rel="noopener noreferrer">
             <Button type="link" icon={<LinkOutlined />}>
