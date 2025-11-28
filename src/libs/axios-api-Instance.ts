@@ -1,9 +1,12 @@
 import axios, { AxiosRequestConfig } from "axios";
 
-import { baseApiUrl } from "../libs/constants";
+import { apiKey, baseApiUrl } from "../libs/constants";
 
 const config: AxiosRequestConfig = {
   baseURL: baseApiUrl,
+  headers: {
+    "x-api-key": apiKey || "",
+  },
   // withCredentials: true,
 };
 
