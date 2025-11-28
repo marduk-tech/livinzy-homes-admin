@@ -1,4 +1,4 @@
-import { EditOutlined, LinkOutlined } from "@ant-design/icons";
+import { ContainerOutlined, DatabaseOutlined, EditOutlined, FileTextOutlined, LinkOutlined } from "@ant-design/icons";
 import { Button, Flex, Table, TableColumnType } from "antd";
 import { Link } from "react-router-dom";
 
@@ -27,6 +27,7 @@ export const Brick360ProjectsList: React.FC = () => {
     {
       title: "Date Created",
       dataIndex: "createdAt",
+      defaultSortOrder: "descend",
       key: "createdAt",
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -47,9 +48,12 @@ export const Brick360ProjectsList: React.FC = () => {
       dataIndex: "slug",
       key: "slug",
       ...ColumnSearch(["slug"]),
-      render: (slug: string) => {
+      render: (slug: string, record: LvnzyProject) => {
         if (!slug) return "-";
         const reportUrl = `${brickfiAppUrl}/app/brick360/${slug}`;
+        if (!record.score) {
+          return "Report Missing";
+        }
         return (
           <a href={reportUrl} target="_blank" rel="noopener noreferrer">
             <Button type="link" icon={<LinkOutlined />}>
@@ -67,11 +71,18 @@ export const Brick360ProjectsList: React.FC = () => {
       render: (id: string) => {
         return (
           <Flex gap={15} justify="end">
-            <Link to={`/brick360/${id}`}>
+            <Link to={`/brick360/${id}`} target="_blank">
               <Button
                 type="default"
                 shape="default"
                 icon={<EditOutlined />}
+              ></Button>
+            </Link>
+             <Link to={`/brick360Data/${id}`} target="_blank">
+              <Button
+                type="default"
+                shape="default"
+                icon={<FileTextOutlined />}
               ></Button>
             </Link>
           </Flex>

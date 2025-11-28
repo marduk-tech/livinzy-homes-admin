@@ -20,6 +20,7 @@ import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
 import { TracesPage } from "../pages/traces-page";
 import { UsersPage } from "../pages/users-page";
+import { Brick360Data } from "../pages/brick360-projects/brick360-data";
 
 export const Router = () => {
   return (
@@ -45,6 +46,10 @@ export const Router = () => {
         <Route
           path="/brick360/:brick360ProjectId?"
           element={<Brick360Full />}
+        ></Route>
+        <Route
+          path="/brick360Data/:brick360ProjectId?"
+          element={<Brick360Data />}
         ></Route>
         <Route path="/ask" element={<AskPage />} />
 
