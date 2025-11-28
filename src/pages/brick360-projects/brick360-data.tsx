@@ -3,6 +3,7 @@ import { useFetchLvnzyProjectById } from "../../hooks/lvnzyprojects-hooks";
 import { Loader } from "../../components/common/loader";
 import ReactJson from "react-json-view";
 import { useEffect, useState } from "react";
+import { Button, Flex } from "antd";
 
 export function Brick360Data() {
   const { brick360ProjectId } = useParams();
@@ -30,6 +31,12 @@ export function Brick360Data() {
     return <Loader></Loader>;
   }
   return (
+    <Flex vertical gap={32}>
+        <Flex>
+        <Button onClick={() => {
+            navigator.clipboard.writeText(JSON.stringify(formattedData))
+        }}>Click to Copy</Button>
+        </Flex>
     <ReactJson
       src={formattedData!}
       theme="rjv-default"
@@ -42,5 +49,6 @@ export function Brick360Data() {
       indentWidth={4}
       style={{ fontSize: "14px" }}
     />
+    </Flex>
   );
 }
