@@ -1,4 +1,4 @@
-import { CopyOutlined, EditOutlined, MailOutlined, MessageOutlined } from "@ant-design/icons";
+import { CopyOutlined, EditOutlined, MailOutlined, MessageOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Col,
@@ -12,6 +12,7 @@ import {
   Space,
   Table,
   TableColumnType,
+  Tabs,
   Tag,
   Typography,
 } from "antd";
@@ -21,7 +22,7 @@ import {
   useGetAllUsers,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
-import { User, UtmEntry } from "../../types/user";
+import { RequestedReportRow, User, UtmEntry } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 
@@ -37,6 +38,7 @@ export function UsersList() {
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'users' | 'reports'>('users');
 
   const handleSendEmail = () => {
     if (selectedUser && selectedProjectIds.length > 0) {
@@ -234,6 +236,138 @@ export function UsersList() {
     },
   ];
 
+  const getFlattenedReports = (): RequestedReportRow[] => {
+    if (!data) return [];
+
+    const reports: RequestedReportRow[] = [];
+    data.forEach(user => {
+      if (user.requestedReports && user.requestedReports.length > 0) {
+        user.requestedReports.forEach(report => {
+          reports.push({
+            projectName: report.projectName,
+            lvnzyProjectId: report.lvnzyProjectId,
+            requestDate: report.requestDate,
+            userId: user._id,
+            userName: user.profile?.name || '-',
+            userMobile: user.mobile,
+            userCountryCode: user.countryCode,
+          });
+        });
+      }
+    });
+
+    return reports.sort((a, b) =>
+      new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
+    );
+  };
+
+  const reportsColumns: TableColumnType<RequestedReportRow>[] = [
+    {
+      title: "Project Name",
+      dataIndex: "projectName",
+      key: "projectName",
+      ...ColumnSearch("projectName"),
+      width: 250,
+    },
+    {
+      title: "Report Link",
+      dataIndex: "lvnzyProjectId",
+      key: "lvnzyProjectId",
+      width: 150,
+      render: (lvnzyProjectId: string | undefined) => {
+        if (!lvnzyProjectId) {
+          return <Tag color="orange">Pending</Tag>;
+        }
+        const reportUrl = `https://brickfi.in/app/brick360/${lvnzyProjectId}`;
+        return (
+          <Typography.Link href={reportUrl} target="_blank">
+            View Report
+          </Typography.Link>
+        );
+      },
+    },
+    {
+      title: "Request Date",
+      dataIndex: "requestDate",
+      key: "requestDate",
+      width: 180,
+      sorter: (a, b) =>
+        new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime(),
+      defaultSortOrder: 'descend',
+      render: (requestDate: string) =>
+        new Date(requestDate).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+    },
+    {
+      title: "User",
+      key: "user",
+      width: 300,
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search by name or mobile"
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                setSelectedKeys([]);
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const searchTerm = String(value).toLowerCase();
+        const nameMatch = record.userName.toLowerCase().includes(searchTerm);
+        const mobileMatch = record.userMobile.includes(searchTerm);
+        return nameMatch || mobileMatch;
+      },
+      render: (_, record) => (
+        <Space>
+          <Typography.Text>
+            {record.userName}, {record.userCountryCode} {record.userMobile}
+          </Typography.Text>
+          <Typography.Text
+            copyable={{
+              text: record.userId,
+              icon: <CopyOutlined />,
+              tooltips: ['Copy User ID', 'Copied!'],
+            }}
+          />
+        </Space>
+      ),
+    },
+  ];
+
   function getMsgText() {
     const projects = lvnzyProjects?.filter((p: any) =>
       selectedProjectIds.includes(p._id)
@@ -269,19 +403,35 @@ _If you need any kind of assistance with regards to ${
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Typography.Title level={4}>All Users</Typography.Title>
+          <Typography.Title level={4}>Users Management</Typography.Title>
         </Col>
         <Col>
           <UserForm users={data || []} />
         </Col>
       </Row>
 
-      <Table
-        dataSource={data}
-        columns={columns}
-        loading={isLoading}
-        rowKey="_id"
-      />
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as 'users' | 'reports')}>
+        <Tabs.TabPane tab="All Users" key="users">
+          <Table
+            dataSource={data}
+            columns={columns}
+            loading={isLoading}
+            rowKey="_id"
+            scroll={{ x: true }}
+          />
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="Requested Reports" key="reports">
+          <Table
+            dataSource={getFlattenedReports()}
+            columns={reportsColumns}
+            loading={isLoading}
+            rowKey={(record) => `${record.userId}-${record.projectName}-${record.requestDate}`}
+            scroll={{ x: true }}
+            pagination={{ pageSize: 10 }}
+          />
+        </Tabs.TabPane>
+      </Tabs>
 
       {userToEdit && (
         <UserForm

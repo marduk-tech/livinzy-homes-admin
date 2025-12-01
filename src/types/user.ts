@@ -28,6 +28,17 @@ export interface RequestedReport {
   projectName: string;
   reraId: string;
   requestDate: string;
+  lvnzyProjectId?: string;
+}
+
+export interface RequestedReportRow {
+  projectName: string;
+  lvnzyProjectId?: string;
+  requestDate: string;
+  userId: string;
+  userName: string;
+  userMobile: string;
+  userCountryCode: string;
 }
 
 export interface UtmEntry {
