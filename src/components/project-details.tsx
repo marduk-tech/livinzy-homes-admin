@@ -28,9 +28,11 @@ import {
   DeleteRowOutlined,
   DownloadOutlined,
   FilePdfOutlined,
+  ScissorOutlined,
 } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
+import { useRemoveWatermark } from "../hooks/dewatermark-hooks";
 import {
   useCreateProjectMutation,
   useGenerateProjectUI,
@@ -42,19 +44,20 @@ import { baseApiUrl, MediaTags } from "../libs/constants";
 import { queries } from "../libs/queries";
 import { calculateFieldStatus } from "../libs/utils";
 import { COLORS } from "../theme/colors";
-import DynamicReactIcon from "./common/dynamic-react-icon";
 import {
   IMedia,
   Project,
   ProjectField,
   ProjectStructure,
 } from "../types/Project";
+import DynamicReactIcon from "./common/dynamic-react-icon";
 import { FileUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 import { DocumentsList } from "./media-tabs/documents-list";
 import { ReraDocumentsList } from "./media-tabs/rera-documents-list";
 import { VideoUpload } from "./media-tabs/video-tab";
 import { JsonEditor } from "./update-json-modal";
+import WatermarkPreviewModal from "./watermark-preview-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -223,7 +226,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     enabled: !!projectId,
     throwOnError: true,
     refetchOnMount: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 
   // const { data: allProjects, isLoading: allProjectsLoading } = useQuery({
@@ -241,6 +244,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
     null
   );
+
+  const [watermarkModal, setWatermarkModal] = useState({
+    visible: false,
+    originalUrl: "",
+    processedUrl: null as string | null,
+    mediaIndex: -1,
+  });
+
+  const removeWatermarkMutation = useRemoveWatermark();
 
   const handlePreviewImageChange = (index: number, checked: boolean) => {
     if (checked) {
@@ -396,6 +408,70 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const handleRemoveWatermark = async (imageUrl: string, index: number) => {
+    setWatermarkModal({
+      visible: true,
+      originalUrl: imageUrl,
+      processedUrl: null,
+      mediaIndex: index,
+    });
+
+    try {
+      const result = await removeWatermarkMutation.mutateAsync(imageUrl);
+      setWatermarkModal((prev) => ({
+        ...prev,
+        processedUrl: result.processedImageUrl,
+      }));
+    } catch (error) {
+      notification.error({
+        message: "Failed to process image",
+        description: "Please try again later",
+      });
+      setWatermarkModal({
+        visible: false,
+        originalUrl: "",
+        processedUrl: null,
+        mediaIndex: -1,
+      });
+    }
+  };
+
+  const handleApproveWatermarkRemoval = () => {
+    const { processedUrl, mediaIndex } = watermarkModal;
+    if (processedUrl && mediaIndex >= 0) {
+      form.setFieldValue(["media", mediaIndex, "image", "url"], processedUrl);
+      form.setFieldValue(["media", mediaIndex, "hasWatermark"], false);
+
+      if (projectId) {
+        const currentMedia = form.getFieldValue("media") || [];
+        updateProject.mutate({
+          projectData: {
+            media: currentMedia,
+          },
+        });
+      }
+
+      notification.success({
+        message: "Watermark removed successfully",
+      });
+    }
+    setWatermarkModal({
+      visible: false,
+      originalUrl: "",
+      processedUrl: null,
+      mediaIndex: -1,
+    });
+  };
+
+  const handleRejectWatermarkRemoval = () => {
+    setWatermarkModal({
+      visible: false,
+      originalUrl: "",
+      processedUrl: null,
+      mediaIndex: -1,
+    });
+  };
+
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
@@ -540,7 +616,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               ? `2px solid ${COLORS.redIdentifier}`
                               : "none",
                             borderRadius: 8,
-                            padding: 8
+                            padding: 8,
                           }}
                         >
                           <Flex>
@@ -565,7 +641,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               label="Type"
                               hidden
                             ></Form.Item>
-                             <Form.Item
+                            <Form.Item
                               name={["media", index, "hasWatermark"]}
                               label="Has Watermark ?"
                               hidden
@@ -644,6 +720,24 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               />
 
                               <Button
+                                icon={<ScissorOutlined />}
+                                style={{
+                                  marginRight: 10,
+                                }}
+                                onClick={() =>
+                                  handleRemoveWatermark(
+                                    item.image?.url || "",
+                                    index
+                                  )
+                                }
+                                loading={
+                                  removeWatermarkMutation.isPending &&
+                                  watermarkModal.mediaIndex === index
+                                }
+                                title="Remove Watermark"
+                              />
+
+                              <Button
                                 icon={<DeleteOutlined />}
                                 onClick={() => handleDeleteMedia(index)}
                               ></Button>
@@ -717,13 +811,22 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             </Tabs>
           </TabPane>
         </Tabs>
-          <Button
+        <Button
           type="primary"
           onClick={handleSave}
           loading={createProject.isPending || updateProject.isPending}
         >
           {projectId ? "Save" : "Create New Project"}
         </Button>
+
+        <WatermarkPreviewModal
+          visible={watermarkModal.visible}
+          originalImageUrl={watermarkModal.originalUrl}
+          processedImageUrl={watermarkModal.processedUrl}
+          loading={removeWatermarkMutation.isPending}
+          onApprove={handleApproveWatermarkRemoval}
+          onReject={handleRejectWatermarkRemoval}
+        />
       </Form>
     );
   }
