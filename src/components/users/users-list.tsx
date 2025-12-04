@@ -266,8 +266,11 @@ export function UsersList() {
 
     const reports: RequestedReportRow[] = [];
     data.forEach((user) => {
-      if (user.requestedReports && user.requestedReports.length > 0) {
-        user.requestedReports.forEach((report) => {
+      const reqReports = user.requestedReports
+        ? user.requestedReports.filter((r) => !!r)
+        : [];
+      if (reqReports && reqReports.length > 0) {
+        reqReports.forEach((report) => {
           reports.push({
             projectName: report.projectName,
             lvnzyProjectId: report.lvnzyProjectId,
