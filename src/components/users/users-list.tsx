@@ -1,6 +1,14 @@
-import { CopyOutlined, EditOutlined, MailOutlined, MessageOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  CopyOutlined,
+  EditOutlined,
+  FilterOutlined,
+  MailOutlined,
+  MessageOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   Button,
+  Checkbox,
   Col,
   Divider,
   Flex,
@@ -38,7 +46,7 @@ export function UsersList() {
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'reports'>('users');
+  const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
 
   const handleSendEmail = () => {
     if (selectedUser && selectedProjectIds.length > 0) {
@@ -125,14 +133,21 @@ export function UsersList() {
     {
       title: "UTM Source",
       key: "utmSource",
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
         <div style={{ padding: 8 }}>
           <Input
             placeholder="Search UTM Source"
             value={selectedKeys[0] as string}
-            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
             onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block', width: 188 }}
+            style={{ marginBottom: 8, display: "block", width: 188 }}
           />
           <Space>
             <Button
@@ -143,23 +158,33 @@ export function UsersList() {
             >
               Search
             </Button>
-            <Button onClick={() => clearFilters?.()} size="small" style={{ width: 90 }}>
+            <Button
+              onClick={() => clearFilters?.()}
+              size="small"
+              style={{ width: 90 }}
+            >
               Reset
             </Button>
           </Space>
         </div>
       ),
       onFilter: (value, record) => {
-        const utmSource = record.metrics?.utm?.[record.metrics.utm.length - 1]?.utm_source;
-        return utmSource ? utmSource.toLowerCase().includes(String(value).toLowerCase()) : false;
+        const utmSource =
+          record.metrics?.utm?.[record.metrics.utm.length - 1]?.utm_source;
+        return utmSource
+          ? utmSource.toLowerCase().includes(String(value).toLowerCase())
+          : false;
       },
       sorter: (a, b) => {
-        const aSource = a.metrics?.utm?.[a.metrics.utm.length - 1]?.utm_source || "";
-        const bSource = b.metrics?.utm?.[b.metrics.utm.length - 1]?.utm_source || "";
+        const aSource =
+          a.metrics?.utm?.[a.metrics.utm.length - 1]?.utm_source || "";
+        const bSource =
+          b.metrics?.utm?.[b.metrics.utm.length - 1]?.utm_source || "";
         return aSource.localeCompare(bSource);
       },
       render: (_, record) => {
-        const mostRecentUtm = record.metrics?.utm?.[record.metrics.utm.length - 1];
+        const mostRecentUtm =
+          record.metrics?.utm?.[record.metrics.utm.length - 1];
         const utmSource = mostRecentUtm?.utm_source;
 
         if (!utmSource) return "-";
@@ -240,15 +265,15 @@ export function UsersList() {
     if (!data) return [];
 
     const reports: RequestedReportRow[] = [];
-    data.forEach(user => {
+    data.forEach((user) => {
       if (user.requestedReports && user.requestedReports.length > 0) {
-        user.requestedReports.forEach(report => {
+        user.requestedReports.forEach((report) => {
           reports.push({
             projectName: report.projectName,
             lvnzyProjectId: report.lvnzyProjectId,
             requestDate: report.requestDate,
             userId: user._id,
-            userName: user.profile?.name || '-',
+            userName: user.profile?.name || "-",
             userMobile: user.mobile,
             userCountryCode: user.countryCode,
           });
@@ -256,8 +281,9 @@ export function UsersList() {
       }
     });
 
-    return reports.sort((a, b) =>
-      new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
+    return reports.sort(
+      (a, b) =>
+        new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
     );
   };
 
@@ -274,6 +300,57 @@ export function UsersList() {
       dataIndex: "lvnzyProjectId",
       key: "lvnzyProjectId",
       width: 150,
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Checkbox
+            checked={
+              selectedKeys.length > 0 && selectedKeys[0] === "new-requests"
+            }
+            onChange={(e) => {
+              setSelectedKeys(e.target.checked ? ["new-requests"] : []);
+            }}
+          >
+            New Requests
+          </Checkbox>
+
+          <Divider style={{ margin: "8px 0" }} />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Apply
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                setSelectedKeys([]);
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        if (value === "new-requests") {
+          return !record.lvnzyProjectId;
+        }
+        return true;
+      },
       render: (lvnzyProjectId: string | undefined) => {
         if (!lvnzyProjectId) {
           return <Tag color="orange">Pending</Tag>;
@@ -293,7 +370,7 @@ export function UsersList() {
       width: 180,
       sorter: (a, b) =>
         new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime(),
-      defaultSortOrder: 'descend',
+      defaultSortOrder: "descend",
       render: (requestDate: string) =>
         new Date(requestDate).toLocaleDateString("en-US", {
           year: "numeric",
@@ -308,7 +385,12 @@ export function UsersList() {
       title: "User",
       key: "user",
       width: 300,
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
         <div style={{ padding: 8 }}>
           <Input
             placeholder="Search by name or mobile"
@@ -360,7 +442,7 @@ export function UsersList() {
             copyable={{
               text: record.userId,
               icon: <CopyOutlined />,
-              tooltips: ['Copy User ID', 'Copied!'],
+              tooltips: ["Copy User ID", "Copied!"],
             }}
           />
         </Space>
@@ -410,7 +492,10 @@ _If you need any kind of assistance with regards to ${
         </Col>
       </Row>
 
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as 'users' | 'reports')}>
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as "users" | "reports")}
+      >
         <Tabs.TabPane tab="All Users" key="users">
           <Table
             dataSource={data}
@@ -426,7 +511,9 @@ _If you need any kind of assistance with regards to ${
             dataSource={getFlattenedReports()}
             columns={reportsColumns}
             loading={isLoading}
-            rowKey={(record) => `${record.userId}-${record.projectName}-${record.requestDate}`}
+            rowKey={(record) =>
+              `${record.userId}-${record.projectName}-${record.requestDate}`
+            }
             scroll={{ x: true }}
             pagination={{ pageSize: 10 }}
           />
@@ -618,7 +705,10 @@ _If you need any kind of assistance with regards to ${
                 key: "landingPage",
                 render: (page?: string) =>
                   page ? (
-                    <Typography.Link href={`${import.meta.env.VITE_BRICKFI_APP_URL}${page}`} target="_blank">
+                    <Typography.Link
+                      href={`${import.meta.env.VITE_BRICKFI_APP_URL}${page}`}
+                      target="_blank"
+                    >
                       {page.length > 30 ? `${page.substring(0, 30)}...` : page}
                     </Typography.Link>
                   ) : (

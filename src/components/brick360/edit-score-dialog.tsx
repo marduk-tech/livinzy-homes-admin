@@ -91,6 +91,54 @@ const BtnHighlight = createButton(
   }
 );
 
+function arrayToHtml(items: string[]): string {
+  if (!items || items.length === 0) return "";
+
+  return items
+    .filter((item) => item && item.trim())
+    .map((item) => {
+      const trimmed = item.trim();
+      if (trimmed.match(/^<(div|p)/i)) return trimmed;
+      return `<div>${trimmed}</div>`;
+    })
+    .join("");
+}
+
+function htmlToArray(html: string): string[] {
+  if (!html || !html.trim()) return [];
+
+  const trimmed = html.trim();
+
+  if (trimmed.includes("\n") && !trimmed.includes("<")) {
+    return trimmed
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  const temp = document.createElement("div");
+  temp.innerHTML = trimmed;
+  const children = Array.from(temp.children);
+
+  if (children.length === 0) {
+    // Handle <br>-separated content
+    return trimmed
+      .split(/<br\s*\/?>/gi)
+      .map((item) => item.trim())
+      .filter((item) => {
+        const text = item.replace(/<[^>]*>/g, "").trim();
+        return text.length > 0;
+      });
+  }
+
+  return children
+    .map((child) => child.innerHTML.trim())
+    .filter((item) => {
+      const text = item.replace(/<[^>]*>/g, "").trim();
+      return text.length > 0;
+    });
+}
+
 interface EditScoreDialogProps {
   sectionData: any;
   sectionKey: string;
@@ -150,18 +198,14 @@ export function EditScoreDialog({
       const updatedValues = { ...values };
 
       if (sectionKey === "summary") {
-        updatedValues.pros = values.pros
-          ? values.pros.split("\n").filter(Boolean)
-          : [];
-        updatedValues.cons = values.cons
-          ? values.cons.split("\n").filter(Boolean)
-          : [];
+        updatedValues.pros = values.pros ? htmlToArray(values.pros) : [];
+        updatedValues.cons = values.cons ? htmlToArray(values.cons) : [];
       } else {
         Object.keys(values).forEach((key) => {
           if (values[key] && typeof values[key].reasoning === "string") {
             updatedValues[key] = {
               ...values[key],
-              reasoning: values[key].reasoning.split("\n").filter(Boolean),
+              reasoning: htmlToArray(values[key].reasoning),
             };
           }
         });
@@ -178,8 +222,8 @@ export function EditScoreDialog({
   const handleOpen = () => {
     if (sectionKey === "summary") {
       form.setFieldsValue({
-        pros: sectionData.pros?.join("\n"),
-        cons: sectionData.cons?.join("\n"),
+        pros: arrayToHtml(sectionData.pros || []),
+        cons: arrayToHtml(sectionData.cons || []),
       });
     } else {
       const initialValues: { [key: string]: any } = {};
@@ -187,7 +231,7 @@ export function EditScoreDialog({
         if (key !== "_id" && sectionData[key]) {
           initialValues[key] = {
             ...sectionData[key],
-            reasoning: sectionData[key].reasoning?.join("\n"),
+            reasoning: arrayToHtml(sectionData[key].reasoning || []),
           };
         }
       });
