@@ -93,13 +93,13 @@ export function useSendReportEmailMutation() {
 
     onSuccess: () => {
       notification.success({
-        message: `Report email sent successfully!`,
+        message: `Report notification sent successfully!`,
       });
     },
 
     onError: (error: AxiosError<any>) => {
       notification.error({
-        message: `Failed to send email. Please try again later.`,
+        message: `Failed to send notification. Please try again later.`,
       });
       console.log(error);
     },

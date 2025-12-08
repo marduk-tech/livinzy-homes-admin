@@ -5,6 +5,8 @@ import {
   MailOutlined,
   MessageOutlined,
   SearchOutlined,
+  SendOutlined,
+  WhatsAppOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -239,8 +241,9 @@ export function UsersList() {
           <Button
             type="default"
             shape="default"
-            icon={<MailOutlined />}
+            icon={<SendOutlined />}
             disabled={!record.profile?.email}
+            title="Send email and WhatsApp notification"
             onClick={() => {
               setSelectedUser(record);
               setIsEmailModalOpen(true);
@@ -464,14 +467,12 @@ export function UsersList() {
     const projectNames = projects
       .map((p: any) => p.meta.projectName)
       .join(", ");
-    const projectSlug =
-      projects.length === 1 ? `/brick360/${projects[0].slug}` : "";
 
     return `Hi ${selectedUser?.profile.name?.split(" ")[0]}👋
 As per your request, the Brick360 report for *${projectNames}* is ready.
 
 Click below 👇 to login to your account & access the report:
-https://brickfi.in/app${projectSlug}
+https://brickfi.in/app
 
 _If you need any kind of assistance with regards to ${
       projects.length > 1 ? `these properties` : `this property`
@@ -586,7 +587,7 @@ _If you need any kind of assistance with regards to ${
       </Modal>
 
       <Modal
-        title="Send Report Email"
+        title="Send Report Notification (Email & WhatsApp)"
         open={isEmailModalOpen}
         onCancel={() => {
           setIsEmailModalOpen(false);
@@ -594,7 +595,7 @@ _If you need any kind of assistance with regards to ${
           setSelectedProjectIds([]);
         }}
         onOk={handleSendEmail}
-        okText="Send Email"
+        okText="Send Notification"
         okButtonProps={{
           disabled: selectedProjectIds.length === 0,
           loading: sendReportEmailMutation.isPending,
@@ -602,10 +603,29 @@ _If you need any kind of assistance with regards to ${
       >
         <div style={{ marginTop: 20 }}>
           <Typography.Text>
-            Select projects to send report email to{" "}
-            <strong>{selectedUser?.profile?.name || "user"}</strong> (
-            {selectedUser?.profile?.email})
+            Send report notification for selected projects to{" "}
+            <strong>{selectedUser?.profile?.name || "user"}</strong>
           </Typography.Text>
+
+          <Space
+            direction="vertical"
+            style={{ width: "100%", marginTop: 10, marginBottom: 10 }}
+          >
+            {selectedUser?.profile?.email && (
+              <Tag icon={<MailOutlined />} color="blue">
+                {selectedUser.profile.email}
+              </Tag>
+            )}
+            {selectedUser?.mobile && (
+              <Tag icon={<WhatsAppOutlined />} color="green">
+                {selectedUser.countryCode} {selectedUser.mobile}
+              </Tag>
+            )}
+            {!selectedUser?.profile?.email && !selectedUser?.mobile && (
+              <Tag color="red">No contact information available</Tag>
+            )}
+          </Space>
+
           <Select
             mode="multiple"
             showSearch
