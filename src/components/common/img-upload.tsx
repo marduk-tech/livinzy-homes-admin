@@ -2,7 +2,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { Button, message, Upload, UploadFile } from "antd";
 import { UploadChangeParam, UploadProps } from "antd/es/upload";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
-import { baseApiUrl } from "../../libs/constants";
+import { apiKey, baseApiUrl } from "../../libs/constants";
 
 const MAX_FILE_SIZE_MB = 20;
 
@@ -74,6 +74,10 @@ export const FileUpload: React.FC<MediaTabProps> = ({
         listType="picture"
         fileList={fileList}
         action={`${baseApiUrl}upload/multiple`}
+        headers={{
+          'x-api-key': apiKey,
+          'client-type': 'admin',
+        }}
         beforeUpload={beforeUpload}
         onChange={handleChange}
         showUploadList={showUploadList}
