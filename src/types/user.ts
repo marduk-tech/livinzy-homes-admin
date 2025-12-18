@@ -29,6 +29,7 @@ export interface RequestedReport {
   reraId: string;
   requestDate: string;
   lvnzyProjectId?: string;
+  reraNumber?: string;
 }
 
 export interface RequestedReportRow {
@@ -39,6 +40,7 @@ export interface RequestedReportRow {
   userName: string;
   userMobile: string;
   userCountryCode: string;
+  reraNumber?: string;
 }
 
 export interface UtmEntry {

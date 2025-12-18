@@ -277,6 +277,7 @@ export function UsersList() {
           reports.push({
             projectName: report.projectName,
             lvnzyProjectId: report.lvnzyProjectId,
+            reraNumber: report.reraNumber,
             requestDate: report.requestDate,
             userId: user._id,
             userName: user.profile?.name || "-",
@@ -299,7 +300,15 @@ export function UsersList() {
       dataIndex: "projectName",
       key: "projectName",
       ...ColumnSearch("projectName"),
-      width: 250,
+      width: 200,
+    },
+
+     {
+      title: "Rera Number",
+      dataIndex: "reraNumber",
+      key: "reraNumber",
+      ...ColumnSearch("reraNumber"),
+      width: 200,
     },
     {
       title: "Report Link",
