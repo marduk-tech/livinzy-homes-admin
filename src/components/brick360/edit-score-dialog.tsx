@@ -254,6 +254,7 @@ export function EditScoreDialog({
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={handleClose}
+        keyboard={false}
         width={1200}
         footer={[
           <Button key="cancel" onClick={handleClose}>

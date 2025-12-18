@@ -43,7 +43,7 @@ export function UsersList() {
 
   const [userToEdit, setUserToEdit] = useState<User | undefined>();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [msgModalOpen, setMsgModalOpen] = useState(false);
+
   const [isUtmModalOpen, setIsUtmModalOpen] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
@@ -206,6 +206,57 @@ export function UsersList() {
     {
       title: "Requested Reports",
       key: "requestedReports",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search project name"
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                setSelectedKeys([]);
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        if (!record.requestedReports || record.requestedReports.length === 0) {
+          return false;
+        }
+        const searchTerm = String(value).toLowerCase();
+        return record.requestedReports.some((report) =>
+          report.projectName.toLowerCase().includes(searchTerm)
+        );
+      },
       render: (_, record) =>
         record.requestedReports && record.requestedReports.length > 0
           ? record.requestedReports.map((r) => r.projectName).join(", ")
@@ -247,16 +298,6 @@ export function UsersList() {
             onClick={() => {
               setSelectedUser(record);
               setIsEmailModalOpen(true);
-            }}
-          ></Button>
-          <Button
-            type="default"
-            shape="default"
-            icon={<MessageOutlined />}
-            disabled={!record.profile?.email}
-            onClick={() => {
-              setSelectedUser(record);
-              setMsgModalOpen(true);
             }}
           ></Button>
         </Space>
@@ -531,60 +572,6 @@ _If you need any kind of assistance with regards to ${
           onClose={() => setUserToEdit(undefined)}
         />
       )}
-      <Modal
-        title="Send Report Email"
-        open={msgModalOpen}
-        onCancel={() => {
-          setMsgModalOpen(false);
-          setSelectedUser(undefined);
-          setSelectedProjectIds([]);
-        }}
-        onOk={() => {
-          const txt = getMsgText();
-          if (txt) {
-            navigator.clipboard.writeText(getMsgText());
-            notification.success({
-              message: `Message copied to clipboard!`,
-            });
-          }
-        }}
-        okText="Copy Message"
-        okButtonProps={{
-          disabled: selectedProjectIds.length === 0,
-          loading: sendReportEmailMutation.isPending,
-        }}
-      >
-        <div style={{ marginTop: 20 }}>
-          <Typography.Text>
-            Select projects to send report email to{" "}
-            <strong>{selectedUser?.profile?.name || "user"}</strong> (
-            {selectedUser?.profile?.email})
-          </Typography.Text>
-          <Select
-            mode="multiple"
-            showSearch
-            style={{ width: "100%", marginTop: 10 }}
-            placeholder="Select projects"
-            value={selectedProjectIds}
-            onChange={setSelectedProjectIds}
-            filterOption={(input, option) =>
-              String(option?.label ?? "")
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
-            options={lvnzyProjects?.map((project: any) => ({
-              value: project._id,
-              label: project.meta?.projectName || project._id,
-            }))}
-          />
-          <Divider></Divider>
-          <Flex style={{ padding: 2 }}>
-            <Typography.Text style={{ whiteSpace: "pre-line" }}>
-              {getMsgText()}
-            </Typography.Text>
-          </Flex>
-        </div>
-      </Modal>
 
       <Modal
         title="Send Report Notification (Email & WhatsApp)"
