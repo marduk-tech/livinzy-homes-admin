@@ -568,6 +568,7 @@ export const ProjectsList: React.FC = () => {
               <Button
                 type="default"
                 shape="default"
+                disabled={["report-verified", "report-ready", "data-verified"].includes(record.info.status)}
                 icon={<DeleteOutlined />}
               ></Button>
             </DeletePopconfirm>
