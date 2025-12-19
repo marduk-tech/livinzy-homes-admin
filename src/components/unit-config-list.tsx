@@ -343,7 +343,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             name="sizeCarpet"
             label="Carpet Area (sq ft)"
             rules={[
-              { required: true, message: "Please input the carpet area!" },
+              { required: false, message: "Please input the carpet area!" },
             ]}
           >
             <InputNumber
