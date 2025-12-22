@@ -254,12 +254,15 @@ export function UsersList() {
         }
         const searchTerm = String(value).toLowerCase();
         return record.requestedReports.some((report) =>
-          report.projectName.toLowerCase().includes(searchTerm)
+          report && report.projectName.toLowerCase().includes(searchTerm)
         );
       },
       render: (_, record) =>
         record.requestedReports && record.requestedReports.length > 0
-          ? record.requestedReports.map((r) => r.projectName).join(", ")
+          ? record.requestedReports
+              .filter((r) => r && r.projectName)
+              .map((r) => r.projectName)
+              .join(", ")
           : "-",
     },
     {
