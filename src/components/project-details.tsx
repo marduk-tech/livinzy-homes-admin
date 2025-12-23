@@ -35,7 +35,6 @@ import { useNavigate } from "react-router-dom";
 import { useRemoveWatermark } from "../hooks/dewatermark-hooks";
 import {
   useCreateProjectMutation,
-  useGenerateProjectUI,
   useProjectForm,
   useUpdateProjectMutation,
 } from "../hooks/project-hooks";
@@ -238,8 +237,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const updateProject = useUpdateProjectMutation({
     projectId: projectId || "",
   });
-
-  const generateProjectUI = useGenerateProjectUI();
 
   const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
     null
