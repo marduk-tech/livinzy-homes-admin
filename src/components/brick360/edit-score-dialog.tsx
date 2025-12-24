@@ -1,4 +1,9 @@
-import { EditOutlined, HighlightOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  HighlightOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { Button, Form, InputNumber, message, Modal, Typography } from "antd";
 import { useState } from "react";
 import Editor, {
@@ -139,6 +144,42 @@ function htmlToArray(html: string): string[] {
     });
 }
 
+// Clean up whitespace issues from WYSIWYG editor
+function normalizeProConHtml(html: string): string {
+  if (!html || typeof html !== "string") return "";
+
+  let normalized = html.trim();
+
+  // Remove &nbsp; and whitespace between </b> and <br>
+  normalized = normalized.replace(/<\/b>(?:\s|&nbsp;)*<br\s*\/?>/gi, "</b><br>");
+
+  // Remove trailing &nbsp; after </b> if no <br> follows
+  normalized = normalized.replace(/<\/b>(?:\s|&nbsp;)+$/gi, "</b>");
+
+  // Consolidate multiple <br> tags into single <br>
+  normalized = normalized.replace(/(<br\s*\/?>\s*){2,}/gi, "<br>");
+
+  // Remove leading/trailing whitespace and &nbsp;
+  normalized = normalized.replace(/^(?:\s|&nbsp;)+|(?:\s|&nbsp;)+$/gi, "");
+
+  return normalized;
+}
+
+// Only save items with actual text content
+function hasValidContent(html: string): boolean {
+  if (!html || typeof html !== "string") return false;
+
+  // Strip all HTML tags
+  const textContent = html.replace(/<[^>]*>/g, "").trim();
+
+  // Decode HTML entities
+  const temp = document.createElement("div");
+  temp.innerHTML = textContent;
+  const decoded = temp.textContent || temp.innerText || "";
+
+  return decoded.trim().length > 0;
+}
+
 interface EditScoreDialogProps {
   sectionData: any;
   sectionKey: string;
@@ -162,13 +203,19 @@ function WysiwygEditor({ value, onChange, placeholder }: WysiwygEditorProps) {
       value={value || ""}
       onChange={handleChange}
       placeholder={placeholder}
-      containerProps={{ style: { minHeight: "200px", resize: "vertical" } }}
+      containerProps={{
+        style: {
+          minHeight: "250px",
+          resize: "vertical",
+          backgroundColor: "white",
+        },
+      }}
     >
       <Toolbar>
         <BtnUndo />
         <BtnRedo />
         <Separator />
-        {/* <BtnBold />
+        <BtnBold />
         <BtnItalic />
         <BtnUnderline />
         <BtnStrikeThrough />
@@ -177,7 +224,7 @@ function WysiwygEditor({ value, onChange, placeholder }: WysiwygEditorProps) {
         <BtnNumberedList />
         <Separator />
         <BtnLink />
-        <Separator /> */}
+        <Separator />
         <BtnHighlight />
       </Toolbar>
     </Editor>
@@ -198,8 +245,15 @@ export function EditScoreDialog({
       const updatedValues = { ...values };
 
       if (sectionKey === "summary") {
-        updatedValues.pros = values.pros ? htmlToArray(values.pros) : [];
-        updatedValues.cons = values.cons ? htmlToArray(values.cons) : [];
+        // Normalize and filter pros
+        updatedValues.pros = (values.pros || [])
+          .map((item: string) => normalizeProConHtml(item))
+          .filter((item: string) => hasValidContent(item));
+
+        // Normalize and filter cons
+        updatedValues.cons = (values.cons || [])
+          .map((item: string) => normalizeProConHtml(item))
+          .filter((item: string) => hasValidContent(item));
       } else {
         Object.keys(values).forEach((key) => {
           if (values[key] && typeof values[key].reasoning === "string") {
@@ -222,8 +276,8 @@ export function EditScoreDialog({
   const handleOpen = () => {
     if (sectionKey === "summary") {
       form.setFieldsValue({
-        pros: arrayToHtml(sectionData.pros || []),
-        cons: arrayToHtml(sectionData.cons || []),
+        pros: sectionData.pros || [],
+        cons: sectionData.cons || [],
       });
     } else {
       const initialValues: { [key: string]: any } = {};
@@ -255,7 +309,9 @@ export function EditScoreDialog({
         onOk={handleSubmit}
         onCancel={handleClose}
         keyboard={false}
-        width={1200}
+        width={1400}
+        style={{ top: 20 }}
+        styles={{ body: { height: "80vh", overflow: "hidden" } }}
         footer={[
           <Button key="cancel" onClick={handleClose}>
             Cancel
@@ -268,17 +324,181 @@ export function EditScoreDialog({
         <Form
           form={form}
           layout="vertical"
-          style={{ maxHeight: "60vh", overflowY: "auto" }}
+          style={{ height: "100%", overflowY: "auto", paddingRight: 8 }}
         >
           {sectionKey === "summary" ? (
-            <>
-              <Form.Item label="Pros" name="pros">
-                <WysiwygEditor />
-              </Form.Item>
-              <Form.Item label="Cons" name="cons">
-                <WysiwygEditor />
-              </Form.Item>
-            </>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 24,
+                height: "100%",
+              }}
+            >
+              {/* PROS SECTION - LEFT COLUMN */}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <Typography.Title level={4} style={{ marginBottom: 16 }}>
+                  Pros
+                </Typography.Title>
+
+                <Form.List name="pros">
+                  {(fields, { add, remove }) => (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                      }}
+                    >
+                      <Button
+                        type="dashed"
+                        onClick={() => add("", 0)}
+                        icon={<PlusOutlined />}
+                        size="large"
+                        style={{ marginBottom: 16 }}
+                      >
+                        Add Pro
+                      </Button>
+
+                      <div
+                        style={{ flex: 1, overflowY: "auto", paddingRight: 8 }}
+                      >
+                        {fields.map((field, index) => (
+                          <div
+                            key={field.key}
+                            style={{
+                              marginBottom: 16,
+                              border: "1px solid #d9d9d9",
+                              padding: 16,
+                              borderRadius: 8,
+                              backgroundColor: "#fafafa",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 12,
+                              }}
+                            >
+                              <Typography.Text strong>
+                                Pro #{index + 1}
+                              </Typography.Text>
+                              <DeleteOutlined
+                                onClick={() => remove(field.name)}
+                                style={{
+                                  color: "#ff4d4f",
+                                  cursor: "pointer",
+                                  fontSize: 18,
+                                  padding: 4,
+                                }}
+                              />
+                            </div>
+
+                            <Form.Item
+                              {...field}
+                              rules={[
+                                {
+                                  required: true,
+                                  message:
+                                    "Please enter content or delete this item",
+                                },
+                              ]}
+                              style={{ marginBottom: 0 }}
+                            >
+                              <WysiwygEditor placeholder="Enter pro item content..." />
+                            </Form.Item>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Form.List>
+              </div>
+
+              {/* CONS SECTION - RIGHT COLUMN */}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <Typography.Title level={4} style={{ marginBottom: 16 }}>
+                  Cons
+                </Typography.Title>
+
+                <Form.List name="cons">
+                  {(fields, { add, remove }) => (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                      }}
+                    >
+                      <Button
+                        type="dashed"
+                        onClick={() => add("", 0)}
+                        icon={<PlusOutlined />}
+                        size="large"
+                        style={{ marginBottom: 16 }}
+                      >
+                        Add Con
+                      </Button>
+
+                      <div
+                        style={{ flex: 1, overflowY: "auto", paddingRight: 8 }}
+                      >
+                        {fields.map((field, index) => (
+                          <div
+                            key={field.key}
+                            style={{
+                              marginBottom: 16,
+                              border: "1px solid #d9d9d9",
+                              padding: 16,
+                              borderRadius: 8,
+                              backgroundColor: "#fafafa",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 12,
+                              }}
+                            >
+                              <Typography.Text strong>
+                                Con #{index + 1}
+                              </Typography.Text>
+                              <DeleteOutlined
+                                onClick={() => remove(field.name)}
+                                style={{
+                                  color: "#ff4d4f",
+                                  cursor: "pointer",
+                                  fontSize: 18,
+                                  padding: 4,
+                                }}
+                              />
+                            </div>
+
+                            <Form.Item
+                              {...field}
+                              rules={[
+                                {
+                                  required: true,
+                                  message:
+                                    "Please enter content or delete this item",
+                                },
+                              ]}
+                              style={{ marginBottom: 0 }}
+                            >
+                              <WysiwygEditor placeholder="Enter con item content..." />
+                            </Form.Item>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Form.List>
+              </div>
+            </div>
           ) : (
             Object.entries(sectionData).map(([subKey, subSection]: any) =>
               subKey !== "_id" ? (
