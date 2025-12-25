@@ -327,7 +327,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             label="Super Built Up Area (sq ft)"
             rules={[
               {
-                required: true,
+                required: false,
                 message: "Please input the super built up area!",
               },
             ]}
@@ -345,6 +345,16 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             rules={[
               { required: false, message: "Please input the carpet area!" },
             ]}
+          >
+            <InputNumber
+              style={{ width: "100%" }}
+              placeholder="e.g., 900"
+              min={0}
+            />
+          </Form.Item>
+           <Form.Item
+            name="sizePlot"
+            label="Plot Area (sq ft)"
           >
             <InputNumber
               style={{ width: "100%" }}
