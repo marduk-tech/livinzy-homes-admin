@@ -433,25 +433,102 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
-  const handleApproveWatermarkRemoval = () => {
-    const { processedUrl, mediaIndex } = watermarkModal;
-    if (processedUrl && mediaIndex >= 0) {
-      form.setFieldValue(["media", mediaIndex, "image", "url"], processedUrl);
-      form.setFieldValue(["media", mediaIndex, "hasWatermark"], false);
+  // Updates floorplan URL references when a floorplan image URL changes
+  const updateFloorplanReferences = (
+    oldUrl: string,
+    newUrl: string,
+    unitConfigs: Array<{
+      _id?: string;
+      config: string;
+      price: number;
+      floorplans: string[];
+    }> = []
+  ): { updatedConfigs: typeof unitConfigs; updateCount: number } => {
+    let updateCount = 0;
 
-      if (projectId) {
-        const currentMedia = form.getFieldValue("media") || [];
-        updateProject.mutate({
-          projectData: {
-            media: currentMedia,
-          },
-        });
+    const updatedConfigs = unitConfigs.map((unitConfig) => {
+      if (!unitConfig.floorplans || !Array.isArray(unitConfig.floorplans)) {
+        return unitConfig;
       }
 
-      notification.success({
-        message: "Watermark removed successfully",
+      const updatedFloorplans = unitConfig.floorplans.map((floorplanUrl) => {
+        if (floorplanUrl === oldUrl) {
+          updateCount++;
+          return newUrl;
+        }
+        return floorplanUrl;
+      });
+
+      return {
+        ...unitConfig,
+        floorplans: updatedFloorplans,
+      };
+    });
+
+    return { updatedConfigs, updateCount };
+  };
+
+  const handleApproveWatermarkRemoval = () => {
+    const { processedUrl, mediaIndex, originalUrl } = watermarkModal;
+
+    if (!processedUrl || mediaIndex < 0) {
+      return;
+    }
+
+    form.setFieldValue(["media", mediaIndex, "image", "url"], processedUrl);
+    form.setFieldValue(["media", mediaIndex, "hasWatermark"], false);
+
+    // Check if this is a floorplan image
+    const currentMedia = form.getFieldValue("media") || [];
+    const mediaItem = currentMedia[mediaIndex];
+    const isFloorplan = mediaItem?.image?.tags?.includes("floorplan");
+
+    let floorplanUpdateCount = 0;
+
+    // If it's a floorplan, update all references in unit configurations
+    if (isFloorplan && originalUrl) {
+      const currentUnitConfigs =
+        form.getFieldValue(["info", "unitConfigWithPricing"]) || [];
+
+      const { updatedConfigs, updateCount } = updateFloorplanReferences(
+        originalUrl,
+        processedUrl,
+        currentUnitConfigs
+      );
+
+      floorplanUpdateCount = updateCount;
+
+      // Only update if there were changes
+      if (updateCount > 0) {
+        form.setFieldValue(["info", "unitConfigWithPricing"], updatedConfigs);
+      }
+    }
+
+    // Save to backend if editing existing project
+    if (projectId) {
+      const updatedMedia = form.getFieldValue("media");
+      const updatedInfo = form.getFieldValue("info");
+
+      updateProject.mutate({
+        projectData: {
+          media: updatedMedia,
+          ...(floorplanUpdateCount > 0 && { info: updatedInfo }),
+        },
       });
     }
+
+    const baseMessage = "Watermark removed successfully";
+    const message =
+      floorplanUpdateCount > 0
+        ? `${baseMessage} and updated ${floorplanUpdateCount} floorplan reference${
+            floorplanUpdateCount > 1 ? "s" : ""
+          }`
+        : baseMessage;
+
+    notification.success({
+      message,
+    });
+
     setWatermarkModal({
       visible: false,
       originalUrl: "",
