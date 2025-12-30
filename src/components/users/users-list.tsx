@@ -1,5 +1,6 @@
 import {
   CopyOutlined,
+  DownloadOutlined,
   EditOutlined,
   FilterOutlined,
   MailOutlined,
@@ -12,6 +13,7 @@ import {
   Button,
   Checkbox,
   Col,
+  DatePicker,
   Divider,
   Flex,
   Input,
@@ -26,15 +28,25 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
   useGetAllUsers,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
+import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
 import { RequestedReportRow, User, UtmEntry } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
+
+const { RangePicker } = DatePicker;
+
+// Initialize dayjs plugins
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 export function UsersList() {
   const { data, isLoading, isError } = useGetAllUsers();
@@ -49,6 +61,21 @@ export function UsersList() {
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
+
+  const [createdDateRange, setCreatedDateRange] = useState<
+    [dayjs.Dayjs, dayjs.Dayjs] | null
+  >(null);
+  const [updatedDateRange, setUpdatedDateRange] = useState<
+    [dayjs.Dayjs, dayjs.Dayjs] | null
+  >(null);
+
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      setFilteredUsers(data);
+    }
+  }, [data]);
 
   const handleSendEmail = () => {
     if (selectedUser && selectedProjectIds.length > 0) {
@@ -93,6 +120,52 @@ export function UsersList() {
       key: "createdAt",
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      filteredValue: createdDateRange ? ["createdFiltered"] : null,
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <RangePicker
+            value={createdDateRange}
+            onChange={(dates) =>
+              setCreatedDateRange(dates as [Dayjs, Dayjs] | null)
+            }
+            style={{ marginBottom: 8, display: "block", width: "100%" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                setUpdatedDateRange(null);
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Filter
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                setCreatedDateRange(null);
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (_, record) => {
+        if (!createdDateRange || createdDateRange.length !== 2) return true;
+        const recordDate = dayjs(record.createdAt);
+        return (
+          recordDate.isSameOrAfter(createdDateRange[0], "day") &&
+          recordDate.isSameOrBefore(createdDateRange[1], "day")
+        );
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (createdAt: string) =>
         new Date(createdAt).toLocaleDateString("en-US", {
           year: "numeric",
@@ -109,6 +182,53 @@ export function UsersList() {
       key: "updatedAt",
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      filteredValue: updatedDateRange ? ["updatedFiltered"] : null,
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <RangePicker
+            value={updatedDateRange}
+            onChange={(dates) =>
+              setUpdatedDateRange(dates as [Dayjs, Dayjs] | null)
+            }
+            style={{ marginBottom: 8, display: "block", width: "100%" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                // clear the other date filter when applying this one
+                setCreatedDateRange(null);
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Filter
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                setUpdatedDateRange(null);
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => {
+        if (!updatedDateRange || updatedDateRange.length !== 2) return true;
+        const recordDate = dayjs(record.updatedAt);
+        return (
+          recordDate.isSameOrAfter(updatedDateRange[0], "day") &&
+          recordDate.isSameOrBefore(updatedDateRange[1], "day")
+        );
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (updatedAt: string) =>
         new Date(updatedAt).toLocaleDateString("en-US", {
           year: "numeric",
@@ -253,8 +373,9 @@ export function UsersList() {
           return false;
         }
         const searchTerm = String(value).toLowerCase();
-        return record.requestedReports.some((report) =>
-          report && report.projectName.toLowerCase().includes(searchTerm)
+        return record.requestedReports.some(
+          (report) =>
+            report && report.projectName.toLowerCase().includes(searchTerm)
         );
       },
       render: (_, record) =>
@@ -338,6 +459,90 @@ export function UsersList() {
     );
   };
 
+  const handleCSVExport = () => {
+    // Use filtered data if available, otherwise use all data
+    const dataToExport = filteredUsers.length > 0 ? filteredUsers : data || [];
+
+    if (dataToExport.length === 0) {
+      notification.warning({
+        message: "No Data to Export",
+        description: "There are no users to export.",
+      });
+      return;
+    }
+
+    // Create a map of project IDs to project names
+    const projectIdToNameMap = new Map<string, string>();
+    lvnzyProjects?.forEach((project: any) => {
+      projectIdToNameMap.set(
+        project._id,
+        project.meta?.projectName || "Unknown Project"
+      );
+    });
+
+    const headers = [
+      "Name",
+      "Created Date",
+      "Last Updated",
+      "Mobile",
+      "Email",
+      "UTM Source",
+      "UTM Campaign",
+      "UTM Medium",
+      "Requested Reports",
+      "Shared Reports",
+    ];
+
+    const rows = dataToExport.map((user) => {
+      const mostRecentUtm = user.metrics?.utm?.[user.metrics.utm.length - 1];
+
+      // Get requested reports as comma-separated string
+      const requestedReports =
+        user.requestedReports && user.requestedReports.length > 0
+          ? user.requestedReports
+              .filter((r) => r && r.projectName)
+              .map((r) => r.projectName)
+              .join(", ")
+          : "";
+
+      // Get shared reports from first collection
+      const firstCollection = user.savedLvnzyProjects?.[0];
+      const sharedReports =
+        firstCollection?.projects && firstCollection.projects.length > 0
+          ? firstCollection.projects
+              .map(
+                (projectId) => projectIdToNameMap.get(projectId) || projectId
+              )
+              .join(", ")
+          : "";
+
+      return [
+        user.profile?.name || "",
+        formatDateForCSV(user.createdAt),
+        formatDateForCSV(user.updatedAt),
+        `${user.countryCode} ${user.mobile}`,
+        user.profile?.email || "",
+        mostRecentUtm?.utm_source || "",
+        mostRecentUtm?.utm_campaign || "",
+        mostRecentUtm?.utm_medium || "",
+        requestedReports,
+        sharedReports,
+      ];
+    });
+
+    const csvContent = convertToCSV(headers, rows);
+
+    const today = new Date().toISOString().split("T")[0];
+    const filename = `users-export-${today}.csv`;
+
+    downloadCSV(csvContent, filename);
+
+    notification.success({
+      message: "Export Successful",
+      description: `Exported ${dataToExport.length} user(s) to ${filename}`,
+    });
+  };
+
   const reportsColumns: TableColumnType<RequestedReportRow>[] = [
     {
       title: "Project Name",
@@ -347,7 +552,7 @@ export function UsersList() {
       width: 200,
     },
 
-     {
+    {
       title: "Rera Number",
       dataIndex: "reraNumber",
       key: "reraNumber",
@@ -545,7 +750,16 @@ _If you need any kind of assistance with regards to ${
           <Typography.Title level={4}>Users Management</Typography.Title>
         </Col>
         <Col>
-          <UserForm users={data || []} />
+          <Space>
+            <Button
+              type="default"
+              icon={<DownloadOutlined />}
+              onClick={handleCSVExport}
+            >
+              CSV Export
+            </Button>
+            <UserForm users={data || []} />
+          </Space>
         </Col>
       </Row>
 
@@ -560,6 +774,9 @@ _If you need any kind of assistance with regards to ${
             loading={isLoading}
             rowKey="_id"
             scroll={{ x: true }}
+            onChange={(pagination, filters, sorter, extra) => {
+              setFilteredUsers(extra.currentDataSource);
+            }}
           />
         </Tabs.TabPane>
 

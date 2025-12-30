@@ -152,3 +152,53 @@ export function cleanYouTubeUrl(url: string): string | null {
 
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
+
+// CSV export utilities
+export function convertToCSV(headers: string[], rows: string[][]): string {
+  const escapeCSV = (value: string): string => {
+    if (value === null || value === undefined) return "";
+    const stringValue = String(value);
+    // Wrap in quotes if contains comma, newline, or quote
+    if (
+      stringValue.includes(",") ||
+      stringValue.includes("\n") ||
+      stringValue.includes('"')
+    ) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
+  const headerRow = headers.map(escapeCSV).join(",");
+  const dataRows = rows.map((row) => row.map(escapeCSV).join(",")).join("\n");
+
+  return `${headerRow}\n${dataRows}`;
+}
+
+export function downloadCSV(csvContent: string, filename: string): void {
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Clean up blob URL
+  URL.revokeObjectURL(url);
+}
+
+export function formatDateForCSV(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
