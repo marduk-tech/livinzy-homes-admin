@@ -120,23 +120,20 @@ export function UsersList() {
       key: "createdAt",
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      filteredValue: createdDateRange ? ["createdFiltered"] : null,
-      filterDropdown: ({ confirm, clearFilters }) => (
+      filterDropdown: ({ confirm, clearFilters, setSelectedKeys }) => (
         <div style={{ padding: 8 }}>
           <RangePicker
             value={createdDateRange}
-            onChange={(dates) =>
-              setCreatedDateRange(dates as [Dayjs, Dayjs] | null)
-            }
+            onChange={(dates) => {
+              setCreatedDateRange(dates as [Dayjs, Dayjs] | null);
+              setSelectedKeys(dates && dates.length === 2 ? ["filtered"] : []);
+            }}
             style={{ marginBottom: 8, display: "block", width: "100%" }}
           />
           <Space>
             <Button
               type="primary"
-              onClick={() => {
-                setUpdatedDateRange(null);
-                confirm();
-              }}
+              onClick={() => confirm()}
               size="small"
               style={{ width: 90 }}
             >
@@ -146,6 +143,7 @@ export function UsersList() {
               onClick={() => {
                 clearFilters?.();
                 setCreatedDateRange(null);
+                setSelectedKeys([]);
               }}
               size="small"
               style={{ width: 90 }}
@@ -182,24 +180,20 @@ export function UsersList() {
       key: "updatedAt",
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
-      filteredValue: updatedDateRange ? ["updatedFiltered"] : null,
-      filterDropdown: ({ confirm, clearFilters }) => (
+      filterDropdown: ({ confirm, clearFilters, setSelectedKeys }) => (
         <div style={{ padding: 8 }}>
           <RangePicker
             value={updatedDateRange}
-            onChange={(dates) =>
-              setUpdatedDateRange(dates as [Dayjs, Dayjs] | null)
-            }
+            onChange={(dates) => {
+              setUpdatedDateRange(dates as [Dayjs, Dayjs] | null);
+              setSelectedKeys(dates && dates.length === 2 ? ["filtered"] : []);
+            }}
             style={{ marginBottom: 8, display: "block", width: "100%" }}
           />
           <Space>
             <Button
               type="primary"
-              onClick={() => {
-                // clear the other date filter when applying this one
-                setCreatedDateRange(null);
-                confirm();
-              }}
+              onClick={() => confirm()}
               size="small"
               style={{ width: 90 }}
             >
@@ -209,6 +203,7 @@ export function UsersList() {
               onClick={() => {
                 clearFilters?.();
                 setUpdatedDateRange(null);
+                setSelectedKeys([]);
               }}
               size="small"
               style={{ width: 90 }}

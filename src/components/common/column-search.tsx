@@ -63,7 +63,7 @@ export const ColumnSearch = (dataIndex: any) => ({
   ),
   onFilter: (value: any, record: any) => {
     const nestedValue = nestedPropertyAccessor(record, dataIndex);
-    if (nestedValue === undefined) return false;
+    if (nestedValue === undefined || nestedValue === null) return false;
     return nestedValue
       .toString()
       .toLowerCase()
