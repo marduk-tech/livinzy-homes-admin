@@ -86,6 +86,12 @@ export interface IInfo {
     minimumUnitCost: number;
     minimumUnitSize: number;
   };
+  statusComment?: {
+    comments: Array<{
+      text: string;
+      resolved: boolean;
+    }>;
+  };
 }
 
 export interface ILand {

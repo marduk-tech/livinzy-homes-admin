@@ -223,6 +223,122 @@ export function useResolveProjectIssueMutation({
   });
 }
 
+export function useAddStatusCommentMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      commentText,
+    }: {
+      projectId: string;
+      commentText: string;
+    }) => {
+      return api.addStatusComment(projectId, commentText);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Comment added successfully!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to add comment. Please try again.`,
+      });
+    },
+  });
+}
+
+export function useEditStatusCommentMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      commentIndex,
+      commentText,
+    }: {
+      projectId: string;
+      commentIndex: number;
+      commentText: string;
+    }) => {
+      return api.editStatusComment(projectId, commentIndex, commentText);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Comment updated successfully!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to update comment. Please try again.`,
+      });
+    },
+  });
+}
+
+export function useToggleStatusCommentResolvedMutation({
+  enableToasts = false,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      commentIndex,
+      resolved,
+    }: {
+      projectId: string;
+      commentIndex: number;
+      resolved: boolean;
+    }) => {
+      return api.toggleStatusCommentResolved(projectId, commentIndex, resolved);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Status updated!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to update status. Please try again.`,
+      });
+    },
+  });
+}
+
+export function useDeleteStatusCommentMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      commentIndex,
+    }: {
+      projectId: string;
+      commentIndex: number;
+    }) => {
+      return api.deleteStatusComment(projectId, commentIndex);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Comment deleted successfully!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to delete comment. Please try again.`,
+      });
+    },
+  });
+}
+
 export function useProjectForm() {
   const { data: developers = [] } = useFetchDevelopers();
 

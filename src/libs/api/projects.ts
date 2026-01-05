@@ -97,6 +97,62 @@ export const resolveProjectIssue = async (
   });
 };
 
+export const addStatusComment = async (
+  projectId: string,
+  commentText: string
+) => {
+  const endpoint = `/projects/status-comment/add`;
+  return axiosApiInstance.post(endpoint, {
+    projectId,
+    commentText,
+  }).then((response) => {
+    return response.data;
+  });
+};
+
+export const editStatusComment = async (
+  projectId: string,
+  commentIndex: number,
+  commentText: string
+) => {
+  const endpoint = `/projects/status-comment/edit`;
+  return axiosApiInstance.post(endpoint, {
+    projectId,
+    commentIndex,
+    commentText,
+  }).then((response) => {
+    return response.data;
+  });
+};
+
+export const toggleStatusCommentResolved = async (
+  projectId: string,
+  commentIndex: number,
+  resolved: boolean
+) => {
+  const endpoint = `/projects/status-comment/toggle-resolved`;
+  return axiosApiInstance.post(endpoint, {
+    projectId,
+    commentIndex,
+    resolved,
+  }).then((response) => {
+    return response.data;
+  });
+};
+
+export const deleteStatusComment = async (
+  projectId: string,
+  commentIndex: number
+) => {
+  const endpoint = `/projects/status-comment/delete`;
+  return axiosApiInstance.post(endpoint, {
+    projectId,
+    commentIndex,
+  }).then((response) => {
+    return response.data;
+  });
+};
+
 export const getProjectStatusCounts = async () => {
   const endpoint = `/projects/status-counts`;
   return axiosApiInstance.get(endpoint).then((response) => {

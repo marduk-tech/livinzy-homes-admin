@@ -1,5 +1,6 @@
 import {
   CheckCircleOutlined,
+  CommentOutlined,
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -8,11 +9,13 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Checkbox,
   Col,
   Dropdown,
   Flex,
   Form,
   Input,
+  List,
   MenuProps,
   Modal,
   Radio,
@@ -31,10 +34,14 @@ import { COLORS } from "../theme/colors";
 import { Link } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
+  useAddStatusCommentMutation,
   useDeleteProjectMutation,
+  useDeleteStatusCommentMutation,
+  useEditStatusCommentMutation,
   useGetAllProjects,
   useGetProjectStatusCounts,
   useResolveProjectIssueMutation,
+  useToggleStatusCommentResolvedMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
 import { IMedia, Project } from "../types/Project";
@@ -46,6 +53,8 @@ import { JsonProjectImport } from "./json-project-import";
 import { useAuth0 } from "@auth0/auth0-react";
 import ReactJson from "react-json-view";
 import { FONT_SIZES } from "../theme/font-sizes";
+import { queryClient } from "../libs/query-client";
+import { queryKeys } from "../libs/constants";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
@@ -70,7 +79,29 @@ export const ProjectsList: React.FC = () => {
     enableToasts: true,
   });
   const [resolveIssueForm] = Form.useForm();
+  const [selectedProjectForStatusComment, setSelectedProjectForStatusComment] =
+    useState<{ projectId: string; projectName: string; statusComment?: any }>();
+  const [statusCommentForm] = Form.useForm();
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null);
+
+  const addCommentMutation = useAddStatusCommentMutation({ enableToasts: true });
+  const editCommentMutation = useEditStatusCommentMutation({ enableToasts: true });
+  const toggleResolvedMutation = useToggleStatusCommentResolvedMutation({ enableToasts: false });
+  const deleteCommentMutation = useDeleteStatusCommentMutation({ enableToasts: true });
   const { user } = useAuth0();
+
+  // Helper to update specific project in cache without refetching
+  const updateProjectInCache = (projectId: string, statusComment: any) => {
+    queryClient.setQueryData([queryKeys.projects], (oldData: Project[] | undefined) => {
+      if (!oldData) return oldData;
+
+      return oldData.map(project =>
+        project._id === projectId
+          ? { ...project, info: { ...project.info, statusComment } }
+          : project
+      );
+    });
+  };
 
   const {
     data: projects,
@@ -315,14 +346,14 @@ export const ProjectsList: React.FC = () => {
         const aEndDate =
           aExtensions.length > 0
             ? parseDateString(
-                aExtensions[aExtensions.length - 1].completionDate
-              )
+              aExtensions[aExtensions.length - 1].completionDate
+            )
             : new Date(0);
         const bEndDate =
           bExtensions.length > 0
             ? parseDateString(
-                bExtensions[bExtensions.length - 1].completionDate
-              )
+              bExtensions[bExtensions.length - 1].completionDate
+            )
             : new Date(0);
 
         return aEndDate.getTime() - bEndDate.getTime();
@@ -468,13 +499,13 @@ export const ProjectsList: React.FC = () => {
         const types = record.info.homeType || [];
         return types.includes(
           value as
-            | "farmland"
-            | "plot"
-            | "villa"
-            | "rowhouse"
-            | "villament"
-            | "apartment"
-            | "penthouse"
+          | "farmland"
+          | "plot"
+          | "villa"
+          | "rowhouse"
+          | "villament"
+          | "apartment"
+          | "penthouse"
         );
       },
     },
@@ -556,6 +587,21 @@ export const ProjectsList: React.FC = () => {
       render: (id: string, record: Project) => {
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
+            <Tooltip title="Manage Status Comments">
+              <Button
+                type="default"
+                shape="default"
+                icon={<CommentOutlined />}
+                onClick={() =>
+                  setSelectedProjectForStatusComment({
+                    projectId: id,
+                    projectName: record.info.name,
+                    statusComment: record.info.statusComment,
+                  })
+                }
+              />
+            </Tooltip>
+
             <Tooltip title="Edit Project">
               <Button
                 type="default"
@@ -645,130 +691,130 @@ export const ProjectsList: React.FC = () => {
                 style={{ width: 300 }}
               />
               <Select
-              onChange={(value) => {
-                setSearchKeyword("");
-                setIssueSeverity(value);
-              }}
-              placeholder="Filter by issue"
-              options={[
-                {
-                  label: (
-                    <Typography.Text
-                      style={{
-                        color:
-                          issueSeverity == "all"
-                            ? COLORS.textColorDark
-                            : COLORS.textColorDark,
-                      }}
-                    >
-                      All
-                    </Typography.Text>
-                  ),
-                  value: "all",
-                },
-                {
-                  label: (
-                    <Typography.Text
-                      style={{
-                        color:
-                          issueSeverity == "ok"
-                            ? COLORS.textColorDark
-                            : COLORS.greenIdentifier,
-                      }}
-                    >
-                      All good
-                    </Typography.Text>
-                  ),
-                  value: "ok",
-                },
-                {
-                  label: (
-                    <Typography.Text
-                      style={{
-                        color:
-                          issueSeverity == "blocker"
-                            ? COLORS.textColorDark
-                            : COLORS.redIdentifier,
-                      }}
-                    >
-                      Blocker
-                    </Typography.Text>
-                  ),
-                  value: "blocker",
-                },
-                {
-                  label: (
-                    <Typography.Text
-                      style={{
-                        color:
-                          issueSeverity == "review"
-                            ? COLORS.textColorDark
-                            : COLORS.yellowIdentifier,
-                      }}
-                    >
-                      Review
-                    </Typography.Text>
-                  ),
-                  value: "review",
-                },
-              ]}
-            />
-            <Select
-              onChange={(value) => {
-                setIssueType(value);
-              }}
-              placeholder="Filter by issue type"
-              style={{ width: 200 }}
-              options={[
-                { label: "All", value: "all" },
-                { label: "RERA Number", value: "RERA Number" },
-                { label: "RERA Mapping", value: "RERA Mapping" },
-                { label: "Developer Mapping", value: "Developer Mapping" },
-                { label: "Location", value: "Location" },
-                { label: "Locality", value: "Locality" },
-                { label: "Amenities", value: "Amenities" },
-                { label: "Project Density", value: "Project Density" },
-                { label: "Media", value: "Media" },
-                { label: "Open Area", value: "Open Area" },
-                { label: "Unit Config/Pricing", value: "Unit Config/Pricing" },
-                { label: "Sqft Pricing", value: "Sqft Pricing" },
-                { label: "Home Types", value: "Home Types" },
-                { label: "Error", value: "Error" },
-              ]}
-            />
-          </Flex>
+                onChange={(value) => {
+                  setSearchKeyword("");
+                  setIssueSeverity(value);
+                }}
+                placeholder="Filter by issue"
+                options={[
+                  {
+                    label: (
+                      <Typography.Text
+                        style={{
+                          color:
+                            issueSeverity == "all"
+                              ? COLORS.textColorDark
+                              : COLORS.textColorDark,
+                        }}
+                      >
+                        All
+                      </Typography.Text>
+                    ),
+                    value: "all",
+                  },
+                  {
+                    label: (
+                      <Typography.Text
+                        style={{
+                          color:
+                            issueSeverity == "ok"
+                              ? COLORS.textColorDark
+                              : COLORS.greenIdentifier,
+                        }}
+                      >
+                        All good
+                      </Typography.Text>
+                    ),
+                    value: "ok",
+                  },
+                  {
+                    label: (
+                      <Typography.Text
+                        style={{
+                          color:
+                            issueSeverity == "blocker"
+                              ? COLORS.textColorDark
+                              : COLORS.redIdentifier,
+                        }}
+                      >
+                        Blocker
+                      </Typography.Text>
+                    ),
+                    value: "blocker",
+                  },
+                  {
+                    label: (
+                      <Typography.Text
+                        style={{
+                          color:
+                            issueSeverity == "review"
+                              ? COLORS.textColorDark
+                              : COLORS.yellowIdentifier,
+                        }}
+                      >
+                        Review
+                      </Typography.Text>
+                    ),
+                    value: "review",
+                  },
+                ]}
+              />
+              <Select
+                onChange={(value) => {
+                  setIssueType(value);
+                }}
+                placeholder="Filter by issue type"
+                style={{ width: 200 }}
+                options={[
+                  { label: "All", value: "all" },
+                  { label: "RERA Number", value: "RERA Number" },
+                  { label: "RERA Mapping", value: "RERA Mapping" },
+                  { label: "Developer Mapping", value: "Developer Mapping" },
+                  { label: "Location", value: "Location" },
+                  { label: "Locality", value: "Locality" },
+                  { label: "Amenities", value: "Amenities" },
+                  { label: "Project Density", value: "Project Density" },
+                  { label: "Media", value: "Media" },
+                  { label: "Open Area", value: "Open Area" },
+                  { label: "Unit Config/Pricing", value: "Unit Config/Pricing" },
+                  { label: "Sqft Pricing", value: "Sqft Pricing" },
+                  { label: "Home Types", value: "Home Types" },
+                  { label: "Error", value: "Error" },
+                ]}
+              />
+            </Flex>
 
-          <Radio.Group
-            value={projectStatusFilter || "all"}
-            onChange={(e) => setProjectStatusFilter(e.target.value)}
-            buttonStyle="solid"
-          >
-            <Radio.Button value="all">
-              {getStatusLabel("all", "All")}
-            </Radio.Button>
-            <Radio.Button value="basic-details-ready">
-              {getStatusLabel("basic-details-ready", "Basic Details Ready")}
-            </Radio.Button>
-            <Radio.Button value="data-populated">
-              {getStatusLabel("data-populated", "Data Populated")}
-            </Radio.Button>
-            <Radio.Button value="data-verified">
-              {getStatusLabel("data-verified", "Data Verified")}
-            </Radio.Button>
-            <Radio.Button value="report-ready">
-              {getStatusLabel("report-ready", "Report Ready")}
-            </Radio.Button>
-            <Radio.Button value="report-verified">
-              {getStatusLabel("report-verified", "Report Verified")}
-            </Radio.Button>
-            <Radio.Button value="disabled">
-              {getStatusLabel("disabled", "Disabled")}
-            </Radio.Button>
-            <Radio.Button value="new">
-              {getStatusLabel("new", "New")}
-            </Radio.Button>
-          </Radio.Group>
-        </Flex>
+            <Radio.Group
+              value={projectStatusFilter || "all"}
+              onChange={(e) => setProjectStatusFilter(e.target.value)}
+              buttonStyle="solid"
+            >
+              <Radio.Button value="all">
+                {getStatusLabel("all", "All")}
+              </Radio.Button>
+              <Radio.Button value="basic-details-ready">
+                {getStatusLabel("basic-details-ready", "Basic Details Ready")}
+              </Radio.Button>
+              <Radio.Button value="data-populated">
+                {getStatusLabel("data-populated", "Data Populated")}
+              </Radio.Button>
+              <Radio.Button value="data-verified">
+                {getStatusLabel("data-verified", "Data Verified")}
+              </Radio.Button>
+              <Radio.Button value="report-ready">
+                {getStatusLabel("report-ready", "Report Ready")}
+              </Radio.Button>
+              <Radio.Button value="report-verified">
+                {getStatusLabel("report-verified", "Report Verified")}
+              </Radio.Button>
+              <Radio.Button value="disabled">
+                {getStatusLabel("disabled", "Disabled")}
+              </Radio.Button>
+              <Radio.Button value="new">
+                {getStatusLabel("new", "New")}
+              </Radio.Button>
+            </Radio.Group>
+          </Flex>
         </Col>
 
         <Col>
@@ -959,6 +1005,250 @@ export const ProjectsList: React.FC = () => {
             </Typography.Text>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        title={`Status Comments - ${selectedProjectForStatusComment?.projectName || ''}`}
+        open={!!selectedProjectForStatusComment}
+        onCancel={() => {
+          setSelectedProjectForStatusComment(undefined);
+          setEditingCommentIndex(null);
+          statusCommentForm.resetFields();
+        }}
+        footer={null}
+        width={700}
+      >
+        <Flex vertical gap={20} style={{ marginTop: 20 }}>
+          <Form
+            form={statusCommentForm}
+            layout="vertical"
+            onFinish={async (values) => {
+              const response = await addCommentMutation.mutateAsync({
+                projectId: selectedProjectForStatusComment!.projectId,
+                commentText: values.comment,
+              });
+
+              setSelectedProjectForStatusComment(prev => ({
+                ...prev!,
+                statusComment: response.data
+              }));
+
+              updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+
+              statusCommentForm.resetFields();
+            }}
+          >
+            <Form.Item
+              name="comment"
+              label="Add New Comment"
+              rules={[
+                { required: true, message: 'Please enter a comment' },
+                { min: 3, message: 'Comment must be at least 3 characters' },
+              ]}
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="Enter status comment..."
+                maxLength={500}
+                showCount
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={addCommentMutation.isPending}
+              >
+                Add Comment
+              </Button>
+            </Form.Item>
+          </Form>
+
+          {selectedProjectForStatusComment?.statusComment?.comments?.length > 0 && (
+            <Flex vertical gap={8}>
+              <Typography.Text strong>Comment History</Typography.Text>
+              <Flex
+                vertical
+                gap={8}
+                style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  paddingRight: '8px'
+                }}
+              >
+                {[...(selectedProjectForStatusComment?.statusComment?.comments || [])]
+                  .map((comment, originalIndex) => ({ comment, originalIndex }))
+                  .sort((a, b) => {
+                    // Sort by resolved status first (unresolved first)
+                    if (a.comment.resolved !== b.comment.resolved) {
+                      return a.comment.resolved ? 1 : -1;
+                    }
+                    // Within same resolved status, sort by createdAt descending (newest first)
+                    const dateA = a.comment.createdAt ? new Date(a.comment.createdAt).getTime() : 0;
+                    const dateB = b.comment.createdAt ? new Date(b.comment.createdAt).getTime() : 0;
+                    return dateB - dateA;
+                  })
+                  .map(({ comment, originalIndex }) => {
+                    const actualIndex = originalIndex;
+                    const isEditing = editingCommentIndex === actualIndex;
+
+                    return (
+                      <Flex
+                        key={actualIndex}
+                        align="flex-start"
+                        gap={12}
+                        style={{
+                          padding: '12px',
+                          border: '1px solid #d9d9d9',
+                          borderRadius: '4px',
+                          backgroundColor: comment.resolved ? '#f6ffed' : '#fff',
+                        }}
+                      >
+                        <Checkbox
+                          checked={comment.resolved}
+                          onChange={async (e) => {
+                            const response = await toggleResolvedMutation.mutateAsync({
+                              projectId: selectedProjectForStatusComment!.projectId,
+                              commentIndex: actualIndex,
+                              resolved: e.target.checked,
+                            });
+
+                            setSelectedProjectForStatusComment(prev => ({
+                              ...prev!,
+                              statusComment: response.data
+                            }));
+
+                            updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+                          }}
+                          style={{ marginTop: '4px' }}
+                        />
+
+                        <Flex vertical flex={1} gap={4}>
+                          {isEditing ? (
+                            <Form
+                              initialValues={{ editComment: comment.text }}
+                              onFinish={async (values) => {
+                                const response = await editCommentMutation.mutateAsync({
+                                  projectId: selectedProjectForStatusComment!.projectId,
+                                  commentIndex: actualIndex,
+                                  commentText: values.editComment,
+                                });
+
+                                setSelectedProjectForStatusComment(prev => ({
+                                  ...prev!,
+                                  statusComment: response.data
+                                }));
+
+                                updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+
+                                setEditingCommentIndex(null);
+                              }}
+                            >
+                              <Form.Item
+                                name="editComment"
+                                rules={[
+                                  { required: true, message: 'Comment cannot be empty' },
+                                  { min: 3, message: 'Comment must be at least 3 characters' },
+                                ]}
+                                style={{ marginBottom: 8 }}
+                              >
+                                <Input.TextArea
+                                  rows={2}
+                                  maxLength={500}
+                                  showCount
+                                  autoFocus
+                                />
+                              </Form.Item>
+                              <Flex gap={8}>
+                                <Button
+                                  type="primary"
+                                  size="small"
+                                  htmlType="submit"
+                                  loading={editCommentMutation.isPending}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="small"
+                                  onClick={() => setEditingCommentIndex(null)}
+                                >
+                                  Cancel
+                                </Button>
+                              </Flex>
+                            </Form>
+                          ) : (
+                            <>
+                              <Typography.Text
+                                style={{
+                                  textDecoration: comment.resolved ? 'line-through' : 'none',
+                                  color: comment.resolved ? '#8c8c8c' : 'inherit',
+                                }}
+                              >
+                                {comment.text}
+                              </Typography.Text>
+                              {comment.createdAt && (
+                                <Typography.Text
+                                  type="secondary"
+                                  style={{ fontSize: '12px' }}
+                                >
+                                  {new Date(comment.createdAt).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </Typography.Text>
+                              )}
+                            </>
+                          )}
+                        </Flex>
+
+                        {!isEditing && (
+                          <Flex gap={4}>
+                            <Tooltip title="Edit">
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<EditOutlined />}
+                                onClick={() => setEditingCommentIndex(actualIndex)}
+                              />
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <Button
+                                type="text"
+                                size="small"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={async () => {
+                                  const response = await deleteCommentMutation.mutateAsync({
+                                    projectId: selectedProjectForStatusComment!.projectId,
+                                    commentIndex: actualIndex,
+                                  });
+
+                                  setSelectedProjectForStatusComment(prev => ({
+                                    ...prev!,
+                                    statusComment: response.data
+                                  }));
+
+                                  updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+                                }}
+                                loading={deleteCommentMutation.isPending}
+                              />
+                            </Tooltip>
+                          </Flex>
+                        )}
+                      </Flex>
+                    );
+                  })}
+              </Flex>
+            </Flex>
+          )}
+
+          {(!selectedProjectForStatusComment?.statusComment?.comments?.length) && (
+            <Typography.Text type="secondary" style={{ textAlign: 'center' }}>
+              No comments yet. Add your first comment above.
+            </Typography.Text>
+          )}
+        </Flex>
       </Modal>
     </>
   );
