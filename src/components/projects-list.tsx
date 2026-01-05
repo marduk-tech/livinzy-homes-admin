@@ -33,6 +33,7 @@ import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useDeleteProjectMutation,
   useGetAllProjects,
+  useGetProjectStatusCounts,
   useResolveProjectIssueMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
@@ -83,6 +84,11 @@ export const ProjectsList: React.FC = () => {
     limit: 50,
     sortBy: "updatedAt:desc",
   });
+
+  const {
+    data: statusCounts,
+    isLoading: isStatusCountsLoading,
+  } = useGetProjectStatusCounts();
 
   const deleteProjectMutation = useDeleteProjectMutation();
 
@@ -595,6 +601,17 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
+  const getStatusLabel = (status: string, label: string) => {
+    if (isStatusCountsLoading || !statusCounts) return label;
+
+    if (status === "all") {
+      return `${label} (${statusCounts.total})`;
+    }
+
+    const count = statusCounts.statusCounts[status];
+    return count !== undefined ? `${label} (${count})` : label;
+  };
+
   useEffect(() => {
     if (!projectsLoading) {
       refetchProjects();
@@ -609,41 +626,25 @@ export const ProjectsList: React.FC = () => {
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
-          <Flex gap={8}>
-            <Search
-              loading={projectsLoading}
-              placeholder="Search for a project"
-              allowClear
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "") {
-                  setSearchKeyword("");
-                }
-              }}
-              onSearch={(value: string) => {
-                setSearchKeyword(value);
-              }}
-              enterButton="Search"
-              style={{ width: 300 }}
-            />
-
-            <Select
-              onChange={(value) => {
-                setProjectStatusFilter(value);
-              }}
-              placeholder="Filter by status"
-              options={[
-                { label: "All", value: "all" },
-                { label: "Basic Details Ready", value: "basic-details-ready" },
-                { label: "Data Populated", value: "data-populated" },
-                { label: "Data Verified", value: "data-verified" },
-                { label: "Report Ready", value: "report-ready" },
-                { label: "Report Verified", value: "report-verified" },
-                { label: "Disabled", value: "disabled" },
-                { label: "New", value: "new" },
-              ]}
-            />
-            <Select
+          <Flex vertical gap={12}>
+            <Flex gap={8}>
+              <Search
+                loading={projectsLoading}
+                placeholder="Search for a project"
+                allowClear
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setSearchKeyword("");
+                  }
+                }}
+                onSearch={(value: string) => {
+                  setSearchKeyword(value);
+                }}
+                enterButton="Search"
+                style={{ width: 300 }}
+              />
+              <Select
               onChange={(value) => {
                 setSearchKeyword("");
                 setIssueSeverity(value);
@@ -736,6 +737,38 @@ export const ProjectsList: React.FC = () => {
               ]}
             />
           </Flex>
+
+          <Radio.Group
+            value={projectStatusFilter || "all"}
+            onChange={(e) => setProjectStatusFilter(e.target.value)}
+            buttonStyle="solid"
+          >
+            <Radio.Button value="all">
+              {getStatusLabel("all", "All")}
+            </Radio.Button>
+            <Radio.Button value="basic-details-ready">
+              {getStatusLabel("basic-details-ready", "Basic Details Ready")}
+            </Radio.Button>
+            <Radio.Button value="data-populated">
+              {getStatusLabel("data-populated", "Data Populated")}
+            </Radio.Button>
+            <Radio.Button value="data-verified">
+              {getStatusLabel("data-verified", "Data Verified")}
+            </Radio.Button>
+            <Radio.Button value="report-ready">
+              {getStatusLabel("report-ready", "Report Ready")}
+            </Radio.Button>
+            <Radio.Button value="report-verified">
+              {getStatusLabel("report-verified", "Report Verified")}
+            </Radio.Button>
+            <Radio.Button value="disabled">
+              {getStatusLabel("disabled", "Disabled")}
+            </Radio.Button>
+            <Radio.Button value="new">
+              {getStatusLabel("new", "New")}
+            </Radio.Button>
+          </Radio.Group>
+        </Flex>
         </Col>
 
         <Col>

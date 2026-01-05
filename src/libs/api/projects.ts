@@ -91,9 +91,21 @@ export const resolveProjectIssue = async (
 ) => {
   const endpoint = `/projects/resolve-issue`;
   return axiosApiInstance.post(endpoint, {
-    projectId, issueField, resolvedBy, resolutionComments 
+    projectId, issueField, resolvedBy, resolutionComments
   }).then((response) => {
     return response.data as Project;
+  });
+};
+
+export const getProjectStatusCounts = async () => {
+  const endpoint = `/projects/status-counts`;
+  return axiosApiInstance.get(endpoint).then((response) => {
+    return response.data as {
+      total: number;
+      statusCounts: {
+        [key: string]: number;
+      };
+    };
   });
 };
 

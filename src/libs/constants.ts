@@ -5,6 +5,7 @@ export const apiKey = import.meta.env.VITE_ADMIN_API_KEY;
 
 export const queryKeys = {
   projects: "projects",
+  projectStatusCounts: "projectStatusCounts",
   lvnzyProjects: "lvnzyProjects",
   getProjectById: "getProjectById",
   getAllPlaces: "getAllPlaces",

@@ -27,6 +27,16 @@ export function useGetAllProjects(params: {
   });
 }
 
+export function useGetProjectStatusCounts() {
+  return useQuery({
+    queryKey: [queryKeys.projectStatusCounts],
+    queryFn: () => api.getProjectStatusCounts(),
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
+    retry: 1,
+  });
+}
+
 export function useDeleteProjectMutation() {
   return useMutation({
     mutationFn: ({ projectId }: { projectId: string }) => {
@@ -50,6 +60,9 @@ export function useDeleteProjectMutation() {
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.projects],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projectStatusCounts],
       });
     },
   });
@@ -89,6 +102,9 @@ export function useCreateProjectMutation() {
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.projects],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projectStatusCounts],
       });
     },
   });
@@ -157,6 +173,10 @@ export function useUpdateProjectMutation({
 
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllCorridors],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projectStatusCounts],
       });
     },
   });
