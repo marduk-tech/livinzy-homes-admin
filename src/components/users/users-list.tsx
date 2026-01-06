@@ -38,7 +38,13 @@ import {
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
-import { RequestedReportRow, User, UtmEntry } from "../../types/user";
+import {
+  AggregatedReportRow,
+  RequestedReport,
+  RequestedReportRow,
+  User,
+  UtmEntry,
+} from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 
@@ -424,33 +430,56 @@ export function UsersList() {
     },
   ];
 
-  const getFlattenedReports = (): RequestedReportRow[] => {
+  const getAggregatedReports = (): AggregatedReportRow[] => {
     if (!data) return [];
 
-    const reports: RequestedReportRow[] = [];
+    const allReports: RequestedReport[] = [];
     data.forEach((user) => {
-      const reqReports = user.requestedReports
-        ? user.requestedReports.filter((r) => !!r)
-        : [];
-      if (reqReports && reqReports.length > 0) {
-        reqReports.forEach((report) => {
-          reports.push({
-            projectName: report.projectName,
-            lvnzyProjectId: report.lvnzyProjectId,
-            reraNumber: report.reraNumber,
-            requestDate: report.requestDate,
-            userId: user._id,
-            userName: user.profile?.name || "-",
-            userMobile: user.mobile,
-            userCountryCode: user.countryCode,
-          });
-        });
-      }
+      const reqReports = user.requestedReports?.filter((r) => !!r) || [];
+      allReports.push(...reqReports);
     });
 
-    return reports.sort(
+    const groupedMap = new Map<string, RequestedReport[]>();
+
+    allReports.forEach((report) => {
+      const groupKey =
+        report.reraNumber?.trim() ||
+        report.lvnzyProjectId?.trim() ||
+        report.projectName;
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, []);
+      }
+      groupedMap.get(groupKey)!.push(report);
+    });
+
+    const aggregatedRows: AggregatedReportRow[] = [];
+
+    groupedMap.forEach((reports, groupKey) => {
+      const sortedReports = reports.sort(
+        (a, b) =>
+          new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
+      );
+
+      const latestReport = sortedReports[0];
+
+      aggregatedRows.push({
+        projectName: latestReport.projectName,
+        projectId: groupKey,
+        reraNumber: latestReport.reraNumber,
+        lvnzyProjectId: latestReport.lvnzyProjectId,
+        totalRequests: reports.length,
+        latestRequestDate: latestReport.requestDate,
+        allRequestDates: sortedReports.map((r) => r.requestDate),
+        hasReraNumber: !!latestReport.reraNumber,
+        hasLvnzyProjectId: !!latestReport.lvnzyProjectId,
+      });
+    });
+
+    return aggregatedRows.sort(
       (a, b) =>
-        new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
+        new Date(b.latestRequestDate).getTime() -
+        new Date(a.latestRequestDate).getTime()
     );
   };
 
@@ -538,27 +567,18 @@ export function UsersList() {
     });
   };
 
-  const reportsColumns: TableColumnType<RequestedReportRow>[] = [
+  const reportsColumns: TableColumnType<AggregatedReportRow>[] = [
     {
       title: "Project Name",
       dataIndex: "projectName",
       key: "projectName",
       ...ColumnSearch("projectName"),
-      width: 200,
-    },
-
-    {
-      title: "Rera Number",
-      dataIndex: "reraNumber",
-      key: "reraNumber",
-      ...ColumnSearch("reraNumber"),
-      width: 200,
+      width: 250,
     },
     {
-      title: "Report Link",
-      dataIndex: "lvnzyProjectId",
-      key: "lvnzyProjectId",
-      width: 150,
+      title: "Project ID",
+      key: "projectId",
+      width: 300,
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -567,16 +587,26 @@ export function UsersList() {
       }) => (
         <div style={{ padding: 8 }}>
           <Checkbox
-            checked={
-              selectedKeys.length > 0 && selectedKeys[0] === "new-requests"
-            }
+            checked={selectedKeys.includes("new-requests")}
             onChange={(e) => {
-              setSelectedKeys(e.target.checked ? ["new-requests"] : []);
+              const keys = selectedKeys.filter((k) => k !== "new-requests");
+              setSelectedKeys(
+                e.target.checked ? [...keys, "new-requests"] : keys
+              );
             }}
           >
-            New Requests
+            New Requests (No Report Link)
           </Checkbox>
-
+          <Divider style={{ margin: "8px 0" }} />
+          <Checkbox
+            checked={selectedKeys.includes("has-rera")}
+            onChange={(e) => {
+              const keys = selectedKeys.filter((k) => k !== "has-rera");
+              setSelectedKeys(e.target.checked ? [...keys, "has-rera"] : keys);
+            }}
+          >
+            Has RERA Number
+          </Checkbox>
           <Divider style={{ margin: "8px 0" }} />
           <Space>
             <Button
@@ -606,106 +636,110 @@ export function UsersList() {
       ),
       onFilter: (value, record) => {
         if (value === "new-requests") {
-          return !record.lvnzyProjectId;
+          return !record.hasLvnzyProjectId;
+        }
+        if (value === "has-rera") {
+          return record.hasReraNumber;
         }
         return true;
       },
-      render: (lvnzyProjectId: string | undefined) => {
-        if (!lvnzyProjectId) {
-          return <Tag color="orange">Pending</Tag>;
+      render: (_, record) => {
+        const items = [];
+
+        if (record.reraNumber) {
+          items.push(
+            <Typography.Text key="rera" copyable={{ text: record.reraNumber }}>
+              RERA: {record.reraNumber}
+            </Typography.Text>
+          );
         }
-        const reportUrl = `https://brickfi.in/app/brick360/${lvnzyProjectId}`;
+
+        if (record.lvnzyProjectId) {
+          const reportUrl = `https://brickfi.in/app/brick360/${record.lvnzyProjectId}`;
+          items.push(
+            <Typography.Link key="link" href={reportUrl} target="_blank">
+              View Report
+            </Typography.Link>
+          );
+        } else {
+          items.push(
+            <Tag key="pending" color="orange">
+              Pending
+            </Tag>
+          );
+        }
+
         return (
-          <Typography.Link href={reportUrl} target="_blank">
-            View Report
-          </Typography.Link>
+          <Space direction="vertical" size="small">
+            {items}
+          </Space>
         );
       },
     },
     {
-      title: "Request Date",
-      dataIndex: "requestDate",
-      key: "requestDate",
-      width: 180,
+      title: "Total Requests",
+      dataIndex: "totalRequests",
+      key: "totalRequests",
+      width: 150,
+      align: "center",
+      sorter: (a, b) => a.totalRequests - b.totalRequests,
+      render: (count: number) => (
+        <Tag color={count > 1 ? "blue" : "default"}>
+          {count} {count === 1 ? "request" : "requests"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Latest Request",
+      dataIndex: "latestRequestDate",
+      key: "latestRequestDate",
+      width: 200,
       sorter: (a, b) =>
-        new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime(),
+        new Date(a.latestRequestDate).getTime() -
+        new Date(b.latestRequestDate).getTime(),
       defaultSortOrder: "descend",
-      render: (requestDate: string) =>
-        new Date(requestDate).toLocaleDateString("en-US", {
+      render: (date: string, record) => {
+        const formatted = new Date(date).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
-        }),
-    },
-    {
-      title: "User",
-      key: "user",
-      width: 300,
-      filterDropdown: ({
-        setSelectedKeys,
-        selectedKeys,
-        confirm,
-        clearFilters,
-      }) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder="Search by name or mobile"
-            value={selectedKeys[0]}
-            onChange={(e) =>
-              setSelectedKeys(e.target.value ? [e.target.value] : [])
-            }
-            onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: "block" }}
-          />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              size="small"
-              style={{ width: 90 }}
+        });
+
+        if (record.totalRequests > 1) {
+          const allDatesFormatted = record.allRequestDates
+            .map((d) =>
+              new Date(d).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
+            )
+            .join("\n");
+
+          return (
+            <Typography.Text
+              title={`All request dates:\n${allDatesFormatted}`}
+              style={{ cursor: "help" }}
             >
-              Search
-            </Button>
-            <Button
-              onClick={() => {
-                clearFilters?.();
-                setSelectedKeys([]);
-                confirm();
-              }}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Reset
-            </Button>
-          </Space>
-        </div>
-      ),
-      filterIcon: (filtered: boolean) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-      ),
-      onFilter: (value, record) => {
-        const searchTerm = String(value).toLowerCase();
-        const nameMatch = record.userName.toLowerCase().includes(searchTerm);
-        const mobileMatch = record.userMobile.includes(searchTerm);
-        return nameMatch || mobileMatch;
+              {formatted}
+              <Typography.Text
+                type="secondary"
+                style={{ fontSize: 12, marginLeft: 4 }}
+              >
+                (+{record.totalRequests - 1} more)
+              </Typography.Text>
+            </Typography.Text>
+          );
+        }
+
+        return formatted;
       },
-      render: (_, record) => (
-        <Space>
-          <Typography.Text>
-            {record.userName}, {record.userCountryCode} {record.userMobile}
-          </Typography.Text>
-          <Typography.Text
-            copyable={{
-              text: record.userId,
-              icon: <CopyOutlined />,
-              tooltips: ["Copy User ID", "Copied!"],
-            }}
-          />
-        </Space>
-      ),
     },
   ];
 
@@ -777,12 +811,10 @@ _If you need any kind of assistance with regards to ${
 
         <Tabs.TabPane tab="Requested Reports" key="reports">
           <Table
-            dataSource={getFlattenedReports()}
+            dataSource={getAggregatedReports()}
             columns={reportsColumns}
             loading={isLoading}
-            rowKey={(record) =>
-              `${record.userId}-${record.projectName}-${record.requestDate}`
-            }
+            rowKey={(record) => record.projectId}
             scroll={{ x: true }}
             pagination={{ pageSize: 10 }}
           />

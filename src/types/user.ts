@@ -43,6 +43,18 @@ export interface RequestedReportRow {
   reraNumber?: string;
 }
 
+export interface AggregatedReportRow {
+  projectName: string;
+  projectId: string;
+  reraNumber?: string;
+  lvnzyProjectId?: string;
+  totalRequests: number;
+  latestRequestDate: string;
+  allRequestDates: string[];
+  hasReraNumber: boolean;
+  hasLvnzyProjectId: boolean;
+}
+
 export interface UtmEntry {
   utm_source?: string;
   utm_medium?: string;
