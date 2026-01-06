@@ -22,6 +22,7 @@ import {
   RadioChangeEvent,
   Row,
   Select,
+  Switch,
   Table,
   TableColumnType,
   Tag,
@@ -67,6 +68,7 @@ export const ProjectsList: React.FC = () => {
 
   const [issueSeverity, setIssueSeverity] = useState<string>("");
   const [issueType, setIssueType] = useState<string>("");
+  const [hasStatusComments, setHasStatusComments] = useState<boolean>(false);
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
     projectName: string;
@@ -114,6 +116,7 @@ export const ProjectsList: React.FC = () => {
     issueType: issueType == "all" ? "" : issueType,
     limit: 50,
     sortBy: "updatedAt:desc",
+    hasStatusComments,
   });
 
   const {
@@ -585,13 +588,26 @@ export const ProjectsList: React.FC = () => {
       key: "_id",
 
       render: (id: string, record: Project) => {
+        const allCommentsResolved =
+          record.info?.statusComment?.comments &&
+          record.info.statusComment.comments.length > 0 &&
+          record.info.statusComment.comments.every(c => c.resolved === true);
+
+        const shouldGreyIcon = hasStatusComments && allCommentsResolved;
+
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
             <Tooltip title="Manage Status Comments">
               <Button
                 type="default"
                 shape="default"
-                icon={<CommentOutlined />}
+                icon={
+                  <CommentOutlined
+                    style={{
+                      color: shouldGreyIcon ? COLORS.textColorLight : undefined
+                    }}
+                  />
+                }
                 onClick={() =>
                   setSelectedProjectForStatusComment({
                     projectId: id,
@@ -658,11 +674,6 @@ export const ProjectsList: React.FC = () => {
     return count !== undefined ? `${label} (${count})` : label;
   };
 
-  useEffect(() => {
-    if (!projectsLoading) {
-      refetchProjects();
-    }
-  }, [issueSeverity, searchKeyword, projectStatusFilter, issueType]);
 
   return (
     <>
@@ -782,6 +793,15 @@ export const ProjectsList: React.FC = () => {
                   { label: "Error", value: "Error" },
                 ]}
               />
+              <Flex gap={8} align="center">
+                <Typography.Text style={{ whiteSpace: 'nowrap' }}>
+                  Need Review
+                </Typography.Text>
+                <Switch
+                  checked={hasStatusComments}
+                  onChange={(checked) => setHasStatusComments(checked)}
+                />
+              </Flex>
             </Flex>
 
             <Radio.Group

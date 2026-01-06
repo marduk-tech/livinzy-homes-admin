@@ -19,9 +19,10 @@ export function useGetAllProjects(params: {
   issueType: string;
   limit?: number;
   sortBy?: string;
+  hasStatusComments?: boolean;
 }) {
   return useQuery({
-    queryKey: [queryKeys.projects],
+    queryKey: [queryKeys.projects, params],
     queryFn: () => api.getAllProjects({ source: "admin", ...params }),
     refetchOnWindowFocus: false,
   });
