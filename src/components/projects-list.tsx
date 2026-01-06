@@ -31,7 +31,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../theme/colors";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useAddStatusCommentMutation,
@@ -668,7 +668,7 @@ export const ProjectsList: React.FC = () => {
     <>
       <Row
         justify="space-between"
-        align="middle"
+        align="top"
         style={{ marginBottom: 20, padding: "0 10px" }}
       >
         <Col>
@@ -818,9 +818,9 @@ export const ProjectsList: React.FC = () => {
         </Col>
 
         <Col>
-          <Dropdown menu={{ items }} placement="bottomRight" arrow>
-            <Button type="primary">Create New Project</Button>
-          </Dropdown>
+            <Button type="primary" onClick={()=> {
+              window.open("/projects/create");
+            }}>Create New Project</Button>
         </Col>
       </Row>
 
