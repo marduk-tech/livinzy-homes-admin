@@ -84,25 +84,38 @@ export const ProjectsList: React.FC = () => {
   const [selectedProjectForStatusComment, setSelectedProjectForStatusComment] =
     useState<{ projectId: string; projectName: string; statusComment?: any }>();
   const [statusCommentForm] = Form.useForm();
-  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null);
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(
+    null
+  );
 
-  const addCommentMutation = useAddStatusCommentMutation({ enableToasts: true });
-  const editCommentMutation = useEditStatusCommentMutation({ enableToasts: true });
-  const toggleResolvedMutation = useToggleStatusCommentResolvedMutation({ enableToasts: false });
-  const deleteCommentMutation = useDeleteStatusCommentMutation({ enableToasts: true });
+  const addCommentMutation = useAddStatusCommentMutation({
+    enableToasts: true,
+  });
+  const editCommentMutation = useEditStatusCommentMutation({
+    enableToasts: true,
+  });
+  const toggleResolvedMutation = useToggleStatusCommentResolvedMutation({
+    enableToasts: false,
+  });
+  const deleteCommentMutation = useDeleteStatusCommentMutation({
+    enableToasts: true,
+  });
   const { user } = useAuth0();
 
   // Helper to update specific project in cache without refetching
   const updateProjectInCache = (projectId: string, statusComment: any) => {
-    queryClient.setQueryData([queryKeys.projects], (oldData: Project[] | undefined) => {
-      if (!oldData) return oldData;
+    queryClient.setQueryData(
+      [queryKeys.projects],
+      (oldData: Project[] | undefined) => {
+        if (!oldData) return oldData;
 
-      return oldData.map(project =>
-        project._id === projectId
-          ? { ...project, info: { ...project.info, statusComment } }
-          : project
-      );
-    });
+        return oldData.map((project) =>
+          project._id === projectId
+            ? { ...project, info: { ...project.info, statusComment } }
+            : project
+        );
+      }
+    );
   };
 
   const {
@@ -119,10 +132,8 @@ export const ProjectsList: React.FC = () => {
     hasStatusComments,
   });
 
-  const {
-    data: statusCounts,
-    isLoading: isStatusCountsLoading,
-  } = useGetProjectStatusCounts();
+  const { data: statusCounts, isLoading: isStatusCountsLoading } =
+    useGetProjectStatusCounts();
 
   const deleteProjectMutation = useDeleteProjectMutation();
 
@@ -349,14 +360,14 @@ export const ProjectsList: React.FC = () => {
         const aEndDate =
           aExtensions.length > 0
             ? parseDateString(
-              aExtensions[aExtensions.length - 1].completionDate
-            )
+                aExtensions[aExtensions.length - 1].completionDate
+              )
             : new Date(0);
         const bEndDate =
           bExtensions.length > 0
             ? parseDateString(
-              bExtensions[bExtensions.length - 1].completionDate
-            )
+                bExtensions[bExtensions.length - 1].completionDate
+              )
             : new Date(0);
 
         return aEndDate.getTime() - bEndDate.getTime();
@@ -502,13 +513,13 @@ export const ProjectsList: React.FC = () => {
         const types = record.info.homeType || [];
         return types.includes(
           value as
-          | "farmland"
-          | "plot"
-          | "villa"
-          | "rowhouse"
-          | "villament"
-          | "apartment"
-          | "penthouse"
+            | "farmland"
+            | "plot"
+            | "villa"
+            | "rowhouse"
+            | "villament"
+            | "apartment"
+            | "penthouse"
         );
       },
     },
@@ -588,25 +599,39 @@ export const ProjectsList: React.FC = () => {
       key: "_id",
 
       render: (id: string, record: Project) => {
-        const allCommentsResolved =
+        const hasComments =
           record.info?.statusComment?.comments &&
-          record.info.statusComment.comments.length > 0 &&
-          record.info.statusComment.comments.every(c => c.resolved === true);
+          record.info.statusComment.comments.length > 0;
+        const allCommentsResolved =
+          hasComments &&
+          record.info.statusComment!.comments.every((c) => c.resolved === true);
 
-        const shouldGreyIcon = hasStatusComments && allCommentsResolved;
+        const shouldGreyIcon = hasComments && allCommentsResolved;
 
         return (
-          <Flex gap={isMobile ? 5 : 15} justify="end">
+          <Flex gap={8} justify="end" align="center">
             <Tooltip title="Manage Status Comments">
               <Button
-                type="default"
+                type="link"
                 shape="default"
                 icon={
-                  <CommentOutlined
-                    style={{
-                      color: shouldGreyIcon ? COLORS.textColorLight : undefined
-                    }}
-                  />
+                  <DynamicReactIcon
+                    color={
+                      !hasComments
+                        ? COLORS.textColorDark
+                        : shouldGreyIcon
+                        ? COLORS.greenIdentifier
+                        : COLORS.yellowIdentifier
+                    }
+                    iconName={
+                      !hasComments
+                        ? "BiCommentAdd"
+                        : shouldGreyIcon
+                        ? "BiSolidCommentCheck"
+                        : "BiSolidCommentDots"
+                    }
+                    iconSet="bi"
+                  ></DynamicReactIcon>
                 }
                 onClick={() =>
                   setSelectedProjectForStatusComment({
@@ -620,9 +645,15 @@ export const ProjectsList: React.FC = () => {
 
             <Tooltip title="Edit Project">
               <Button
-                type="default"
+                type="link"
                 shape="default"
-                icon={<EditOutlined />}
+                icon={
+                  <DynamicReactIcon
+                    iconName="FaRegEdit"
+                    iconSet="fa"
+                    color={COLORS.textColorDark}
+                  />
+                }
                 onClick={() => window.open(`/projects/${id}/edit`, "_blank")}
               />
             </Tooltip>
@@ -633,12 +664,32 @@ export const ProjectsList: React.FC = () => {
               title="Delete"
               description="Are you sure you want to delete this project"
             >
+              <Tooltip title={[
+                  "report-verified",
+                  "report-ready",
+                  "data-verified",
+                ].includes(record.info.status) ? "Project cannot be deleted": ""}>
               <Button
-                type="default"
+                type="link"
                 shape="default"
-                disabled={["report-verified", "report-ready", "data-verified"].includes(record.info.status)}
-                icon={<DeleteOutlined />}
+                disabled={[
+                  "report-verified",
+                  "report-ready",
+                  "data-verified",
+                ].includes(record.info.status)}
+                icon={
+                  <DynamicReactIcon
+                    iconName="RiDeleteBin2Line"
+                    iconSet="ri"
+                    color={[
+                  "report-verified",
+                  "report-ready",
+                  "data-verified",
+                ].includes(record.info.status) ? COLORS.textColorLight: COLORS.textColorDark}
+                  />
+                }
               ></Button>
+              </Tooltip>
             </DeletePopconfirm>
           </Flex>
         );
@@ -673,7 +724,6 @@ export const ProjectsList: React.FC = () => {
     const count = statusCounts.statusCounts[status];
     return count !== undefined ? `${label} (${count})` : label;
   };
-
 
   return (
     <>
@@ -787,15 +837,18 @@ export const ProjectsList: React.FC = () => {
                   { label: "Project Density", value: "Project Density" },
                   { label: "Media", value: "Media" },
                   { label: "Open Area", value: "Open Area" },
-                  { label: "Unit Config/Pricing", value: "Unit Config/Pricing" },
+                  {
+                    label: "Unit Config/Pricing",
+                    value: "Unit Config/Pricing",
+                  },
                   { label: "Sqft Pricing", value: "Sqft Pricing" },
                   { label: "Home Types", value: "Home Types" },
                   { label: "Error", value: "Error" },
                 ]}
               />
               <Flex gap={8} align="center">
-                <Typography.Text style={{ whiteSpace: 'nowrap' }}>
-                  Need Review
+                <Typography.Text style={{ whiteSpace: "nowrap" }}>
+                  Additional Review
                 </Typography.Text>
                 <Switch
                   checked={hasStatusComments}
@@ -838,9 +891,14 @@ export const ProjectsList: React.FC = () => {
         </Col>
 
         <Col>
-            <Button type="primary" onClick={()=> {
+          <Button
+            type="primary"
+            onClick={() => {
               window.open("/projects/create");
-            }}>Create New Project</Button>
+            }}
+          >
+            Create New Project
+          </Button>
         </Col>
       </Row>
 
@@ -1028,7 +1086,9 @@ export const ProjectsList: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`Status Comments - ${selectedProjectForStatusComment?.projectName || ''}`}
+        title={`Status Comments - ${
+          selectedProjectForStatusComment?.projectName || ""
+        }`}
         open={!!selectedProjectForStatusComment}
         onCancel={() => {
           setSelectedProjectForStatusComment(undefined);
@@ -1048,12 +1108,15 @@ export const ProjectsList: React.FC = () => {
                 commentText: values.comment,
               });
 
-              setSelectedProjectForStatusComment(prev => ({
+              setSelectedProjectForStatusComment((prev) => ({
                 ...prev!,
-                statusComment: response.data
+                statusComment: response.data,
               }));
 
-              updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+              updateProjectInCache(
+                selectedProjectForStatusComment!.projectId,
+                response.data
+              );
 
               statusCommentForm.resetFields();
             }}
@@ -1062,8 +1125,8 @@ export const ProjectsList: React.FC = () => {
               name="comment"
               label="Add New Comment"
               rules={[
-                { required: true, message: 'Please enter a comment' },
-                { min: 3, message: 'Comment must be at least 3 characters' },
+                { required: true, message: "Please enter a comment" },
+                { min: 3, message: "Comment must be at least 3 characters" },
               ]}
             >
               <Input.TextArea
@@ -1084,19 +1147,23 @@ export const ProjectsList: React.FC = () => {
             </Form.Item>
           </Form>
 
-          {selectedProjectForStatusComment?.statusComment?.comments?.length > 0 && (
+          {selectedProjectForStatusComment?.statusComment?.comments?.length >
+            0 && (
             <Flex vertical gap={8}>
               <Typography.Text strong>Comment History</Typography.Text>
               <Flex
                 vertical
                 gap={8}
                 style={{
-                  maxHeight: '400px',
-                  overflowY: 'auto',
-                  paddingRight: '8px'
+                  maxHeight: "400px",
+                  overflowY: "auto",
+                  paddingRight: "8px",
                 }}
               >
-                {[...(selectedProjectForStatusComment?.statusComment?.comments || [])]
+                {[
+                  ...(selectedProjectForStatusComment?.statusComment
+                    ?.comments || []),
+                ]
                   .map((comment, originalIndex) => ({ comment, originalIndex }))
                   .sort((a, b) => {
                     // Sort by resolved status first (unresolved first)
@@ -1104,8 +1171,12 @@ export const ProjectsList: React.FC = () => {
                       return a.comment.resolved ? 1 : -1;
                     }
                     // Within same resolved status, sort by createdAt descending (newest first)
-                    const dateA = a.comment.createdAt ? new Date(a.comment.createdAt).getTime() : 0;
-                    const dateB = b.comment.createdAt ? new Date(b.comment.createdAt).getTime() : 0;
+                    const dateA = a.comment.createdAt
+                      ? new Date(a.comment.createdAt).getTime()
+                      : 0;
+                    const dateB = b.comment.createdAt
+                      ? new Date(b.comment.createdAt).getTime()
+                      : 0;
                     return dateB - dateA;
                   })
                   .map(({ comment, originalIndex }) => {
@@ -1118,29 +1189,36 @@ export const ProjectsList: React.FC = () => {
                         align="flex-start"
                         gap={12}
                         style={{
-                          padding: '12px',
-                          border: '1px solid #d9d9d9',
-                          borderRadius: '4px',
-                          backgroundColor: comment.resolved ? '#f6ffed' : '#fff',
+                          padding: "12px",
+                          border: "1px solid #d9d9d9",
+                          borderRadius: "4px",
+                          backgroundColor: comment.resolved
+                            ? "#f6ffed"
+                            : "#fff",
                         }}
                       >
                         <Checkbox
                           checked={comment.resolved}
                           onChange={async (e) => {
-                            const response = await toggleResolvedMutation.mutateAsync({
-                              projectId: selectedProjectForStatusComment!.projectId,
-                              commentIndex: actualIndex,
-                              resolved: e.target.checked,
-                            });
+                            const response =
+                              await toggleResolvedMutation.mutateAsync({
+                                projectId:
+                                  selectedProjectForStatusComment!.projectId,
+                                commentIndex: actualIndex,
+                                resolved: e.target.checked,
+                              });
 
-                            setSelectedProjectForStatusComment(prev => ({
+                            setSelectedProjectForStatusComment((prev) => ({
                               ...prev!,
-                              statusComment: response.data
+                              statusComment: response.data,
                             }));
 
-                            updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+                            updateProjectInCache(
+                              selectedProjectForStatusComment!.projectId,
+                              response.data
+                            );
                           }}
-                          style={{ marginTop: '4px' }}
+                          style={{ marginTop: "4px" }}
                         />
 
                         <Flex vertical flex={1} gap={4}>
@@ -1148,18 +1226,24 @@ export const ProjectsList: React.FC = () => {
                             <Form
                               initialValues={{ editComment: comment.text }}
                               onFinish={async (values) => {
-                                const response = await editCommentMutation.mutateAsync({
-                                  projectId: selectedProjectForStatusComment!.projectId,
-                                  commentIndex: actualIndex,
-                                  commentText: values.editComment,
-                                });
+                                const response =
+                                  await editCommentMutation.mutateAsync({
+                                    projectId:
+                                      selectedProjectForStatusComment!
+                                        .projectId,
+                                    commentIndex: actualIndex,
+                                    commentText: values.editComment,
+                                  });
 
-                                setSelectedProjectForStatusComment(prev => ({
+                                setSelectedProjectForStatusComment((prev) => ({
                                   ...prev!,
-                                  statusComment: response.data
+                                  statusComment: response.data,
                                 }));
 
-                                updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+                                updateProjectInCache(
+                                  selectedProjectForStatusComment!.projectId,
+                                  response.data
+                                );
 
                                 setEditingCommentIndex(null);
                               }}
@@ -1167,8 +1251,15 @@ export const ProjectsList: React.FC = () => {
                               <Form.Item
                                 name="editComment"
                                 rules={[
-                                  { required: true, message: 'Comment cannot be empty' },
-                                  { min: 3, message: 'Comment must be at least 3 characters' },
+                                  {
+                                    required: true,
+                                    message: "Comment cannot be empty",
+                                  },
+                                  {
+                                    min: 3,
+                                    message:
+                                      "Comment must be at least 3 characters",
+                                  },
                                 ]}
                                 style={{ marginBottom: 8 }}
                               >
@@ -1200,8 +1291,12 @@ export const ProjectsList: React.FC = () => {
                             <>
                               <Typography.Text
                                 style={{
-                                  textDecoration: comment.resolved ? 'line-through' : 'none',
-                                  color: comment.resolved ? '#8c8c8c' : 'inherit',
+                                  textDecoration: comment.resolved
+                                    ? "line-through"
+                                    : "none",
+                                  color: comment.resolved
+                                    ? "#8c8c8c"
+                                    : "inherit",
                                 }}
                               >
                                 {comment.text}
@@ -1209,12 +1304,14 @@ export const ProjectsList: React.FC = () => {
                               {comment.createdAt && (
                                 <Typography.Text
                                   type="secondary"
-                                  style={{ fontSize: '12px' }}
+                                  style={{ fontSize: "12px" }}
                                 >
-                                  {new Date(comment.createdAt).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric'
+                                  {new Date(
+                                    comment.createdAt
+                                  ).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
                                   })}
                                 </Typography.Text>
                               )}
@@ -1229,7 +1326,9 @@ export const ProjectsList: React.FC = () => {
                                 type="text"
                                 size="small"
                                 icon={<EditOutlined />}
-                                onClick={() => setEditingCommentIndex(actualIndex)}
+                                onClick={() =>
+                                  setEditingCommentIndex(actualIndex)
+                                }
                               />
                             </Tooltip>
                             <Tooltip title="Delete">
@@ -1239,17 +1338,25 @@ export const ProjectsList: React.FC = () => {
                                 danger
                                 icon={<DeleteOutlined />}
                                 onClick={async () => {
-                                  const response = await deleteCommentMutation.mutateAsync({
-                                    projectId: selectedProjectForStatusComment!.projectId,
-                                    commentIndex: actualIndex,
-                                  });
+                                  const response =
+                                    await deleteCommentMutation.mutateAsync({
+                                      projectId:
+                                        selectedProjectForStatusComment!
+                                          .projectId,
+                                      commentIndex: actualIndex,
+                                    });
 
-                                  setSelectedProjectForStatusComment(prev => ({
-                                    ...prev!,
-                                    statusComment: response.data
-                                  }));
+                                  setSelectedProjectForStatusComment(
+                                    (prev) => ({
+                                      ...prev!,
+                                      statusComment: response.data,
+                                    })
+                                  );
 
-                                  updateProjectInCache(selectedProjectForStatusComment!.projectId, response.data);
+                                  updateProjectInCache(
+                                    selectedProjectForStatusComment!.projectId,
+                                    response.data
+                                  );
                                 }}
                                 loading={deleteCommentMutation.isPending}
                               />
@@ -1263,8 +1370,9 @@ export const ProjectsList: React.FC = () => {
             </Flex>
           )}
 
-          {(!selectedProjectForStatusComment?.statusComment?.comments?.length) && (
-            <Typography.Text type="secondary" style={{ textAlign: 'center' }}>
+          {!selectedProjectForStatusComment?.statusComment?.comments
+            ?.length && (
+            <Typography.Text type="secondary" style={{ textAlign: "center" }}>
               No comments yet. Add your first comment above.
             </Typography.Text>
           )}
