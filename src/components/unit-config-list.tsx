@@ -17,6 +17,7 @@ import {
 } from "antd";
 
 import React, { useState } from "react";
+import { FileUpload } from "./common/img-upload";
 
 interface UnitConfig {
   config: string;
@@ -38,16 +39,19 @@ interface UnitConfigListProps {
       caption?: string;
     };
   }>;
+  onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
 }
 
 export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   value = [],
   onChange,
   media = [],
+  onFloorplanUpload,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const [newlyUploadedImageIds, setNewlyUploadedImageIds] = useState<Set<string>>(new Set());
 
   // Helper function to get which unit config is using each floorplan
   const getFloorplanUsage = () => {
@@ -91,6 +95,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
 
   const handleAdd = () => {
     setEditingIndex(null);
+    setNewlyUploadedImageIds(new Set());
     setIsModalVisible(true);
     form.resetFields();
     form.setFieldsValue({
@@ -143,6 +148,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
       }
 
       onChange?.(newValue);
+      setNewlyUploadedImageIds(new Set());
       setIsModalVisible(false);
     } catch (error) {
       console.error("Validation failed:", error);
@@ -307,6 +313,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
         onOk={handleModalOk}
         onCancel={() => {
           setIsModalVisible(false);
+          setNewlyUploadedImageIds(new Set());
           resetModalState();
         }}
         width={800}
@@ -385,6 +392,32 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               placeholder="Enter price"
             />
           </Form.Item>
+
+          <Form.Item label="Upload New Floor Plans">
+            <div style={{ marginBottom: 16 }}>
+              <FileUpload
+                onUploadComplete={(urls: string[], originalNames: string[]) => {
+                  if (onFloorplanUpload) {
+                    onFloorplanUpload(urls, originalNames);
+                    setNewlyUploadedImageIds(prev => new Set([...prev, ...urls]));
+                  }
+                }}
+                fileType="image"
+                isMultiple={true}
+                button={{
+                  label: "Upload Floor Plans",
+                  type: "default",
+                }}
+              />
+              <Typography.Text
+                type="secondary"
+                style={{ fontSize: 12, display: 'block', marginTop: 8 }}
+              >
+                Uploaded images will appear at the top of the selection list below
+              </Typography.Text>
+            </div>
+          </Form.Item>
+
           <Form.Item
             name="floorplans"
             label="Choose Floor Plans"
@@ -408,6 +441,13 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                 <Row gutter={[16, 16]}>
                   {media
                     .filter((item) => item.image?.tags.includes("floorplan"))
+                    .sort((a, b) => {
+                      const aIsNew = newlyUploadedImageIds.has(a.image?.url || '');
+                      const bIsNew = newlyUploadedImageIds.has(b.image?.url || '');
+                      if (aIsNew && !bIsNew) return -1;
+                      if (!aIsNew && bIsNew) return 1;
+                      return 0;
+                    })
                     .map((item) => {
                       const url = item.image?.url;
                       const currentFloorplans =
@@ -437,9 +477,11 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                             form.setFieldValue("floorplans", newValue);
                           }}
                           style={{
-                            border: `1px solid ${
+                            border: `2px solid ${
                               isSelected
                                 ? "#1890ff"
+                                : newlyUploadedImageIds.has(item.image?.url || '')
+                                ? "#52c41a"
                                 : isDisabled
                                 ? "#f0f0f0"
                                 : "#d9d9d9"
@@ -453,10 +495,13 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                             transition: "all 0.3s",
                             backgroundColor: isSelected
                               ? "#e6f7ff"
+                              : newlyUploadedImageIds.has(item.image?.url || '')
+                              ? "#f6ffed"
                               : isDisabled
                               ? "#f9f9f9"
                               : "#ffffff",
                             opacity: isDisabled ? 0.6 : 1,
+                            position: "relative",
                           }}
                           onMouseEnter={(e) => {
                             if (!isDisabled) {
@@ -483,6 +528,19 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                               filter: isDisabled ? "grayscale(50%)" : "none",
                             }}
                           />
+                          {newlyUploadedImageIds.has(item.image?.url || '') && (
+                            <Tag
+                              color="success"
+                              style={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                zIndex: 1,
+                              }}
+                            >
+                              New
+                            </Tag>
+                          )}
                           <div
                             style={{
                               flex: 1,

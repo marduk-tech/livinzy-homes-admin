@@ -73,7 +73,8 @@ const RenderFields: React.FC<{
   category: string;
   isMobile: boolean;
   fieldRules: Record<string, any>;
-}> = ({ fields, category, isMobile, fieldRules, form }) => (
+  onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
+}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -173,6 +174,7 @@ const RenderFields: React.FC<{
                       );
                     }}
                     media={form.getFieldValue("media") || []}
+                    onFloorplanUpload={onFloorplanUpload}
                   />
                 ) : type === "single_select" || type == "multi_select" ? (
                   <Select
@@ -386,6 +388,36 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       updateProject.mutate({
         projectData: {
           media: currentMedia,
+        },
+      });
+    }
+  };
+
+  const onFloorplanUpload = (urls: string[], originalNames: string[]) => {
+    notification.success({
+      message: `${urls.length} floor plan${urls.length > 1 ? 's' : ''} uploaded successfully`,
+    });
+
+    const currentMedia = form.getFieldValue("media") || [];
+
+    const newFloorplans = urls.map((url, index) => ({
+      type: "image" as const,
+      image: {
+        url,
+        tags: ["floorplan"],
+        caption: originalNames[index] || `Floor Plan ${currentMedia.length + index + 1}`,
+      },
+      isPreview: false,
+      hasWatermark: false,
+    }));
+
+    const updatedMedia = [...newFloorplans, ...currentMedia];
+    form.setFieldValue("media", updatedMedia);
+
+    if (projectId) {
+      updateProject.mutate({
+        projectData: {
+          media: updatedMedia,
         },
       });
     }
@@ -639,6 +671,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   category="info"
                   isMobile={isMobile}
                   fieldRules={fieldRules}
+                  onFloorplanUpload={onFloorplanUpload}
                 />
               </TabPane>
             );
