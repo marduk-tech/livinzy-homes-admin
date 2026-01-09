@@ -418,7 +418,7 @@ export function UsersList() {
             type="default"
             shape="default"
             icon={<SendOutlined />}
-            disabled={!record.profile?.email}
+            disabled={!record.profile?.email && !record.mobile}
             title="Send email and WhatsApp notification"
             onClick={() => {
               setSelectedUser(record);
