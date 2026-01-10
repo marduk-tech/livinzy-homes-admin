@@ -60,14 +60,12 @@ export const auth0CallbackUrl = import.meta.env.VITE_AUTH0_CALLBACK_URL;
 
 export const MediaTags = [
   "exterior",
-  "layout",
-  "aerial",
-  "walkthrough",
-  "construction",
-  "amenities",
-  "plot",
-  "house",
   "floorplan",
+  "layout",
+  "amenities",
+  "construction",
+  "house",
+  "na"
 ];
 export const ProjectCategories = [
   {

@@ -712,7 +712,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   />
                 </Flex>
 
-                <Flex gap={48} style={{ width: "100%" }} wrap="wrap">
+                <Flex gap={48} style={{ width: "100%", maxHeight: 550, overflowY: "scroll" }} wrap="wrap">
                   {project?.media?.map((item: IMedia, index) => {
                     if (item?.type === "image") {
                       return (
@@ -920,6 +920,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         </Tabs>
         <Button
           type="primary"
+          style={{marginTop: 16}}
           onClick={handleSave}
           loading={createProject.isPending || updateProject.isPending}
         >
