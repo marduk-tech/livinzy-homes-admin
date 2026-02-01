@@ -32,6 +32,8 @@ import {
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../theme/colors";
 
+import { useAuth0 } from "@auth0/auth0-react";
+import ReactJson from "react-json-view";
 import { Link, useNavigate } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
@@ -39,23 +41,22 @@ import {
   useDeleteProjectMutation,
   useDeleteStatusCommentMutation,
   useEditStatusCommentMutation,
+  useGenerateScoreCardMutation,
   useGetAllProjects,
   useGetProjectStatusCounts,
   useResolveProjectIssueMutation,
   useToggleStatusCommentResolvedMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
+import { queryKeys } from "../libs/constants";
+import { queryClient } from "../libs/query-client";
+import { FONT_SIZES } from "../theme/font-sizes";
 import { IMedia, Project } from "../types/Project";
 import { AVGSQFTRateDisplay } from "./common/avg-sqft-rate-display";
 import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
-import { useAuth0 } from "@auth0/auth0-react";
-import ReactJson from "react-json-view";
-import { FONT_SIZES } from "../theme/font-sizes";
-import { queryClient } from "../libs/query-client";
-import { queryKeys } from "../libs/constants";
 const { Search } = Input;
 
 export const ProjectsList: React.FC = () => {
@@ -85,7 +86,7 @@ export const ProjectsList: React.FC = () => {
     useState<{ projectId: string; projectName: string; statusComment?: any }>();
   const [statusCommentForm] = Form.useForm();
   const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(
-    null
+    null,
   );
 
   const addCommentMutation = useAddStatusCommentMutation({
@@ -100,6 +101,9 @@ export const ProjectsList: React.FC = () => {
   const deleteCommentMutation = useDeleteStatusCommentMutation({
     enableToasts: true,
   });
+  const generateScoreCardMutation = useGenerateScoreCardMutation({
+    enableToasts: true,
+  });
   const { user } = useAuth0();
 
   // Helper to update specific project in cache without refetching
@@ -112,9 +116,9 @@ export const ProjectsList: React.FC = () => {
         return oldData.map((project) =>
           project._id === projectId
             ? { ...project, info: { ...project.info, statusComment } }
-            : project
+            : project,
         );
-      }
+      },
     );
   };
 
@@ -191,7 +195,7 @@ export const ProjectsList: React.FC = () => {
                     e.stopPropagation();
                     window.open(
                       `https://www.google.com/maps?q=${record.info.location.lat},${record.info.location.lng}`,
-                      "_blank"
+                      "_blank",
                     );
                   }}
                 >
@@ -232,7 +236,7 @@ export const ProjectsList: React.FC = () => {
           <Flex style={{ width: 125, flexWrap: "wrap" }} gap={4}>
             {projectCorridors.map((c: any) => {
               const corridorObj = corridors!.find(
-                (corr) => corr._id == c.corridorId
+                (corr) => corr._id == c.corridorId,
               );
               if (corridorObj) {
                 return (
@@ -260,7 +264,7 @@ export const ProjectsList: React.FC = () => {
       }),
       onFilter: (value, record) => {
         const corrs = ((record.info.corridors || []) as any).map(
-          (c: any) => c.corridorId
+          (c: any) => c.corridorId,
         );
         return corrs.includes(value);
       },
@@ -360,13 +364,13 @@ export const ProjectsList: React.FC = () => {
         const aEndDate =
           aExtensions.length > 0
             ? parseDateString(
-                aExtensions[aExtensions.length - 1].completionDate
+                aExtensions[aExtensions.length - 1].completionDate,
               )
             : new Date(0);
         const bEndDate =
           bExtensions.length > 0
             ? parseDateString(
-                bExtensions[bExtensions.length - 1].completionDate
+                bExtensions[bExtensions.length - 1].completionDate,
               )
             : new Date(0);
 
@@ -377,7 +381,7 @@ export const ProjectsList: React.FC = () => {
 
         const startDate = parseDateString(extensions[0].startDate);
         const endDate = parseDateString(
-          extensions[extensions.length - 1].completionDate
+          extensions[extensions.length - 1].completionDate,
         );
 
         const formatDate = (date: Date) => {
@@ -426,7 +430,7 @@ export const ProjectsList: React.FC = () => {
           <Flex style={{ maxWidth: 200 }} wrap="wrap" gap={2}>
             {Object.entries(mediaByTag)
               .filter(
-                ([_, counts]) => counts.images.length > 0 || counts.videos > 0
+                ([_, counts]) => counts.images.length > 0 || counts.videos > 0,
               )
               .map(([tag, counts]) => (
                 <Tooltip
@@ -519,7 +523,7 @@ export const ProjectsList: React.FC = () => {
             | "rowhouse"
             | "villament"
             | "apartment"
-            | "penthouse"
+            | "penthouse",
         );
       },
     },
@@ -543,13 +547,13 @@ export const ProjectsList: React.FC = () => {
           );
         }
         const resolvedIssues = internalChecks.checks.filter(
-          (c: any) => c.resolved
+          (c: any) => c.resolved,
         );
         const severeIssues = internalChecks.checks.filter(
-          (c: any) => !c.resolved && c.severity == 5
+          (c: any) => !c.resolved && c.severity == 5,
         );
         const nonSevereIssues = internalChecks.checks.filter(
-          (c: any) => !c.resolved && c.severity < 5
+          (c: any) => !c.resolved && c.severity < 5,
         );
         const getIssuesLabel = (issues: any[], color: string) => {
           return (
@@ -608,8 +612,77 @@ export const ProjectsList: React.FC = () => {
 
         const shouldGreyIcon = hasComments && allCommentsResolved;
 
+        const canShowScoreCard = ["report-ready", "report-verified"].includes(
+          record.info.status,
+        );
+        const reportStatus = record.info.reportStatus?.status;
+        const isProcessing =
+          reportStatus === "pre-processing" ||
+          reportStatus === "report-processing";
+        const isError =
+          reportStatus === "pre-processing-error" ||
+          reportStatus === "report-processing-error";
+        const isProcessed =
+          reportStatus === "report-processed" ||
+          reportStatus === "pre-processed";
+
+        const getScoreCardTooltip = () => {
+          if (isProcessing) return `Status: ${reportStatus}`;
+          if (isError)
+            return `Error: ${record.info.reportStatus?.comments || reportStatus}`;
+          if (isProcessed) return "Score card generated";
+          return "Generate Score Card";
+        };
+
+        const getScoreCardIcon = () => {
+          if (isProcessing) return "TbFileReport";
+          if (isError) return "TbReportOff";
+          if (isProcessed) return "TbFileReport";
+          return "TbReportAnalytics";
+        };
+
+        const getScoreCardColor = () => {
+          if (isError) return COLORS.redIdentifier;
+          if (isProcessed) return COLORS.greenIdentifier;
+          return COLORS.textColorDark;
+        };
+
+        const handleGenerateScoreCard = () => {
+          Modal.confirm({
+            title: "Generate Score Card",
+            content: `Are you sure you want to generate the score card for "${record.info.name}"? This process may take a few minutes.`,
+            okText: "Generate",
+            cancelText: "Cancel",
+            onOk: () => {
+              generateScoreCardMutation.mutate({ projectId: id });
+            },
+          });
+        };
+
         return (
           <Flex gap={8} justify="end" align="center">
+            {canShowScoreCard && (
+              <Tooltip title={getScoreCardTooltip()}>
+                <Button
+                  type="link"
+                  shape="default"
+                  disabled={isProcessing || generateScoreCardMutation.isPending}
+                  loading={
+                    generateScoreCardMutation.isPending &&
+                    generateScoreCardMutation.variables?.projectId === id
+                  }
+                  icon={
+                    <DynamicReactIcon
+                      color={getScoreCardColor()}
+                      iconName={getScoreCardIcon()}
+                      iconSet="tb"
+                    />
+                  }
+                  onClick={handleGenerateScoreCard}
+                />
+              </Tooltip>
+            )}
+
             <Tooltip title="Manage Status Comments">
               <Button
                 type="link"
@@ -620,15 +693,15 @@ export const ProjectsList: React.FC = () => {
                       !hasComments
                         ? COLORS.textColorDark
                         : shouldGreyIcon
-                        ? COLORS.greenIdentifier
-                        : COLORS.yellowIdentifier
+                          ? COLORS.greenIdentifier
+                          : COLORS.yellowIdentifier
                     }
                     iconName={
                       !hasComments
                         ? "BiCommentAdd"
                         : shouldGreyIcon
-                        ? "BiSolidCommentCheck"
-                        : "BiSolidCommentDots"
+                          ? "BiSolidCommentCheck"
+                          : "BiSolidCommentDots"
                     }
                     iconSet="bi"
                   ></DynamicReactIcon>
@@ -664,31 +737,39 @@ export const ProjectsList: React.FC = () => {
               title="Delete"
               description="Are you sure you want to delete this project"
             >
-              <Tooltip title={[
-                  "report-verified",
-                  "report-ready",
-                  "data-verified",
-                ].includes(record.info.status) ? "Project cannot be deleted": ""}>
-              <Button
-                type="link"
-                shape="default"
-                disabled={[
-                  "report-verified",
-                  "report-ready",
-                  "data-verified",
-                ].includes(record.info.status)}
-                icon={
-                  <DynamicReactIcon
-                    iconName="RiDeleteBin2Line"
-                    iconSet="ri"
-                    color={[
-                  "report-verified",
-                  "report-ready",
-                  "data-verified",
-                ].includes(record.info.status) ? COLORS.textColorLight: COLORS.textColorDark}
-                  />
+              <Tooltip
+                title={
+                  ["report-verified", "report-ready", "data-verified"].includes(
+                    record.info.status,
+                  )
+                    ? "Project cannot be deleted"
+                    : ""
                 }
-              ></Button>
+              >
+                <Button
+                  type="link"
+                  shape="default"
+                  disabled={[
+                    "report-verified",
+                    "report-ready",
+                    "data-verified",
+                  ].includes(record.info.status)}
+                  icon={
+                    <DynamicReactIcon
+                      iconName="RiDeleteBin2Line"
+                      iconSet="ri"
+                      color={
+                        [
+                          "report-verified",
+                          "report-ready",
+                          "data-verified",
+                        ].includes(record.info.status)
+                          ? COLORS.textColorLight
+                          : COLORS.textColorDark
+                      }
+                    />
+                  }
+                ></Button>
               </Tooltip>
             </DeletePopconfirm>
           </Flex>
@@ -1115,7 +1196,7 @@ export const ProjectsList: React.FC = () => {
 
               updateProjectInCache(
                 selectedProjectForStatusComment!.projectId,
-                response.data
+                response.data,
               );
 
               statusCommentForm.resetFields();
@@ -1215,7 +1296,7 @@ export const ProjectsList: React.FC = () => {
 
                             updateProjectInCache(
                               selectedProjectForStatusComment!.projectId,
-                              response.data
+                              response.data,
                             );
                           }}
                           style={{ marginTop: "4px" }}
@@ -1242,7 +1323,7 @@ export const ProjectsList: React.FC = () => {
 
                                 updateProjectInCache(
                                   selectedProjectForStatusComment!.projectId,
-                                  response.data
+                                  response.data,
                                 );
 
                                 setEditingCommentIndex(null);
@@ -1307,7 +1388,7 @@ export const ProjectsList: React.FC = () => {
                                   style={{ fontSize: "12px" }}
                                 >
                                   {new Date(
-                                    comment.createdAt
+                                    comment.createdAt,
                                   ).toLocaleDateString("en-IN", {
                                     day: "2-digit",
                                     month: "short",
@@ -1350,12 +1431,12 @@ export const ProjectsList: React.FC = () => {
                                     (prev) => ({
                                       ...prev!,
                                       statusComment: response.data,
-                                    })
+                                    }),
                                   );
 
                                   updateProjectInCache(
                                     selectedProjectForStatusComment!.projectId,
-                                    response.data
+                                    response.data,
                                   );
                                 }}
                                 loading={deleteCommentMutation.isPending}

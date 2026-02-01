@@ -92,6 +92,16 @@ export interface IInfo {
       resolved: boolean;
     }>;
   };
+  reportStatus?: {
+    status?:
+      | 'pre-processing'
+      | 'pre-processed'
+      | 'pre-processing-error'
+      | 'report-processing'
+      | 'report-processed'
+      | 'report-processing-error';
+    comments?: string;
+  };
 }
 
 export interface ILand {

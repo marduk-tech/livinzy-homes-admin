@@ -167,3 +167,10 @@ export const getProjectStatusCounts = async () => {
   });
 };
 
+export const generateScoreCard = async (projectId: string) => {
+  const endpoint = `/projects/generate-scorecard`;
+  return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
+    return response.data;
+  });
+};
+

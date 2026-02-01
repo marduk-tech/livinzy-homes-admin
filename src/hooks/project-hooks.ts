@@ -340,6 +340,29 @@ export function useDeleteStatusCommentMutation({
   });
 }
 
+export function useGenerateScoreCardMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({ projectId }: { projectId: string }) => {
+      return api.generateScoreCard(projectId);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Score card generation initiated!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({ message: `Failed to generate score card.` });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+    },
+  });
+}
+
 export function useProjectForm() {
   const { data: developers = [] } = useFetchDevelopers();
 
