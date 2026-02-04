@@ -11,10 +11,14 @@ import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { CreateUserPayload, UpdateUserPayload } from "../types/user";
 
-export function useGetAllUsers() {
+export function useGetAllUsers(params?: {
+  limit?: number;
+  sortBy?: string;
+  search?: string;
+}) {
   return useQuery({
-    queryKey: [queryKeys.getAllUsers],
-    queryFn: getAllUsers,
+    queryKey: [queryKeys.getAllUsers, params],
+    queryFn: () => getAllUsers(params),
   });
 }
 

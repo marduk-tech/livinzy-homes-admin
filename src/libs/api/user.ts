@@ -6,8 +6,18 @@ import {
 } from "../../types/user";
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export const getAllUsers = async (): Promise<User[]> => {
-  const { data } = await axiosApiInstance.get<User[]>("/user/all");
+export const getAllUsers = async (params?: {
+  limit?: number;
+  sortBy?: string;
+  search?: string;
+}): Promise<User[]> => {
+  const { limit = 100, sortBy = 'createdAt:desc', search = '' } = params || {};
+  const queryParams = new URLSearchParams();
+  queryParams.append('limit', String(limit));
+  queryParams.append('sortBy', sortBy);
+  if (search) queryParams.append('search', search);
+
+  const { data } = await axiosApiInstance.get<User[]>(`/user/all?${queryParams}`);
   return data;
 };
 

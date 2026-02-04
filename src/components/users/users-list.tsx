@@ -49,13 +49,20 @@ import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 
 const { RangePicker } = DatePicker;
+const { Search } = Input;
 
 // Initialize dayjs plugins
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 export function UsersList() {
-  const { data, isLoading, isError } = useGetAllUsers();
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+
+  const { data, isLoading, isError } = useGetAllUsers({
+    limit: 100,
+    sortBy: 'createdAt:desc',
+    search: searchKeyword,
+  });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
 
@@ -797,6 +804,17 @@ _If you need any kind of assistance with regards to ${
         onChange={(key) => setActiveTab(key as "users" | "reports")}
       >
         <Tabs.TabPane tab="All Users" key="users">
+          <Search
+            loading={isLoading}
+            placeholder="Search by name, mobile, email or project"
+            allowClear
+            onChange={(e) => {
+              if (e.target.value === "") setSearchKeyword("");
+            }}
+            onSearch={(value: string) => setSearchKeyword(value)}
+            enterButton="Search"
+            style={{ width: 350, marginBottom: 16 }}
+          />
           <Table
             dataSource={data}
             columns={columns}
