@@ -218,7 +218,28 @@ export const ProjectsList: React.FC = () => {
                   : "default"
               }
             >
-              {record.info.status.replace("-", " ")}
+              <Flex gap={2} align="center">
+                <span>{record.info.status.replace("-", " ")}</span>
+                {record.info.status == "report-verified" ? (
+                  <span
+                    style={{ cursor: "pointer", marginTop: "5px" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(
+                        `https://brickfi.in/app/brick360/${record.info.reportStatus.reportId}`,
+                        "_blank",
+                      );
+                    }}
+                  >
+                    <DynamicReactIcon
+                      color="white"
+                      iconName="IoNavigateCircleSharp"
+                      iconSet="io5"
+                      size={16}
+                    />
+                  </span>
+                ) : null}
+              </Flex>
             </Tag>
           </Flex>
         </Flex>
