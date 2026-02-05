@@ -1,4 +1,5 @@
 import {
+  AggregatedReportRow,
   CreateUserPayload,
   SavedLvnzyProject,
   UpdateUserPayload,
@@ -45,5 +46,10 @@ export const sendReportEmail = async (
     `/user/${userId}/send-report-email`,
     { projectIds }
   );
+  return data;
+};
+
+export const getAggregatedReports = async (): Promise<AggregatedReportRow[]> => {
+  const { data } = await axiosApiInstance.get<AggregatedReportRow[]>('/user/aggregated-reports');
   return data;
 };

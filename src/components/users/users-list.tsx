@@ -34,16 +34,14 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
+  useGetAggregatedReports,
   useGetAllUsers,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
 import {
   AggregatedReportRow,
-  RequestedReport,
-  RequestedReportRow,
   User,
-  UtmEntry,
 } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
@@ -63,6 +61,7 @@ export function UsersList() {
     sortBy: 'createdAt:desc',
     search: searchKeyword,
   });
+  const { data: aggregatedReports, isLoading: isReportsLoading } = useGetAggregatedReports();
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
 
@@ -437,59 +436,6 @@ export function UsersList() {
     },
   ];
 
-  const getAggregatedReports = (): AggregatedReportRow[] => {
-    if (!data) return [];
-
-    const allReports: RequestedReport[] = [];
-    data.forEach((user) => {
-      const reqReports = user.requestedReports?.filter((r) => !!r) || [];
-      allReports.push(...reqReports);
-    });
-
-    const groupedMap = new Map<string, RequestedReport[]>();
-
-    allReports.forEach((report) => {
-      const groupKey =
-        report.reraNumber?.trim() ||
-        report.lvnzyProjectId?.trim() ||
-        report.projectName;
-
-      if (!groupedMap.has(groupKey)) {
-        groupedMap.set(groupKey, []);
-      }
-      groupedMap.get(groupKey)!.push(report);
-    });
-
-    const aggregatedRows: AggregatedReportRow[] = [];
-
-    groupedMap.forEach((reports, groupKey) => {
-      const sortedReports = reports.sort(
-        (a, b) =>
-          new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
-      );
-
-      const latestReport = sortedReports[0];
-
-      aggregatedRows.push({
-        projectName: latestReport.projectName,
-        projectId: groupKey,
-        reraNumber: latestReport.reraNumber,
-        lvnzyProjectId: latestReport.lvnzyProjectId,
-        totalRequests: reports.length,
-        latestRequestDate: latestReport.requestDate,
-        allRequestDates: sortedReports.map((r) => r.requestDate),
-        hasReraNumber: !!latestReport.reraNumber,
-        hasLvnzyProjectId: !!latestReport.lvnzyProjectId,
-      });
-    });
-
-    return aggregatedRows.sort(
-      (a, b) =>
-        new Date(b.latestRequestDate).getTime() -
-        new Date(a.latestRequestDate).getTime()
-    );
-  };
-
   const handleCSVExport = () => {
     // Use filtered data if available, otherwise use all data
     const dataToExport = filteredUsers.length > 0 ? filteredUsers : data || [];
@@ -829,9 +775,9 @@ _If you need any kind of assistance with regards to ${
 
         <Tabs.TabPane tab="Requested Reports" key="reports">
           <Table
-            dataSource={getAggregatedReports()}
+            dataSource={aggregatedReports}
             columns={reportsColumns}
-            loading={isLoading}
+            loading={isReportsLoading}
             rowKey={(record) => record.projectId}
             scroll={{ x: true }}
             pagination={{ pageSize: 10 }}

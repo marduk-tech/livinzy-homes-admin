@@ -3,6 +3,7 @@ import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
   createUser,
+  getAggregatedReports,
   getAllUsers,
   sendReportEmail,
   updateUser,
@@ -19,6 +20,13 @@ export function useGetAllUsers(params?: {
   return useQuery({
     queryKey: [queryKeys.getAllUsers, params],
     queryFn: () => getAllUsers(params),
+  });
+}
+
+export function useGetAggregatedReports() {
+  return useQuery({
+    queryKey: ['aggregatedReports'],
+    queryFn: () => getAggregatedReports(),
   });
 }
 
