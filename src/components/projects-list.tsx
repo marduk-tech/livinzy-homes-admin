@@ -220,13 +220,13 @@ export const ProjectsList: React.FC = () => {
             >
               <Flex gap={2} align="center">
                 <span>{record.info.status.replace("-", " ")}</span>
-                {record.info.status == "report-verified" ? (
+                {record.info.status == "report-verified" && record.info.reportStatus ? (
                   <span
                     style={{ cursor: "pointer", marginTop: "5px" }}
                     onClick={(e) => {
                       e.stopPropagation();
                       window.open(
-                        `https://brickfi.in/app/brick360/${record.info.reportStatus.reportId}`,
+                        `https://brickfi.in/app/brick360/${record.info.reportStatus?.reportId}`,
                         "_blank",
                       );
                     }}

@@ -101,6 +101,7 @@ export interface IInfo {
       | 'report-processed'
       | 'report-processing-error';
     comments?: string;
+    reportId?: string;
   };
 }
 
