@@ -226,7 +226,7 @@ export const ProjectsList: React.FC = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       window.open(
-                        `https://brickfi.in/app/brick360/${record.info.reportStatus.reportId}`,
+                        `https://brickfi.in/app/brick360/${record.info.reportStatus?.reportId}`,
                         "_blank",
                       );
                     }}
