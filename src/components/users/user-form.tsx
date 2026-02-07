@@ -40,6 +40,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
       form.setFieldsValue({
         name: data.profile?.name || "",
         email: data.profile?.email || "",
+        status: data.status || undefined,
         mobileNumber: {
           countryCode: Number(data.countryCode || "91"),
           phoneNumber: mobile,
@@ -86,6 +87,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
             email: values.email || data.profile?.email,
           },
           savedLvnzyProjects,
+          status: values.status,
         };
 
         await updateUserMutation.mutateAsync({
@@ -161,6 +163,18 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           >
             <Input placeholder="Enter email address" />
           </Form.Item>
+
+          {data && (
+            <Form.Item name="status" label="Status">
+              <Select
+                placeholder="Select status"
+                options={[
+                  { label: "New Lead", value: "new-lead" },
+                  { label: "Active Lead", value: "active-lead" },
+                ]}
+              />
+            </Form.Item>
+          )}
 
           <Form.Item
             name="mobileNumber"

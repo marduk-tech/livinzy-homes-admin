@@ -1,5 +1,6 @@
 import {
   CopyOutlined,
+  DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
   FilterOutlined,
@@ -19,6 +20,7 @@ import {
   Input,
   Modal,
   notification,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -35,6 +37,7 @@ import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
   useAddLeadTrailCommentMutation,
+  useDeleteLeadTrailCommentMutation,
   useGetAggregatedReports,
   useGetAllUsers,
   useSendReportEmailMutation,
@@ -69,6 +72,7 @@ export function UsersList() {
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
   const addLeadTrailCommentMutation = useAddLeadTrailCommentMutation();
+  const deleteLeadTrailCommentMutation = useDeleteLeadTrailCommentMutation();
 
   const [userToEdit, setUserToEdit] = useState<User | undefined>();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -84,6 +88,7 @@ export function UsersList() {
   const [isLeadTrailModalOpen, setIsLeadTrailModalOpen] = useState(false);
   const [leadTrailUser, setLeadTrailUser] = useState<User | undefined>();
   const [newComment, setNewComment] = useState("");
+  const [selectedOriginalDate, setSelectedOriginalDate] = useState<Dayjs | null>(null);
 
   const [createdDateRange, setCreatedDateRange] = useState<
     [dayjs.Dayjs, dayjs.Dayjs] | null
@@ -726,6 +731,7 @@ export function UsersList() {
     {
       title: "Mobile",
       key: "mobile",
+      ...ColumnSearch("mobile"),
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
     },
     {
@@ -799,19 +805,18 @@ export function UsersList() {
       sorter: (a, b) => {
         const aComments = a.leadTrail?.comments;
         const bComments = b.leadTrail?.comments;
-        const aDate = aComments?.length
-          ? new Date(aComments[aComments.length - 1].dateAdded).getTime()
-          : 0;
-        const bDate = bComments?.length
-          ? new Date(bComments[bComments.length - 1].dateAdded).getTime()
-          : 0;
-        return aDate - bDate;
+        const getLatestDate = (comments: typeof aComments) => {
+          if (!comments?.length) return 0;
+          const latest = comments[comments.length - 1];
+          return new Date(latest.dateOriginal || latest.dateAdded).getTime();
+        };
+        return getLatestDate(aComments) - getLatestDate(bComments);
       },
       render: (_, record) => {
         const comments = record.leadTrail?.comments;
         if (!comments?.length) return "-";
         const latest = comments[comments.length - 1];
-        return new Date(latest.dateAdded).toLocaleDateString("en-US", {
+        return new Date(latest.dateOriginal || latest.dateAdded).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
@@ -840,11 +845,16 @@ export function UsersList() {
   const handleAddComment = () => {
     if (!leadTrailUser || !newComment.trim()) return;
     addLeadTrailCommentMutation.mutate(
-      { userId: leadTrailUser._id, comment: newComment.trim() },
+      {
+        userId: leadTrailUser._id,
+        comment: newComment.trim(),
+        dateOriginal: selectedOriginalDate?.toISOString(),
+      },
       {
         onSuccess: (updatedUser) => {
           setLeadTrailUser(updatedUser);
           setNewComment("");
+          setSelectedOriginalDate(null);
         },
       },
     );
@@ -1025,6 +1035,7 @@ _If you need any kind of assistance with regards to ${
           setIsLeadTrailModalOpen(false);
           setLeadTrailUser(undefined);
           setNewComment("");
+          setSelectedOriginalDate(null);
         }}
         footer={null}
         width={600}
@@ -1038,7 +1049,12 @@ _If you need any kind of assistance with regards to ${
             }}
           >
             {leadTrailUser?.leadTrail?.comments?.length ? (
-              [...leadTrailUser.leadTrail.comments].reverse().map((c, idx) => (
+              [...leadTrailUser.leadTrail.comments]
+                .sort((a, b) =>
+                  new Date(b.dateOriginal || b.dateAdded).getTime() -
+                  new Date(a.dateOriginal || a.dateAdded).getTime()
+                )
+                .map((c, idx) => (
                 <div
                   key={c._id || idx}
                   style={{
@@ -1048,18 +1064,43 @@ _If you need any kind of assistance with regards to ${
                     borderRadius: 6,
                   }}
                 >
-                  <Typography.Text>{c.comment}</Typography.Text>
-                  <br />
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    {new Date(c.dateAdded).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })}
-                  </Typography.Text>
+                  <Flex justify="space-between" align="start">
+                    <div>
+                      <Typography.Text>{c.comment}</Typography.Text>
+                      <br />
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {new Date(c.dateOriginal || c.dateAdded).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </Typography.Text>
+                    </div>
+                    {c._id && (
+                      <Popconfirm
+                        title="Delete this comment?"
+                        onConfirm={() => {
+                          deleteLeadTrailCommentMutation.mutate(
+                            { userId: leadTrailUser._id, commentId: c._id! },
+                            {
+                              onSuccess: (updatedUser) => {
+                                setLeadTrailUser(updatedUser);
+                              },
+                            },
+                          );
+                        }}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                        />
+                      </Popconfirm>
+                    )}
+                  </Flex>
                 </div>
               ))
             ) : (
@@ -1069,14 +1110,21 @@ _If you need any kind of assistance with regards to ${
             )}
           </div>
 
-          <Flex gap={8}>
-            <Input.TextArea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              rows={2}
-              style={{ flex: 1 }}
-            />
+          <Flex gap={8} align="end">
+            <div style={{ flex: 1 }}>
+              <Input.TextArea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                rows={2}
+              />
+              <DatePicker
+                value={selectedOriginalDate}
+                onChange={(date) => setSelectedOriginalDate(date)}
+                placeholder="Backdate (optional)"
+                style={{ marginTop: 8, width: "100%" }}
+              />
+            </div>
             <Button
               type="primary"
               icon={<MessageOutlined />}

@@ -58,11 +58,22 @@ export const getAggregatedReports = async (): Promise<AggregatedReportRow[]> => 
 
 export const addLeadTrailComment = async (
   userId: string,
-  comment: string
+  comment: string,
+  dateOriginal?: string
 ): Promise<User> => {
   const { data } = await axiosApiInstance.post<User>(
     `/user/${userId}/lead-trail`,
-    { comment }
+    { comment, dateOriginal }
+  );
+  return data;
+};
+
+export const deleteLeadTrailComment = async (
+  userId: string,
+  commentId: string
+): Promise<User> => {
+  const { data } = await axiosApiInstance.delete<User>(
+    `/user/${userId}/lead-trail/${commentId}`
   );
   return data;
 };

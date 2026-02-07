@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import {
   addLeadTrailComment,
   createUser,
+  deleteLeadTrailComment,
   getAggregatedReports,
   getAllUsers,
   sendReportEmail,
@@ -125,11 +126,13 @@ export function useAddLeadTrailCommentMutation() {
     mutationFn: ({
       userId,
       comment,
+      dateOriginal,
     }: {
       userId: string;
       comment: string;
+      dateOriginal?: string;
     }) => {
-      return addLeadTrailComment(userId, comment);
+      return addLeadTrailComment(userId, comment, dateOriginal);
     },
 
     onSuccess: () => {
@@ -141,6 +144,39 @@ export function useAddLeadTrailCommentMutation() {
     onError: (error: AxiosError<any>) => {
       notification.error({
         message: "Failed to add comment. Please try again.",
+      });
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllUsers],
+      });
+    },
+  });
+}
+
+export function useDeleteLeadTrailCommentMutation() {
+  return useMutation({
+    mutationFn: ({
+      userId,
+      commentId,
+    }: {
+      userId: string;
+      commentId: string;
+    }) => {
+      return deleteLeadTrailComment(userId, commentId);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: "Comment deleted successfully!",
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: "Failed to delete comment. Please try again.",
       });
       console.log(error);
     },
