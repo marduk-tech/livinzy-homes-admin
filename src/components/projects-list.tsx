@@ -220,7 +220,7 @@ export const ProjectsList: React.FC = () => {
             >
               <Flex gap={2} align="center">
                 <span>{record.info.status.replace("-", " ")}</span>
-                {record.info.status == "report-verified" ? (
+                {record.info.status == "report-verified" && record.info.reportStatus ? (
                   <span
                     style={{ cursor: "pointer", marginTop: "5px" }}
                     onClick={(e) => {
