@@ -65,6 +65,16 @@ export interface UtmEntry {
   capturedAt: string;
 }
 
+export interface LeadTrailComment {
+  _id?: string;
+  comment: string;
+  dateAdded: string;
+}
+
+export interface LeadTrail {
+  comments: LeadTrailComment[];
+}
+
 export interface User {
   _id: string;
   mobile: string;
@@ -74,6 +84,8 @@ export interface User {
   savedLvnzyProjects: SavedLvnzyProject[];
   chatSessions: ChatSession[];
   requestedReports?: RequestedReport[];
+  status?: 'new-lead' | 'callback-request' | 'active-client' | 'active-lead';
+  leadTrail?: LeadTrail;
   metrics?: {
     utm?: UtmEntry[];
   };

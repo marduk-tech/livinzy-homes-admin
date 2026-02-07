@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
+  addLeadTrailComment,
   createUser,
   getAggregatedReports,
   getAllUsers,
@@ -16,6 +17,7 @@ export function useGetAllUsers(params?: {
   limit?: number;
   sortBy?: string;
   search?: string;
+  status?: string;
 }) {
   return useQuery({
     queryKey: [queryKeys.getAllUsers, params],
@@ -114,6 +116,39 @@ export function useSendReportEmailMutation() {
         message: `Failed to send notification. Please try again later.`,
       });
       console.log(error);
+    },
+  });
+}
+
+export function useAddLeadTrailCommentMutation() {
+  return useMutation({
+    mutationFn: ({
+      userId,
+      comment,
+    }: {
+      userId: string;
+      comment: string;
+    }) => {
+      return addLeadTrailComment(userId, comment);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: "Comment added successfully!",
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: "Failed to add comment. Please try again.",
+      });
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllUsers],
+      });
     },
   });
 }

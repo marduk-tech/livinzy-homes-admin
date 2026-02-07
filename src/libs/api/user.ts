@@ -11,12 +11,14 @@ export const getAllUsers = async (params?: {
   limit?: number;
   sortBy?: string;
   search?: string;
+  status?: string;
 }): Promise<User[]> => {
-  const { limit = 100, sortBy = 'createdAt:desc', search = '' } = params || {};
+  const { limit = 100, sortBy = 'createdAt:desc', search = '', status = '' } = params || {};
   const queryParams = new URLSearchParams();
   queryParams.append('limit', String(limit));
   queryParams.append('sortBy', sortBy);
   if (search) queryParams.append('search', search);
+  if (status) queryParams.append('status', status);
 
   const { data } = await axiosApiInstance.get<User[]>(`/user/all?${queryParams}`);
   return data;
@@ -51,5 +53,16 @@ export const sendReportEmail = async (
 
 export const getAggregatedReports = async (): Promise<AggregatedReportRow[]> => {
   const { data } = await axiosApiInstance.get<AggregatedReportRow[]>('/user/aggregated-reports');
+  return data;
+};
+
+export const addLeadTrailComment = async (
+  userId: string,
+  comment: string
+): Promise<User> => {
+  const { data } = await axiosApiInstance.post<User>(
+    `/user/${userId}/lead-trail`,
+    { comment }
+  );
   return data;
 };

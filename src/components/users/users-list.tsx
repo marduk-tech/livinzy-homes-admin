@@ -34,15 +34,13 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
+  useAddLeadTrailCommentMutation,
   useGetAggregatedReports,
   useGetAllUsers,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
-import {
-  AggregatedReportRow,
-  User,
-} from "../../types/user";
+import { AggregatedReportRow, User } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 
@@ -58,12 +56,19 @@ export function UsersList() {
 
   const { data, isLoading, isError } = useGetAllUsers({
     limit: 100,
-    sortBy: 'createdAt:desc',
+    sortBy: "createdAt:desc",
     search: searchKeyword,
   });
-  const { data: aggregatedReports, isLoading: isReportsLoading } = useGetAggregatedReports();
+  const { data: aggregatedReports, isLoading: isReportsLoading } =
+    useGetAggregatedReports();
+  const { data: leadsData, isLoading: isLeadsLoading } = useGetAllUsers({
+    limit: 500,
+    sortBy: "createdAt:desc",
+    status: "callback-request,active-lead",
+  });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
+  const addLeadTrailCommentMutation = useAddLeadTrailCommentMutation();
 
   const [userToEdit, setUserToEdit] = useState<User | undefined>();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -72,7 +77,13 @@ export function UsersList() {
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "leads">(
+    "users",
+  );
+
+  const [isLeadTrailModalOpen, setIsLeadTrailModalOpen] = useState(false);
+  const [leadTrailUser, setLeadTrailUser] = useState<User | undefined>();
+  const [newComment, setNewComment] = useState("");
 
   const [createdDateRange, setCreatedDateRange] = useState<
     [dayjs.Dayjs, dayjs.Dayjs] | null
@@ -102,7 +113,7 @@ export function UsersList() {
             setSelectedUser(undefined);
             setSelectedProjectIds([]);
           },
-        }
+        },
       );
     }
   };
@@ -382,7 +393,7 @@ export function UsersList() {
         const searchTerm = String(value).toLowerCase();
         return record.requestedReports.some(
           (report) =>
-            report && report.projectName.toLowerCase().includes(searchTerm)
+            report && report.projectName.toLowerCase().includes(searchTerm),
         );
       },
       render: (_, record) =>
@@ -453,7 +464,7 @@ export function UsersList() {
     lvnzyProjects?.forEach((project: any) => {
       projectIdToNameMap.set(
         project._id,
-        project.meta?.projectName || "Unknown Project"
+        project.meta?.projectName || "Unknown Project",
       );
     });
 
@@ -488,7 +499,7 @@ export function UsersList() {
         firstCollection?.projects && firstCollection.projects.length > 0
           ? firstCollection.projects
               .map(
-                (projectId) => projectIdToNameMap.get(projectId) || projectId
+                (projectId) => projectIdToNameMap.get(projectId) || projectId,
               )
               .join(", ")
           : "";
@@ -544,7 +555,7 @@ export function UsersList() {
             onChange={(e) => {
               const keys = selectedKeys.filter((k) => k !== "new-requests");
               setSelectedKeys(
-                e.target.checked ? [...keys, "new-requests"] : keys
+                e.target.checked ? [...keys, "new-requests"] : keys,
               );
             }}
           >
@@ -603,7 +614,7 @@ export function UsersList() {
           items.push(
             <Typography.Text key="rera" copyable={{ text: record.reraNumber }}>
               RERA: {record.reraNumber}
-            </Typography.Text>
+            </Typography.Text>,
           );
         }
 
@@ -612,13 +623,13 @@ export function UsersList() {
           items.push(
             <Typography.Link key="link" href={reportUrl} target="_blank">
               View Report
-            </Typography.Link>
+            </Typography.Link>,
           );
         } else {
           items.push(
             <Tag key="pending" color="orange">
               Pending
-            </Tag>
+            </Tag>,
           );
         }
 
@@ -671,7 +682,7 @@ export function UsersList() {
                 hour: "2-digit",
                 minute: "2-digit",
                 hour12: false,
-              })
+              }),
             )
             .join("\n");
 
@@ -696,9 +707,152 @@ export function UsersList() {
     },
   ];
 
+  const projectIdToNameMap = new Map<string, string>();
+  lvnzyProjects?.forEach((project: any) => {
+    projectIdToNameMap.set(
+      project._id,
+      project.meta?.projectName || "Unknown Project",
+    );
+  });
+
+  const leadsColumns: TableColumnType<User>[] = [
+    {
+      title: "Name",
+      dataIndex: ["profile", "name"],
+      key: "name",
+      ...ColumnSearch(["profile", "name"]),
+      render: (_: string, record) => record.profile?.name || "-",
+    },
+    {
+      title: "Mobile",
+      key: "mobile",
+      render: (_, record) => `${record.countryCode} ${record.mobile}`,
+    },
+    {
+      title: "Email",
+      dataIndex: ["profile", "email"],
+      key: "email",
+      render: (_, record) => record.profile?.email || "-",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      filters: [
+        { text: "Callback Request", value: "callback-request" },
+        { text: "Active Lead", value: "active-lead" },
+      ],
+      onFilter: (value, record) => record.status === value,
+      render: (status: string) => {
+        const color = status === "callback-request" ? "gold" : "green";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      title: "Shared Reports",
+      key: "sharedReports",
+      render: (_, record) => {
+        const firstCollection = record.savedLvnzyProjects?.[0];
+        if (!firstCollection?.projects?.length) return "-";
+        return firstCollection.projects
+          .map((id) => projectIdToNameMap.get(id) || id)
+          .join(", ");
+      },
+    },
+    {
+      title: "Requested Reports",
+      key: "requestedReports",
+      render: (_, record) =>
+        record.requestedReports?.length
+          ? record.requestedReports
+              .filter((r) => r?.projectName)
+              .map((r) => r.projectName)
+              .join(", ")
+          : "-",
+    },
+    {
+      title: "Lead Trail",
+      key: "leadTrail",
+      render: (_, record) => {
+        const comments = record.leadTrail?.comments;
+        const latest = comments?.length ? comments[comments.length - 1] : null;
+        return (
+          <Typography.Link
+            onClick={() => {
+              setLeadTrailUser(record);
+              setIsLeadTrailModalOpen(true);
+              setNewComment("");
+            }}
+          >
+            {latest
+              ? latest.comment.length > 30
+                ? `${latest.comment.substring(0, 30)}...`
+                : latest.comment
+              : "Add comment"}
+          </Typography.Link>
+        );
+      },
+    },
+    {
+      title: "Last Contact",
+      key: "lastContact",
+      sorter: (a, b) => {
+        const aComments = a.leadTrail?.comments;
+        const bComments = b.leadTrail?.comments;
+        const aDate = aComments?.length
+          ? new Date(aComments[aComments.length - 1].dateAdded).getTime()
+          : 0;
+        const bDate = bComments?.length
+          ? new Date(bComments[bComments.length - 1].dateAdded).getTime()
+          : 0;
+        return aDate - bDate;
+      },
+      render: (_, record) => {
+        const comments = record.leadTrail?.comments;
+        if (!comments?.length) return "-";
+        const latest = comments[comments.length - 1];
+        return new Date(latest.dateAdded).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      },
+    },
+    {
+      title: "Date Added",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      sorter: (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      defaultSortOrder: "descend",
+      render: (createdAt: string) =>
+        new Date(createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+  ];
+
+  const handleAddComment = () => {
+    if (!leadTrailUser || !newComment.trim()) return;
+    addLeadTrailCommentMutation.mutate(
+      { userId: leadTrailUser._id, comment: newComment.trim() },
+      {
+        onSuccess: (updatedUser) => {
+          setLeadTrailUser(updatedUser);
+          setNewComment("");
+        },
+      },
+    );
+  };
+
   function getMsgText() {
     const projects = lvnzyProjects?.filter((p: any) =>
-      selectedProjectIds.includes(p._id)
+      selectedProjectIds.includes(p._id),
     );
     if (!projects || !projects.length) {
       return "";
@@ -747,7 +901,7 @@ _If you need any kind of assistance with regards to ${
 
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as "users" | "reports")}
+        onChange={(key) => setActiveTab(key as "users" | "reports" | "leads")}
       >
         <Tabs.TabPane tab="All Users" key="users">
           <Search
@@ -781,6 +935,17 @@ _If you need any kind of assistance with regards to ${
             rowKey={(record) => record.projectId}
             scroll={{ x: true }}
             pagination={{ pageSize: 10 }}
+          />
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="Leads" key="leads">
+          <Table
+            dataSource={leadsData}
+            columns={leadsColumns}
+            loading={isLeadsLoading}
+            rowKey="_id"
+            scroll={{ x: true }}
+            pagination={{ pageSize: 20 }}
           />
         </Tabs.TabPane>
       </Tabs>
@@ -850,6 +1015,78 @@ _If you need any kind of assistance with regards to ${
               label: project.meta?.projectName || project._id,
             }))}
           />
+        </div>
+      </Modal>
+
+      <Modal
+        title={`Lead Trail - ${leadTrailUser?.profile?.name || "User"}`}
+        open={isLeadTrailModalOpen}
+        onCancel={() => {
+          setIsLeadTrailModalOpen(false);
+          setLeadTrailUser(undefined);
+          setNewComment("");
+        }}
+        footer={null}
+        width={600}
+      >
+        <div style={{ marginTop: 16 }}>
+          <div
+            style={{
+              maxHeight: 300,
+              overflowY: "auto",
+              marginBottom: 16,
+            }}
+          >
+            {leadTrailUser?.leadTrail?.comments?.length ? (
+              [...leadTrailUser.leadTrail.comments].reverse().map((c, idx) => (
+                <div
+                  key={c._id || idx}
+                  style={{
+                    padding: "8px 12px",
+                    marginBottom: 8,
+                    background: "#f5f5f5",
+                    borderRadius: 6,
+                  }}
+                >
+                  <Typography.Text>{c.comment}</Typography.Text>
+                  <br />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {new Date(c.dateAdded).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </Typography.Text>
+                </div>
+              ))
+            ) : (
+              <Typography.Text type="secondary">
+                No comments yet
+              </Typography.Text>
+            )}
+          </div>
+
+          <Flex gap={8}>
+            <Input.TextArea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              rows={2}
+              style={{ flex: 1 }}
+            />
+            <Button
+              type="primary"
+              icon={<MessageOutlined />}
+              onClick={handleAddComment}
+              loading={addLeadTrailCommentMutation.isPending}
+              disabled={!newComment.trim()}
+            >
+              Add
+            </Button>
+          </Flex>
         </div>
       </Modal>
 
