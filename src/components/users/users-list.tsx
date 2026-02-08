@@ -46,6 +46,7 @@ import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
 import { AggregatedReportRow, User } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
+import { COLORS } from "../../theme/colors";
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
@@ -1110,27 +1111,25 @@ _If you need any kind of assistance with regards to ${
             )}
           </div>
 
-          <Flex gap={8} align="end">
-            <div style={{ flex: 1 }}>
+          <Flex vertical gap={12} align="flex-end" style={{padding: 8, backgroundColor: COLORS.bgColor, borderRadius: 8, border: `1px solid ${COLORS.borderColor}`}}>
               <Input.TextArea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
+                placeholder="Add comment..."
                 rows={2}
               />
               <DatePicker
                 value={selectedOriginalDate}
                 onChange={(date) => setSelectedOriginalDate(date)}
-                placeholder="Backdate (optional)"
+                placeholder="Original date (required)"
                 style={{ marginTop: 8, width: "100%" }}
               />
-            </div>
+            
             <Button
               type="primary"
-              icon={<MessageOutlined />}
               onClick={handleAddComment}
               loading={addLeadTrailCommentMutation.isPending}
-              disabled={!newComment.trim()}
+              disabled={!newComment.trim() || !selectedOriginalDate}
             >
               Add
             </Button>
