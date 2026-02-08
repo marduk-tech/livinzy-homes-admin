@@ -47,6 +47,7 @@ import { AggregatedReportRow, User } from "../../types/user";
 import { ColumnSearch } from "../common/column-search";
 import { UserForm } from "./user-form";
 import { COLORS } from "../../theme/colors";
+import DynamicReactIcon from "../common/dynamic-react-icon";
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
@@ -781,8 +782,6 @@ export function UsersList() {
       title: "Lead Trail",
       key: "leadTrail",
       render: (_, record) => {
-        const comments = record.leadTrail?.comments;
-        const latest = comments?.length ? comments[comments.length - 1] : null;
         return (
           <Typography.Link
             onClick={() => {
@@ -791,11 +790,9 @@ export function UsersList() {
               setNewComment("");
             }}
           >
-            {latest
-              ? latest.comment.length > 30
-                ? `${latest.comment.substring(0, 30)}...`
-                : latest.comment
-              : "Add comment"}
+            {record.leadTrail?.comments && record.leadTrail?.comments.length
+              ? <DynamicReactIcon color={COLORS.textColorLight} iconName="MdOutlineInsertComment" iconSet="md"></DynamicReactIcon>
+              : <DynamicReactIcon color={COLORS.textColorLight} iconName="MdAddComment" iconSet="md"></DynamicReactIcon>}
           </Typography.Link>
         );
       },
@@ -808,7 +805,7 @@ export function UsersList() {
         const bComments = b.leadTrail?.comments;
         const getLatestDate = (comments: typeof aComments) => {
           if (!comments?.length) return 0;
-          const latest = comments[comments.length - 1];
+          const latest = comments[0];
           return new Date(latest.dateOriginal || latest.dateAdded).getTime();
         };
         return getLatestDate(aComments) - getLatestDate(bComments);
@@ -816,13 +813,10 @@ export function UsersList() {
       render: (_, record) => {
         const comments = record.leadTrail?.comments;
         if (!comments?.length) return "-";
-        const latest = comments[comments.length - 1];
+        const latest = comments[0];
         return new Date(latest.dateOriginal || latest.dateAdded).toLocaleDateString("en-US", {
-          year: "numeric",
           month: "short",
           day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
           hour12: false,
         });
       },
