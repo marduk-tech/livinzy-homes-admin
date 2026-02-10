@@ -54,3 +54,10 @@ export const updateDeveloper = async (
 export const deleteDeveloper = async (developerId: string): Promise<void> => {
   await axiosApiInstance.delete(`/real-estate-developer/${developerId}`);
 };
+
+export const generateDeveloperInfo = async (developerId: string) => {
+  const { data } = await axiosApiInstance.post(
+    `/real-estate-developer/${developerId}/generate-info`
+  );
+  return data;
+};

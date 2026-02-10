@@ -1,13 +1,21 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Col,
   Flex,
   Input,
+  Modal,
   Row,
   Table,
   TableColumnType,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import { useState } from "react";
@@ -15,6 +23,7 @@ import { useState } from "react";
 const { Search } = Input;
 import {
   useDeleteDeveloperMutation,
+  useGenerateDeveloperInfoMutation,
   useGetAllDevelopers,
   useUpdateDeveloperMutation,
 } from "../../hooks/developer-hooks";
@@ -27,6 +36,7 @@ import { FONT_SIZES } from "../../theme/font-sizes";
 import { COLORS } from "../../theme/colors";
 
 export function DevelopersList() {
+  const brickfiAppUrl = import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const { data, isLoading, isError } = useGetAllDevelopers({
     keyword: searchKeyword,
@@ -42,6 +52,7 @@ export function DevelopersList() {
   >();
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
   const updateDeveloperMutation = useUpdateDeveloperMutation();
+  const generateInfoMutation = useGenerateDeveloperInfoMutation();
 
   const handleDelete = async (developerId: string): Promise<void> => {
     deleteDeveloperMutation.mutateAsync(developerId);
@@ -128,6 +139,31 @@ export function DevelopersList() {
       ...ColumnSearch("name"),
     },
     {
+      title: "Page",
+      key: "page",
+      render: (_, record) =>
+        record.slug ? (
+          <Typography.Link
+            href={`${brickfiAppUrl}/real-estate-developer/${record.slug}`}
+            target="_blank"
+          >
+            View
+          </Typography.Link>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "Details Generated",
+      key: "detailsGenerated",
+      render: (_, record) =>
+        record.genDetails ? (
+          <CheckCircleOutlined style={{ color: "green", fontSize: 18 }} />
+        ) : (
+          "-"
+        ),
+    },
+    {
       title: "Projects Count",
       key: "projectsCount",
       render: (_, record) => (
@@ -140,6 +176,26 @@ export function DevelopersList() {
       align: "right",
       render: (_, record) => (
         <Flex gap={15} justify="end" align="center">
+          <Tooltip title="Generate Developer Info">
+            <Button
+              type="default"
+              shape="default"
+              icon={<ThunderboltOutlined />}
+              loading={generateInfoMutation.isPending && generateInfoMutation.variables === record._id}
+              disabled={generateInfoMutation.isPending && generateInfoMutation.variables !== record._id}
+              onClick={() => {
+                Modal.confirm({
+                  title: "Generate Developer Info",
+                  content: `Are you sure you want to generate info for "${record.name}"? This may take a few minutes.`,
+                  okText: "Generate",
+                  cancelText: "Cancel",
+                  onOk: () => {
+                    generateInfoMutation.mutate(record._id);
+                  },
+                });
+              }}
+            />
+          </Tooltip>
           <Button
             type="primary"
             icon={<PlusOutlined />}

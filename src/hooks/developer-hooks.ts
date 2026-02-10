@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import {
   createDeveloper,
   deleteDeveloper,
+  generateDeveloperInfo,
   getAllDevelopers,
   getDeveloperById,
   updateDeveloper,
@@ -110,6 +111,26 @@ export function useDeleteDeveloperMutation() {
       console.log(error);
     },
 
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllDevelopers],
+      });
+    },
+  });
+}
+
+export function useGenerateDeveloperInfoMutation() {
+  return useMutation({
+    mutationFn: (developerId: string) => {
+      return generateDeveloperInfo(developerId);
+    },
+    onSuccess: () => {
+      notification.success({ message: `Developer info generation initiated!` });
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({ message: `Failed to generate developer info.` });
+      console.log(error);
+    },
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllDevelopers],

@@ -9,6 +9,8 @@ interface DeveloperProject {
 export interface Developer {
   _id: string;
   name: string;
+  slug?: string;
+  genDetails?: object;
   developerProjects: DeveloperProject[];
   externalWebsites?: string[];
   createdAt: string;
