@@ -244,6 +244,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     null
   );
 
+  const [selectedMediaIndices, setSelectedMediaIndices] = useState<Set<number>>(new Set());
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+
   const [watermarkModal, setWatermarkModal] = useState({
     visible: false,
     originalUrl: "",
@@ -437,6 +440,26 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const handleToggleSelect = (index: number) => {
+    setSelectedMediaIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const currentMedia = form.getFieldValue("media") || [];
+    const updatedMedia = currentMedia.filter((_: any, i: number) => !selectedMediaIndices.has(i));
+    form.setFieldValue("media", updatedMedia);
+    if (projectId) {
+      updateProject.mutate({ projectData: { media: updatedMedia } });
+    }
+    setSelectedMediaIndices(new Set());
+    setDeleteConfirmVisible(false);
+  };
+
   const handleRemoveWatermark = async (imageUrl: string, index: number) => {
     setWatermarkModal({
       visible: true,
@@ -614,6 +637,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       };
 
       form.setFieldsValue(formValues);
+      setSelectedMediaIndices(new Set());
       setProjectData(project);
 
       const initialPreviewIndex = project.media.findIndex(
@@ -697,6 +721,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             <Tabs defaultActiveKey="images">
               <TabPane tab={"Images"} key={"images"}>
                 <Flex justify="end" style={{ marginBottom: 16, gap: 8 }}>
+                  {selectedMediaIndices.size > 0 && (
+                    <Button
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => setDeleteConfirmVisible(true)}
+                    >
+                      Delete ({selectedMediaIndices.size})
+                    </Button>
+                  )}
                   <FileUpload
                     onUploadComplete={(
                       urls: string[],
@@ -718,26 +751,31 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       return (
                         <Flex
                           gap={8}
+                          align="center"
                           style={{
-                            border: item.hasWatermark
-                              ? `2px solid ${COLORS.redIdentifier}`
-                              : "none",
+                            border: selectedMediaIndices.has(index)
+                              ? "2px solid #1677ff"
+                              : item.hasWatermark
+                                ? `2px solid ${COLORS.redIdentifier}`
+                                : "none",
                             borderRadius: 8,
                             padding: 8,
                           }}
                         >
-                          <Flex>
-                            <Image
-                              width={150}
-                              src={item.image?.url}
-                              alt={item._id}
-                              style={{
-                                borderRadius: 10,
-                                objectFit: "cover",
-                                aspectRatio: "1 / 1",
-                              }}
-                            />
-                          </Flex>
+                          <Checkbox
+                            checked={selectedMediaIndices.has(index)}
+                            onChange={() => handleToggleSelect(index)}
+                          />
+                          <Image
+                            width={150}
+                            src={item.image?.url}
+                            alt={item._id}
+                            style={{
+                              borderRadius: 10,
+                              objectFit: "cover",
+                              aspectRatio: "1 / 1",
+                            }}
+                          />
                           <Flex
                             vertical
                             justify="center"
@@ -855,6 +893,41 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     }
                   })}
                 </Flex>
+
+                <Modal
+                  title={`Delete ${selectedMediaIndices.size} image(s)?`}
+                  open={deleteConfirmVisible}
+                  onCancel={() => setDeleteConfirmVisible(false)}
+                  onOk={handleBulkDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Typography.Text>
+                    The following images will be permanently deleted:
+                  </Typography.Text>
+                  <Flex
+                    gap={8}
+                    style={{ marginTop: 12, overflowX: "auto", paddingBottom: 8 }}
+                  >
+                    {Array.from(selectedMediaIndices).map((idx) => {
+                      const mediaItem = project?.media?.[idx];
+                      return mediaItem ? (
+                        <img
+                          key={idx}
+                          src={mediaItem.image?.url}
+                          alt={`Selected ${idx}`}
+                          style={{
+                            width: 80,
+                            height: 80,
+                            objectFit: "cover",
+                            borderRadius: 6,
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : null;
+                    })}
+                  </Flex>
+                </Modal>
 
                 {/* Hot fix for video getting deleted on image save  */}
                 <div
