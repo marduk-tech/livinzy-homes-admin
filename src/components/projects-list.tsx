@@ -633,7 +633,7 @@ export const ProjectsList: React.FC = () => {
 
         const shouldGreyIcon = hasComments && allCommentsResolved;
 
-        const canShowScoreCard = ["report-ready", "report-verified"].includes(
+        const canShowScoreCard = ["data-verified", "report-ready", "report-verified"].includes(
           record.info.status,
         );
         const reportStatus = record.info.reportStatus?.status;
@@ -648,10 +648,9 @@ export const ProjectsList: React.FC = () => {
           reportStatus === "pre-processed";
 
         const getScoreCardTooltip = () => {
-          if (isProcessing) return `Status: ${reportStatus}`;
+          if (isProcessing || isProcessed) return `Status: ${reportStatus}`;
           if (isError)
             return `Error: ${record.info.reportStatus?.comments || reportStatus}`;
-          if (isProcessed) return "Score card generated";
           return "Generate Score Card";
         };
 
