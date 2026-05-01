@@ -663,7 +663,8 @@ export const ProjectsList: React.FC = () => {
 
         const getScoreCardColor = () => {
           if (isError) return COLORS.redIdentifier;
-          if (isProcessed) return COLORS.greenIdentifier;
+          if (reportStatus && reportStatus?.indexOf('pre-') > -1) return COLORS.yellowIdentifier;
+          if (reportStatus && reportStatus?.indexOf('report-') > -1) return COLORS.greenIdentifier;
           return COLORS.textColorDark;
         };
 
