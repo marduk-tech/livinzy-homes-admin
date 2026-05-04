@@ -9,12 +9,15 @@ import {
   Typography,
 } from "antd";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useGetAllTraces } from "../../hooks/traces-hooks";
 import { Trace } from "../../types/trace";
 import { ColumnSearch } from "../common/column-search";
 
 export function TracesList() {
   const { data, isLoading, isError } = useGetAllTraces();
+  const [searchParams] = useSearchParams();
+  const userIdParam = searchParams.get("userId");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTrace, setSelectedTrace] = useState<{
     input: string;
@@ -100,6 +103,7 @@ export function TracesList() {
       dataIndex: "userId",
       key: "userId",
       ...ColumnSearch("userId"),
+      ...(userIdParam ? { defaultFilteredValue: [userIdParam] } : {}),
       width: 150,
     },
     {

@@ -171,6 +171,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
                 options={[
                   { label: "New Lead", value: "new-lead" },
                   { label: "Active Lead", value: "active-lead" },
+                  { label: "Dropped Lead", value: "dropped-lead" },
                 ]}
               />
             </Form.Item>

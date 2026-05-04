@@ -23,6 +23,7 @@ export const queryKeys = {
   getAllUsers: "getAllUsers",
   getAllGlossary: "getAllGlossary",
   getAllTraces: "getAllTraces",
+  getUserConversations: "getUserConversations",
 };
 export const LivIndexDrivers = [
   "road",

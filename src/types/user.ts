@@ -4,6 +4,10 @@ export interface UserProfile {
   city?: string;
   source?: string;
   linkedin?: string;
+  preferredCallbackTime?: string;
+  preferredCallbackTimestamp?: string;
+  callbackCategory?: string;
+  sourceIntent?: string;
 }
 
 export interface ChatSession {
@@ -85,7 +89,7 @@ export interface User {
   savedLvnzyProjects: SavedLvnzyProject[];
   chatSessions: ChatSession[];
   requestedReports?: RequestedReport[];
-  status?: 'new-lead' | 'callback-request' | 'active-client' | 'active-lead';
+  status?: 'new-lead' | 'callback-request' | 'active-client' | 'active-lead' | 'dropped-lead';
   leadTrail?: LeadTrail;
   metrics?: {
     utm?: UtmEntry[];

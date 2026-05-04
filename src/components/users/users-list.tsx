@@ -4,6 +4,7 @@ import {
   DownloadOutlined,
   EditOutlined,
   FilterOutlined,
+  LineChartOutlined,
   MailOutlined,
   MessageOutlined,
   SearchOutlined,
@@ -44,7 +45,9 @@ import {
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
 import { AggregatedReportRow, User } from "../../types/user";
+import { useNavigate } from "react-router-dom";
 import { ColumnSearch } from "../common/column-search";
+import { UserConversationsModal } from "./user-conversations-modal";
 import { UserForm } from "./user-form";
 import { COLORS } from "../../theme/colors";
 import DynamicReactIcon from "../common/dynamic-react-icon";
@@ -69,7 +72,7 @@ export function UsersList() {
   const { data: leadsData, isLoading: isLeadsLoading } = useGetAllUsers({
     limit: 500,
     sortBy: "createdAt:desc",
-    status: "callback-request,active-lead",
+    status: "callback-request,active-lead,dropped-lead",
   });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
@@ -91,6 +94,11 @@ export function UsersList() {
   const [leadTrailUser, setLeadTrailUser] = useState<User | undefined>();
   const [newComment, setNewComment] = useState("");
   const [selectedOriginalDate, setSelectedOriginalDate] = useState<Dayjs | null>(null);
+
+  const [conversationsUser, setConversationsUser] = useState<User | null>(null);
+  const [isConversationsModalOpen, setIsConversationsModalOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const [createdDateRange, setCreatedDateRange] = useState<
     [dayjs.Dayjs, dayjs.Dayjs] | null
@@ -749,11 +757,51 @@ export function UsersList() {
       filters: [
         { text: "Callback Request", value: "callback-request" },
         { text: "Active Lead", value: "active-lead" },
+        { text: "Dropped Lead", value: "dropped-lead" },
       ],
       onFilter: (value, record) => record.status === value,
       render: (status: string) => {
+        if (status === "dropped-lead") {
+          return (
+            <Tag
+              style={{
+                background: "#f0f0f0",
+                color: "#888",
+                borderColor: "#d9d9d9",
+              }}
+            >
+              {status}
+            </Tag>
+          );
+        }
         const color = status === "callback-request" ? "gold" : "green";
         return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      title: "Preferred Callback",
+      key: "preferredCallback",
+      sorter: (a, b) => {
+        const at = a.profile?.preferredCallbackTimestamp
+          ? new Date(a.profile.preferredCallbackTimestamp).getTime()
+          : 0;
+        const bt = b.profile?.preferredCallbackTimestamp
+          ? new Date(b.profile.preferredCallbackTimestamp).getTime()
+          : 0;
+        return at - bt;
+      },
+      render: (_, record) => {
+        const ts = record.profile?.preferredCallbackTimestamp;
+        const label = record.profile?.preferredCallbackTime;
+        if (ts) {
+          const d = new Date(ts);
+          const dd = String(d.getDate()).padStart(2, "0");
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, "0");
+          const min = String(d.getMinutes()).padStart(2, "0");
+          return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`;
+        }
+        return label || "-";
       },
     },
     {
@@ -822,18 +870,55 @@ export function UsersList() {
       },
     },
     {
-      title: "Date Added",
-      dataIndex: "createdAt",
-      key: "createdAt",
+      title: "Date Updated",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
       sorter: (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       defaultSortOrder: "descend",
-      render: (createdAt: string) =>
-        new Date(createdAt).toLocaleDateString("en-US", {
+      render: (updatedAt: string) =>
+        new Date(updatedAt).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         }),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 140,
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="default"
+            icon={<EditOutlined />}
+            title="Edit user"
+            onClick={() => setUserToEdit(record)}
+          />
+          <Button
+            type="default"
+            icon={<LineChartOutlined />}
+            title="View traces"
+            onClick={() => navigate(`/traces?userId=${record._id}`)}
+          />
+          <Button
+            type="default"
+            title="View conversations"
+            icon={
+              <DynamicReactIcon
+                iconName="IoMdChatbubbles"
+                iconSet="io"
+                size={16}
+                color="#000"
+              />
+            }
+            onClick={() => {
+              setConversationsUser(record);
+              setIsConversationsModalOpen(true);
+            }}
+          />
+        </Space>
+      ),
     },
   ];
 
@@ -962,6 +1047,15 @@ _If you need any kind of assistance with regards to ${
           onClose={() => setUserToEdit(undefined)}
         />
       )}
+
+      <UserConversationsModal
+        user={conversationsUser}
+        open={isConversationsModalOpen}
+        onClose={() => {
+          setIsConversationsModalOpen(false);
+          setConversationsUser(null);
+        }}
+      />
 
       <Modal
         title="Send Report Notification (Email & WhatsApp)"
