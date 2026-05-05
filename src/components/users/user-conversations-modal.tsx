@@ -1,7 +1,10 @@
-import { Collapse, Empty, Modal, Spin, Typography } from "antd";
+import { Collapse, Empty, Flex, Modal, Spin, Typography } from "antd";
 import { useGetUserConversations } from "../../hooks/traces-hooks";
 import { ConversationThread } from "../../types/conversation";
 import { User } from "../../types/user";
+import { FONT_SIZES } from "../../theme/font-sizes";
+import { COLORS } from "../../theme/colors";
+import DynamicReactIcon from "../common/dynamic-react-icon";
 
 interface UserConversationsModalProps {
   user: User | null;
@@ -28,21 +31,25 @@ const truncatedHeader: React.CSSProperties = {
   overflow: "hidden",
   textOverflow: "ellipsis",
   maxWidth: "100%",
+  fontWeight: 500,
+  fontSize: FONT_SIZES.HEADING_4,
+  color: "white",
 };
 
 const messageBox: React.CSSProperties = {
   padding: 12,
   backgroundColor: "#f5f5f5",
-  borderRadius: 4,
-  marginBottom: 8,
-  maxHeight: 300,
-  overflowY: "auto",
+  borderTopRightRadius: 16,
+  borderBottomRightRadius: 16,
+  borderBottomLeftRadius: 16,
+  marginBottom: 0,
 };
 
 const tsCaption: React.CSSProperties = {
   fontSize: 11,
   color: "#888",
   marginBottom: 12,
+  alignSelf: "flex-end",
 };
 
 export function UserConversationsModal({
@@ -69,35 +76,67 @@ export function UserConversationsModal({
 
     const items = (data as ConversationThread[]).map((thread) => ({
       key: thread.threadId,
+      style: {
+        marginBottom: 8,
+        background: COLORS.bgColorDark,
+        borderRadius: 8,
+        border: "none",
+      },
       label: (
         <div>
           <div style={truncatedHeader}>
             {thread.firstQuestion || "(empty question)"}
           </div>
-          <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-            {formatTimestamp(thread.startTime)} · {thread.messages.length} turn
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: FONT_SIZES.PARA, color: "white" }}
+          >
+            {formatTimestamp(thread.startTime)} · {thread.messages.length}{" "}
+            conversation
             {thread.messages.length === 1 ? "" : "s"}
           </Typography.Text>
         </div>
       ),
       children: (
-        <div>
+        <div style={{ height: 400, overflowY: "scroll" }}>
           {thread.messages.map((m, i) => (
             <div key={`${thread.threadId}-${i}`}>
-              <Typography.Text strong>Input</Typography.Text>
-              <div style={messageBox}>{m.input || "(no input)"}</div>
-              {m.inputAt ? (
-                <div style={tsCaption}>{formatTimestamp(m.inputAt)}</div>
-              ) : null}
+              <Flex gap={2}>
+                <DynamicReactIcon
+                  size={14}
+                  iconName="FiUser"
+                  iconSet="fi"
+                  color={COLORS.textColorDark}
+                ></DynamicReactIcon>
+                <Flex vertical>
+                  <div style={messageBox}>{m.input || "(no input)"}</div>
+                  {m.inputAt ? (
+                    <div style={tsCaption}>{formatTimestamp(m.inputAt)}</div>
+                  ) : null}
+                </Flex>
+              </Flex>
 
-              <Typography.Text strong>Output</Typography.Text>
-              <div
-                style={messageBox}
-                dangerouslySetInnerHTML={{ __html: m.output || "(no output)" }}
-              />
-              {m.outputAt ? (
-                <div style={tsCaption}>{formatTimestamp(m.outputAt)}</div>
-              ) : null}
+              <Flex gap={2}>
+                <Flex>
+                <DynamicReactIcon
+                  size={14}
+                  iconName="GiOilySpiral"
+                  iconSet="gi"
+                  color={COLORS.textColorDark}
+                ></DynamicReactIcon>
+                </Flex>
+                <Flex vertical>
+                <div
+                  style={messageBox}
+                  dangerouslySetInnerHTML={{
+                    __html: m.output || "(no output)",
+                  }}
+                />
+                {m.outputAt ? (
+                  <div style={tsCaption}>{formatTimestamp(m.outputAt)}</div>
+                ) : null}
+                </Flex>
+              </Flex>
             </div>
           ))}
         </div>
@@ -118,7 +157,9 @@ export function UserConversationsModal({
       onCancel={onClose}
       footer={null}
       width={900}
-      styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
+      styles={{
+        body: { maxHeight: "70vh", overflowY: "auto", scrollbarWidth: "none" },
+      }}
       destroyOnClose
     >
       {renderBody()}

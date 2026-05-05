@@ -93,10 +93,12 @@ export function UsersList() {
   const [isLeadTrailModalOpen, setIsLeadTrailModalOpen] = useState(false);
   const [leadTrailUser, setLeadTrailUser] = useState<User | undefined>();
   const [newComment, setNewComment] = useState("");
-  const [selectedOriginalDate, setSelectedOriginalDate] = useState<Dayjs | null>(null);
+  const [selectedOriginalDate, setSelectedOriginalDate] =
+    useState<Dayjs | null>(null);
 
   const [conversationsUser, setConversationsUser] = useState<User | null>(null);
-  const [isConversationsModalOpen, setIsConversationsModalOpen] = useState(false);
+  const [isConversationsModalOpen, setIsConversationsModalOpen] =
+    useState(false);
 
   const navigate = useNavigate();
 
@@ -745,12 +747,6 @@ export function UsersList() {
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
     },
     {
-      title: "Email",
-      dataIndex: ["profile", "email"],
-      key: "email",
-      render: (_, record) => record.profile?.email || "-",
-    },
-    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -782,25 +778,18 @@ export function UsersList() {
       title: "Preferred Callback",
       key: "preferredCallback",
       sorter: (a, b) => {
-        const at = a.profile?.preferredCallbackTimestamp
-          ? new Date(a.profile.preferredCallbackTimestamp).getTime()
-          : 0;
-        const bt = b.profile?.preferredCallbackTimestamp
-          ? new Date(b.profile.preferredCallbackTimestamp).getTime()
-          : 0;
-        return at - bt;
+        try {
+          const splitsA = a.profile?.preferredCallbackTime!.split(",");
+          const splitsB = b.profile?.preferredCallbackTime!.split(",");
+          const at = new Date(splitsA[1].trim() + " 2026").getTime();
+          const bt = new Date(splitsB[1].trim() + " 2026").getTime();
+          return at - bt;
+        } catch (err) {
+          return 0;
+        }
       },
       render: (_, record) => {
-        const ts = record.profile?.preferredCallbackTimestamp;
         const label = record.profile?.preferredCallbackTime;
-        if (ts) {
-          const d = new Date(ts);
-          const dd = String(d.getDate()).padStart(2, "0");
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const hh = String(d.getHours()).padStart(2, "0");
-          const min = String(d.getMinutes()).padStart(2, "0");
-          return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`;
-        }
         return label || "-";
       },
     },
@@ -838,9 +827,19 @@ export function UsersList() {
               setNewComment("");
             }}
           >
-            {record.leadTrail?.comments && record.leadTrail?.comments.length
-              ? <DynamicReactIcon color={COLORS.textColorLight} iconName="MdOutlineInsertComment" iconSet="md"></DynamicReactIcon>
-              : <DynamicReactIcon color={COLORS.textColorLight} iconName="MdAddComment" iconSet="md"></DynamicReactIcon>}
+            {record.leadTrail?.comments && record.leadTrail?.comments.length ? (
+              <DynamicReactIcon
+                color={COLORS.textColorLight}
+                iconName="MdOutlineInsertComment"
+                iconSet="md"
+              ></DynamicReactIcon>
+            ) : (
+              <DynamicReactIcon
+                color={COLORS.textColorLight}
+                iconName="MdAddComment"
+                iconSet="md"
+              ></DynamicReactIcon>
+            )}
           </Typography.Link>
         );
       },
@@ -861,8 +860,10 @@ export function UsersList() {
       render: (_, record) => {
         const comments = record.leadTrail?.comments;
         if (!comments?.length) return "-";
-        const latest = comments[0];
-        return new Date(latest.dateOriginal || latest.dateAdded).toLocaleDateString("en-US", {
+        const latest = comments[comments.length - 1];
+        return new Date(
+          latest.dateOriginal || latest.dateAdded,
+        ).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           hour12: false,
@@ -895,12 +896,12 @@ export function UsersList() {
             title="Edit user"
             onClick={() => setUserToEdit(record)}
           />
-          <Button
+          {/* <Button
             type="default"
             icon={<LineChartOutlined />}
             title="View traces"
             onClick={() => navigate(`/traces?userId=${record._id}`)}
-          />
+          /> */}
           <Button
             type="default"
             title="View conversations"
@@ -1139,59 +1140,65 @@ _If you need any kind of assistance with regards to ${
           >
             {leadTrailUser?.leadTrail?.comments?.length ? (
               [...leadTrailUser.leadTrail.comments]
-                .sort((a, b) =>
-                  new Date(b.dateOriginal || b.dateAdded).getTime() -
-                  new Date(a.dateOriginal || a.dateAdded).getTime()
+                .sort(
+                  (a, b) =>
+                    new Date(b.dateOriginal || b.dateAdded).getTime() -
+                    new Date(a.dateOriginal || a.dateAdded).getTime(),
                 )
                 .map((c, idx) => (
-                <div
-                  key={c._id || idx}
-                  style={{
-                    padding: "8px 12px",
-                    marginBottom: 8,
-                    background: "#f5f5f5",
-                    borderRadius: 6,
-                  }}
-                >
-                  <Flex justify="space-between" align="start">
-                    <div>
-                      <Typography.Text>{c.comment}</Typography.Text>
-                      <br />
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(c.dateOriginal || c.dateAdded).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </Typography.Text>
-                    </div>
-                    {c._id && (
-                      <Popconfirm
-                        title="Delete this comment?"
-                        onConfirm={() => {
-                          deleteLeadTrailCommentMutation.mutate(
-                            { userId: leadTrailUser._id, commentId: c._id! },
-                            {
-                              onSuccess: (updatedUser) => {
-                                setLeadTrailUser(updatedUser);
+                  <div
+                    key={c._id || idx}
+                    style={{
+                      padding: "8px 12px",
+                      marginBottom: 8,
+                      background: "#f5f5f5",
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Flex justify="space-between" align="start">
+                      <div>
+                        <Typography.Text>{c.comment}</Typography.Text>
+                        <br />
+                        <Typography.Text
+                          type="secondary"
+                          style={{ fontSize: 12 }}
+                        >
+                          {new Date(
+                            c.dateOriginal || c.dateAdded,
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Typography.Text>
+                      </div>
+                      {c._id && (
+                        <Popconfirm
+                          title="Delete this comment?"
+                          onConfirm={() => {
+                            deleteLeadTrailCommentMutation.mutate(
+                              { userId: leadTrailUser._id, commentId: c._id! },
+                              {
+                                onSuccess: (updatedUser) => {
+                                  setLeadTrailUser(updatedUser);
+                                },
                               },
-                            },
-                          );
-                        }}
-                        okText="Yes"
-                        cancelText="No"
-                      >
-                        <Button
-                          type="text"
-                          danger
-                          size="small"
-                          icon={<DeleteOutlined />}
-                        />
-                      </Popconfirm>
-                    )}
-                  </Flex>
-                </div>
-              ))
+                            );
+                          }}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined />}
+                          />
+                        </Popconfirm>
+                      )}
+                    </Flex>
+                  </div>
+                ))
             ) : (
               <Typography.Text type="secondary">
                 No comments yet
@@ -1199,20 +1206,30 @@ _If you need any kind of assistance with regards to ${
             )}
           </div>
 
-          <Flex vertical gap={12} align="flex-end" style={{padding: 8, backgroundColor: COLORS.bgColor, borderRadius: 8, border: `1px solid ${COLORS.borderColor}`}}>
-              <Input.TextArea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add comment..."
-                rows={2}
-              />
-              <DatePicker
-                value={selectedOriginalDate}
-                onChange={(date) => setSelectedOriginalDate(date)}
-                placeholder="Original date (required)"
-                style={{ marginTop: 8, width: "100%" }}
-              />
-            
+          <Flex
+            vertical
+            gap={12}
+            align="flex-end"
+            style={{
+              padding: 8,
+              backgroundColor: COLORS.bgColor,
+              borderRadius: 8,
+              border: `1px solid ${COLORS.borderColor}`,
+            }}
+          >
+            <Input.TextArea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add comment..."
+              rows={2}
+            />
+            <DatePicker
+              value={selectedOriginalDate}
+              onChange={(date) => setSelectedOriginalDate(date)}
+              placeholder="Original date (required)"
+              style={{ marginTop: 8, width: "100%" }}
+            />
+
             <Button
               type="primary"
               onClick={handleAddComment}
