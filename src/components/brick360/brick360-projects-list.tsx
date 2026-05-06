@@ -10,8 +10,6 @@ export const Brick360ProjectsList: React.FC = () => {
   const { data: projects, isFetching: projectsLoading } =
     useGetAllLvnzyProjects();
 
-  console.log(projects);
-
   const brickfiAppUrl =
     import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
 
@@ -93,7 +91,7 @@ export const Brick360ProjectsList: React.FC = () => {
 
   return (
     <Table
-      dataSource={projects}
+      dataSource={projects.filter((p: any) => !!p.score)}
       columns={columns}
       rowKey="_id"
       loading={projectsLoading}
