@@ -281,14 +281,7 @@ export function UsersList() {
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
     },
     {
-      title: "Email",
-      dataIndex: ["profile", "email"],
-      key: "email",
-      ...ColumnSearch(["profile", "email"]),
-      render: (_, record) => record.profile?.email || "-",
-    },
-    {
-      title: "UTM Source",
+      title: "Source",
       key: "utmSource",
       filterDropdown: ({
         setSelectedKeys,
@@ -359,6 +352,108 @@ export function UsersList() {
       },
     },
     {
+      title: "Medium",
+      key: "utmMedium",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search UTM Medium"
+            value={selectedKeys[0] as string}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block", width: 188 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => clearFilters?.()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => {
+        const utm =
+          record.metrics?.utm?.[record.metrics.utm.length - 1]?.utm_medium;
+        return utm
+          ? utm.toLowerCase().includes(String(value).toLowerCase())
+          : false;
+      },
+      render: (_, record) => {
+        const mostRecentUtm =
+          record.metrics?.utm?.[record.metrics.utm.length - 1];
+        return mostRecentUtm?.utm_medium || "-";
+      },
+    },
+    {
+      title: "Campaign",
+      key: "utmCampaign",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search UTM Campaign"
+            value={selectedKeys[0] as string}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block", width: 188 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => clearFilters?.()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => {
+        const utm =
+          record.metrics?.utm?.[record.metrics.utm.length - 1]?.utm_campaign;
+        return utm
+          ? utm.toLowerCase().includes(String(value).toLowerCase())
+          : false;
+      },
+      render: (_, record) => {
+        const mostRecentUtm =
+          record.metrics?.utm?.[record.metrics.utm.length - 1];
+        return mostRecentUtm?.utm_campaign || "-";
+      },
+    },
+    {
       title: "Requested Reports",
       key: "requestedReports",
       filterDropdown: ({
@@ -413,6 +508,7 @@ export function UsersList() {
             report && report.projectName.toLowerCase().includes(searchTerm),
         );
       },
+      width: 300,
       render: (_, record) =>
         record.requestedReports && record.requestedReports.length > 0
           ? record.requestedReports
@@ -424,7 +520,7 @@ export function UsersList() {
     {
       title: "Collections",
       key: "collections",
-      width: 500,
+      width: 250,
       render: (_, record) => (
         <>
           {record.savedLvnzyProjects?.length
