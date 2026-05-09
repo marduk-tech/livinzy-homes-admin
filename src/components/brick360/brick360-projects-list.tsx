@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 import { ColumnSearch } from "../common/column-search";
+import { Loader } from "../common/loader";
 
 export const Brick360ProjectsList: React.FC = () => {
   const { data: projects, isFetching: projectsLoading } =
@@ -89,12 +90,12 @@ export const Brick360ProjectsList: React.FC = () => {
     },
   ];
 
-  return (
+
+  return !projects || !projects.length ? <Loader></Loader> :
     <Table
-      dataSource={projects.filter((p: any) => !!p.score)}
+      dataSource={projects.filter((p: any) => !!p && !!p.score)}
       columns={columns}
       rowKey="_id"
       loading={projectsLoading}
     />
-  );
 };
