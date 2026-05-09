@@ -19,6 +19,7 @@ export const queryKeys = {
 
   getAllReraProjects: "getAllReraProjects",
   getReraProjectById: "getReraProjectById",
+  getReraProjectByReraNumber: "getReraProjectByReraNumber",
   getLvnzyProjectById: "getLvnzyProjectById",
   getAllUsers: "getAllUsers",
   getAllGlossary: "getAllGlossary",

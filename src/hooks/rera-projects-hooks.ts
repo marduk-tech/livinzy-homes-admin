@@ -6,6 +6,7 @@ import {
   deleteReraProject,
   getAllReraProjects,
   getReraProjectById,
+  getReraProjectByReraNumber,
   updateReraProject,
 } from "../libs/api/rera-project";
 import { queryKeys } from "../libs/constants";
@@ -27,6 +28,14 @@ export function useGetReraProjectById(projectId: string) {
     queryKey: [queryKeys.getReraProjectById, projectId],
     queryFn: () => getReraProjectById(projectId),
     enabled: !!projectId,
+  });
+}
+
+export function useGetReraProjectByReraNumber(reraNumber?: string) {
+  return useQuery({
+    queryKey: [queryKeys.getReraProjectByReraNumber, reraNumber],
+    queryFn: () => getReraProjectByReraNumber(reraNumber!),
+    enabled: !!reraNumber,
   });
 }
 

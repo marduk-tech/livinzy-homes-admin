@@ -2,6 +2,7 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  FileTextOutlined,
   PlusOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
@@ -32,6 +33,7 @@ import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { DeveloperForm } from "./developer-form";
 import ProjectForm from "./project-form";
+import { ReraDocumentsModal } from "../rera-projects/rera-documents-modal";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { COLORS } from "../../theme/colors";
 
@@ -49,6 +51,9 @@ export function DevelopersList() {
   >();
   const [selectedProjectIndex, setSelectedProjectIndex] = useState<
     number | undefined
+  >();
+  const [reraDocsModal, setReraDocsModal] = useState<
+    { reraNumber: string; projectName?: string } | undefined
   >();
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
   const updateDeveloperMutation = useUpdateDeveloperMutation();
@@ -87,7 +92,27 @@ export function DevelopersList() {
       key: "projectActions",
       align: "right",
       render: (_, record, index) => (
-        <>
+        <Flex gap={8} justify="end">
+          <Tooltip
+            title={
+              record.reraNumber
+                ? "View RERA Documents"
+                : "No RERA number on this project"
+            }
+          >
+            <Button
+              type="default"
+              shape="default"
+              icon={<FileTextOutlined />}
+              disabled={!record.reraNumber}
+              onClick={() =>
+                setReraDocsModal({
+                  reraNumber: record.reraNumber!,
+                  projectName: record.name,
+                })
+              }
+            />
+          </Tooltip>
           <Button
             type="default"
             shape="default"
@@ -126,7 +151,7 @@ export function DevelopersList() {
               icon={<DeleteOutlined />}
             ></Button>
           </DeletePopconfirm>
-        </>
+        </Flex>
       ),
     },
   ];
@@ -297,6 +322,13 @@ export function DevelopersList() {
           onClose={() => setDeveloperToEdit(undefined)}
         />
       )}
+
+      <ReraDocumentsModal
+        open={!!reraDocsModal}
+        onClose={() => setReraDocsModal(undefined)}
+        reraNumber={reraDocsModal?.reraNumber}
+        projectName={reraDocsModal?.projectName}
+      />
     </>
   );
 }
