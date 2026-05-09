@@ -63,7 +63,7 @@ export function UsersList() {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
 
   const { data, isLoading, isError } = useGetAllUsers({
-    limit: 100,
+    limit: 1000,
     sortBy: "createdAt:desc",
     search: searchKeyword,
   });
