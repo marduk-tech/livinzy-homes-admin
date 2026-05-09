@@ -1,4 +1,4 @@
-import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import { EyeOutlined, FileTextOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Col,
@@ -22,6 +22,7 @@ import {
 } from "../../hooks/rera-projects-hooks";
 import { ReraProject } from "../../types/rera-project";
 import { ColumnSearch } from "../common/column-search";
+import { ReraDocumentsModal } from "./rera-documents-modal";
 import dayjs, { Dayjs } from "dayjs";
 const { RangePicker } = DatePicker;
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -45,6 +46,10 @@ export function ReraProjectsList() {
   const [selectedRange, setSelectedRange] = useState<
     [dayjs.Dayjs, dayjs.Dayjs] | null
   >(null);
+
+  const [reraDocsModal, setReraDocsModal] = useState<
+    { reraProjectId: string; projectName?: string } | undefined
+  >();
 
   const parseDateString = (dateStr: string | undefined | null) => {
     if (!dateStr || typeof dateStr !== "string") {
@@ -200,6 +205,19 @@ export function ReraProjectsList() {
       render: (id: string, record: ReraProject) => {
         return (
           <Flex gap={15} justify="end">
+            <Tooltip title="View RERA Documents">
+              <Button
+                type="default"
+                shape="default"
+                icon={<FileTextOutlined />}
+                onClick={() =>
+                  setReraDocsModal({
+                    reraProjectId: id,
+                    projectName: record.projectDetails.projectName,
+                  })
+                }
+              />
+            </Tooltip>
             <Tooltip title="View RERA Project Details">
               <Button
                 type="default"
@@ -314,6 +332,13 @@ export function ReraProjectsList() {
           </div>
         )}
       </Modal>
+
+      <ReraDocumentsModal
+        open={!!reraDocsModal}
+        onClose={() => setReraDocsModal(undefined)}
+        reraProjectId={reraDocsModal?.reraProjectId}
+        projectName={reraDocsModal?.projectName}
+      />
     </>
   );
 }

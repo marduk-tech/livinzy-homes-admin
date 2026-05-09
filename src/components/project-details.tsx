@@ -17,6 +17,7 @@ import {
   Row,
   Select,
   Space,
+  Table,
   Tabs,
   Tag,
   Typography,
@@ -28,6 +29,7 @@ import {
   DeleteRowOutlined,
   DownloadOutlined,
   FilePdfOutlined,
+  FileTextOutlined,
   ScissorOutlined,
 } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
@@ -53,7 +55,7 @@ import DynamicReactIcon from "./common/dynamic-react-icon";
 import { FileUpload } from "./common/img-upload";
 import { Loader } from "./common/loader";
 import { DocumentsList } from "./media-tabs/documents-list";
-import { ReraDocumentsList } from "./media-tabs/rera-documents-list";
+import { ReraDocumentsModal } from "./rera-projects/rera-documents-modal";
 import { VideoUpload } from "./media-tabs/video-tab";
 import { JsonEditor } from "./update-json-modal";
 import WatermarkPreviewModal from "./watermark-preview-modal";
@@ -253,6 +255,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     processedUrl: null as string | null,
     mediaIndex: -1,
   });
+
+  const [reraDocsModalOpen, setReraDocsModalOpen] = useState(false);
 
   const removeWatermarkMutation = useRemoveWatermark();
 
@@ -984,9 +988,59 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               </TabPane>
 
               <TabPane tab={"RERA Documents"} key={"rera-documents"}>
-                <ReraDocumentsList
-                  reraProjectId={project?.info?.reraProjectId}
-                />
+                {(() => {
+                  const reraId =
+                    typeof project?.info?.reraProjectId === "object"
+                      ? (project?.info?.reraProjectId as any)?._id
+                      : (project?.info?.reraProjectId as string | undefined);
+                  const reraNumber =
+                    project?.info?.reraNumber ||
+                    (typeof project?.info?.reraProjectId === "object"
+                      ? (project?.info?.reraProjectId as any)?.projectDetails
+                          ?.projectRegistrationNumber
+                      : undefined);
+
+                  if (!reraId && !reraNumber) {
+                    return (
+                      <Typography.Text type="secondary">
+                        No RERA project linked to this project.
+                      </Typography.Text>
+                    );
+                  }
+
+                  return (
+                    <Table
+                      dataSource={[{ key: "rera", reraNumber, reraId }]}
+                      pagination={false}
+                      columns={[
+                        {
+                          title: "RERA Number",
+                          dataIndex: "reraNumber",
+                          key: "reraNumber",
+                          render: (val: string | undefined) => (
+                            <Typography.Text copyable={!!val}>
+                              {val || "—"}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: "",
+                          key: "actions",
+                          align: "right",
+                          render: () => (
+                            <Button
+                              type="primary"
+                              icon={<FileTextOutlined />}
+                              onClick={() => setReraDocsModalOpen(true)}
+                            >
+                              View Documents
+                            </Button>
+                          ),
+                        },
+                      ]}
+                    />
+                  );
+                })()}
               </TabPane>
             </Tabs>
           </TabPane>
@@ -1007,6 +1061,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           loading={removeWatermarkMutation.isPending}
           onApprove={handleApproveWatermarkRemoval}
           onReject={handleRejectWatermarkRemoval}
+        />
+
+        <ReraDocumentsModal
+          open={reraDocsModalOpen}
+          onClose={() => setReraDocsModalOpen(false)}
+          reraProjectId={
+            typeof project?.info?.reraProjectId === "object"
+              ? (project?.info?.reraProjectId as any)?._id
+              : (project?.info?.reraProjectId as string | undefined)
+          }
+          reraNumber={project?.info?.reraNumber}
+          projectName={project?.info?.name}
         />
       </Form>
     );

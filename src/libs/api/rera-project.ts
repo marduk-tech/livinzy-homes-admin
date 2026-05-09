@@ -27,6 +27,15 @@ export async function getReraProjectById(
   return data;
 }
 
+export async function getReraProjectByReraNumber(
+  reraNumber: string
+): Promise<ReraProject> {
+  const { data } = await axiosApiInstance.get<ReraProject>(
+    `/rera-projects/by-rera-number/${encodeURIComponent(reraNumber)}`
+  );
+  return data;
+}
+
 export async function createReraProject(
   projectData: CreateReraProjectPayload
 ): Promise<ReraProject> {
