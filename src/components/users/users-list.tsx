@@ -209,9 +209,6 @@ export function UsersList() {
           year: "numeric",
           month: "short",
           day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
         }),
     },
     {
@@ -269,9 +266,6 @@ export function UsersList() {
           year: "numeric",
           month: "short",
           day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
         }),
     },
     {
@@ -279,6 +273,19 @@ export function UsersList() {
       key: "mobile",
       ...ColumnSearch("mobile"),
       render: (_, record) => `${record.countryCode} ${record.mobile}`,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      filters: [
+        { text: "New Lead", value: "new-lead" },
+        { text: "Callback Request", value: "callback-request" },
+        { text: "Active Lead", value: "active-lead" },
+        { text: "Dropped Lead", value: "dropped-lead" },
+      ],
+      onFilter: (value, record) => record.status === value,
+      render: (status: string) => status ? <Tag>{status}</Tag> : "-",
     },
     {
       title: "Source",
