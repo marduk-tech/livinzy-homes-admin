@@ -881,15 +881,14 @@ export function UsersList() {
       title: "Preferred Callback",
       key: "preferredCallback",
       sorter: (a, b) => {
-        try {
-          const splitsA = a.profile?.preferredCallbackTime!.split(",");
-          const splitsB = b.profile?.preferredCallbackTime!.split(",");
-          const at = new Date(splitsA[1].trim() + " 2026").getTime();
-          const bt = new Date(splitsB[1].trim() + " 2026").getTime();
-          return at - bt;
-        } catch (err) {
-          return 0;
-        }
+        const getTimestamp = (value?: string): number => {
+          if (!value) return -1;
+          const splits = value.split(",");
+          if (splits.length < 2) return -1;
+          const t = new Date(splits[1].trim() + " 2026").getTime();
+          return isNaN(t) ? -1 : t;
+        };
+        return getTimestamp(a.profile?.preferredCallbackTime) - getTimestamp(b.profile?.preferredCallbackTime);
       },
       render: (_, record) => {
         const label = record.profile?.preferredCallbackTime;
