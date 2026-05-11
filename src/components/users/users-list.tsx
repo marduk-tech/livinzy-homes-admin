@@ -64,14 +64,14 @@ export function UsersList() {
 
   const { data, isLoading, isError } = useGetAllUsers({
     limit: 1000,
-    sortBy: "createdAt:desc",
+    sortBy: "updatedAt:desc",
     search: searchKeyword,
   });
   const { data: aggregatedReports, isLoading: isReportsLoading } =
     useGetAggregatedReports();
   const { data: leadsData, isLoading: isLeadsLoading } = useGetAllUsers({
     limit: 500,
-    sortBy: "createdAt:desc",
+    sortBy: "updatedAt:desc",
     status: "callback-request,active-lead,dropped-lead",
   });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
