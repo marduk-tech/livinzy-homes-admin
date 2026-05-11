@@ -9,6 +9,7 @@ import {
   MessageOutlined,
   SearchOutlined,
   SendOutlined,
+  SolutionOutlined,
   WhatsAppOutlined,
 } from "@ant-design/icons";
 import {
@@ -48,6 +49,7 @@ import { AggregatedReportRow, User } from "../../types/user";
 import { useNavigate } from "react-router-dom";
 import { ColumnSearch } from "../common/column-search";
 import { UserConversationsModal } from "./user-conversations-modal";
+import { UserJourneyModal } from "./user-journey-modal";
 import { UserForm } from "./user-form";
 import { COLORS } from "../../theme/colors";
 import DynamicReactIcon from "../common/dynamic-react-icon";
@@ -99,6 +101,8 @@ export function UsersList() {
   const [conversationsUser, setConversationsUser] = useState<User | null>(null);
   const [isConversationsModalOpen, setIsConversationsModalOpen] =
     useState(false);
+  const [journeyUser, setJourneyUser] = useState<User | null>(null);
+  const [isJourneyModalOpen, setIsJourneyModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -562,6 +566,16 @@ export function UsersList() {
               setIsEmailModalOpen(true);
             }}
           ></Button>
+          <Button
+            type="default"
+            shape="default"
+            title="View user journey"
+            icon={<SolutionOutlined />}
+            onClick={() => {
+              setJourneyUser(record);
+              setIsJourneyModalOpen(true);
+            }}
+          />
         </Space>
       ),
     },
@@ -998,12 +1012,6 @@ export function UsersList() {
             title="Edit user"
             onClick={() => setUserToEdit(record)}
           />
-          {/* <Button
-            type="default"
-            icon={<LineChartOutlined />}
-            title="View traces"
-            onClick={() => navigate(`/traces?userId=${record._id}`)}
-          /> */}
           <Button
             type="default"
             title="View conversations"
@@ -1018,6 +1026,15 @@ export function UsersList() {
             onClick={() => {
               setConversationsUser(record);
               setIsConversationsModalOpen(true);
+            }}
+          />
+          <Button
+            type="default"
+            title="View user journey"
+            icon={<SolutionOutlined />}
+            onClick={() => {
+              setJourneyUser(record);
+              setIsJourneyModalOpen(true);
             }}
           />
         </Space>
@@ -1157,6 +1174,15 @@ _If you need any kind of assistance with regards to ${
         onClose={() => {
           setIsConversationsModalOpen(false);
           setConversationsUser(null);
+        }}
+      />
+
+      <UserJourneyModal
+        user={journeyUser}
+        open={isJourneyModalOpen}
+        onClose={() => {
+          setIsJourneyModalOpen(false);
+          setJourneyUser(null);
         }}
       />
 
