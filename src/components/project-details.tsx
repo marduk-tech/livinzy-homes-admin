@@ -114,14 +114,14 @@ const RenderFields: React.FC<{
                         initialJson={form.getFieldValue(
                           Array.isArray(dbField)
                             ? [category, ...dbField]
-                            : [category, dbField]
+                            : [category, dbField],
                         )}
                         onJsonChange={(data) => {
                           form.setFieldValue(
                             Array.isArray(dbField)
                               ? [category, ...dbField]
                               : [category, dbField],
-                            data
+                            data,
                           );
                         }}
                       />
@@ -165,14 +165,14 @@ const RenderFields: React.FC<{
                     value={form.getFieldValue(
                       Array.isArray(dbField)
                         ? [category, ...dbField]
-                        : [category, dbField]
+                        : [category, dbField],
                     )}
                     onChange={(value) => {
                       form.setFieldValue(
                         Array.isArray(dbField)
                           ? [category, ...dbField]
                           : [category, dbField],
-                        value
+                        value,
                       );
                     }}
                     media={form.getFieldValue("media") || []}
@@ -195,7 +195,7 @@ const RenderFields: React.FC<{
                         Array.isArray(dbField)
                           ? [category, ...dbField]
                           : [category, dbField],
-                        value
+                        value,
                       );
                     }}
                   />
@@ -207,7 +207,7 @@ const RenderFields: React.FC<{
               </Form.Item>
             </Col>
           );
-      }
+      },
     )}
   </Row>
 );
@@ -243,10 +243,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   });
 
   const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
-    null
+    null,
   );
 
-  const [selectedMediaIndices, setSelectedMediaIndices] = useState<Set<number>>(new Set());
+  const [selectedMediaIndices, setSelectedMediaIndices] = useState<Set<number>>(
+    new Set(),
+  );
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
   const [watermarkModal, setWatermarkModal] = useState({
@@ -345,7 +347,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     urls: string[],
     originalNames: string[],
     index?: number,
-    mediaType: "image" | "document" | "video" = "image"
+    mediaType: "image" | "document" | "video" = "image",
   ) => {
     notification.success({
       message: `${urls.length} ${mediaType}s uploaded successfully`,
@@ -402,7 +404,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const onFloorplanUpload = (urls: string[], originalNames: string[]) => {
     notification.success({
-      message: `${urls.length} floor plan${urls.length > 1 ? 's' : ''} uploaded successfully`,
+      message: `${urls.length} floor plan${urls.length > 1 ? "s" : ""} uploaded successfully`,
     });
 
     const currentMedia = form.getFieldValue("media") || [];
@@ -412,7 +414,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       image: {
         url,
         tags: ["floorplan"],
-        caption: originalNames[index] || `Floor Plan ${currentMedia.length + index + 1}`,
+        caption:
+          originalNames[index] ||
+          `Floor Plan ${currentMedia.length + index + 1}`,
       },
       isPreview: false,
       hasWatermark: false,
@@ -455,7 +459,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const handleBulkDelete = () => {
     const currentMedia = form.getFieldValue("media") || [];
-    const updatedMedia = currentMedia.filter((_: any, i: number) => !selectedMediaIndices.has(i));
+    const updatedMedia = currentMedia.filter(
+      (_: any, i: number) => !selectedMediaIndices.has(i),
+    );
     form.setFieldValue("media", updatedMedia);
     if (projectId) {
       updateProject.mutate({ projectData: { media: updatedMedia } });
@@ -501,7 +507,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       config: string;
       price: number;
       floorplans: string[];
-    }> = []
+    }> = [],
   ): { updatedConfigs: typeof unitConfigs; updateCount: number } => {
     let updateCount = 0;
 
@@ -552,7 +558,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       const { updatedConfigs, updateCount } = updateFloorplanReferences(
         originalUrl,
         processedUrl,
-        currentUnitConfigs
+        currentUnitConfigs,
       );
 
       floorplanUpdateCount = updateCount;
@@ -619,7 +625,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         } else {
           return key !== "plots";
         }
-      })
+      }),
     ) as ProjectStructure;
 
     setVisibleTabs(filteredFields);
@@ -645,10 +651,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       setProjectData(project);
 
       const initialPreviewIndex = project.media.findIndex(
-        (item: IMedia) => item.isPreview
+        (item: IMedia) => item.isPreview,
       );
       setPreviewImageIndex(
-        initialPreviewIndex >= 0 ? initialPreviewIndex : null
+        initialPreviewIndex >= 0 ? initialPreviewIndex : null,
       );
     }
   }, [project, form]);
@@ -678,7 +684,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             const fieldStatus = calculateFieldStatus(
               fields as FieldType[],
               "info",
-              form
+              form,
             );
 
             return (
@@ -705,16 +711,6 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             );
           })}
 
-          {/* <TabPane tab={"Documents"} key={"documents"} disabled={!projectId}>
-            {project && (
-              <DocumentsList
-                project={project}
-                onUploadComplete={onUploadComplete}
-                handleDeleteMedia={handleDeleteMedia}
-              />
-            )}
-          </TabPane> */}
-
           <TabPane
             tab={
               <Typography.Text style={{ fontSize: 16 }}>Media</Typography.Text>
@@ -737,7 +733,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   <FileUpload
                     onUploadComplete={(
                       urls: string[],
-                      originalNames: string[]
+                      originalNames: string[],
                     ) =>
                       onUploadComplete(urls, originalNames, undefined, "image")
                     }
@@ -749,7 +745,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   />
                 </Flex>
 
-                <Flex gap={48} style={{ width: "100%", maxHeight: 550, overflowY: "scroll" }} wrap="wrap">
+                <Flex
+                  gap={48}
+                  style={{ width: "100%", maxHeight: 550, overflowY: "scroll" }}
+                  wrap="wrap"
+                >
                   {project?.media?.map((item: IMedia, index) => {
                     if (item?.type === "image") {
                       return (
@@ -841,7 +841,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                   onChange={(e) =>
                                     handlePreviewImageChange(
                                       index,
-                                      e.target.checked
+                                      e.target.checked,
                                     )
                                   }
                                 >
@@ -852,13 +852,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                               <FileUpload
                                 onUploadComplete={(
                                   urls: string[],
-                                  originalNames: string[]
+                                  originalNames: string[],
                                 ) =>
                                   onUploadComplete(
                                     urls,
                                     originalNames,
                                     index,
-                                    "image"
+                                    "image",
                                   )
                                 }
                                 fileType="image"
@@ -876,7 +876,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                 onClick={() =>
                                   handleRemoveWatermark(
                                     item.image?.url || "",
-                                    index
+                                    index,
                                   )
                                 }
                                 loading={
@@ -911,7 +911,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   </Typography.Text>
                   <Flex
                     gap={8}
-                    style={{ marginTop: 12, overflowX: "auto", paddingBottom: 8 }}
+                    style={{
+                      marginTop: 12,
+                      overflowX: "auto",
+                      paddingBottom: 8,
+                    }}
                   >
                     {Array.from(selectedMediaIndices).map((idx) => {
                       const mediaItem = project?.media?.[idx];
@@ -1010,7 +1014,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
                   return (
                     <Table
-                      dataSource={[{ key: "rera", reraNumber, reraId }]}
+                      dataSource={[
+                        { key: `r-${reraNumber}`, reraNumber },
+                        ...(project?.info?.otherPhasesRera
+                          ? project.info.otherPhasesRera.split(",").map((r) => {
+                              return { key: `r-${reraNumber}`, reraNumber: r };
+                            })
+                          : []),
+                      ]}
                       pagination={false}
                       columns={[
                         {
@@ -1047,7 +1058,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         </Tabs>
         <Button
           type="primary"
-          style={{marginTop: 16}}
+          style={{ marginTop: 16 }}
           onClick={handleSave}
           loading={createProject.isPending || updateProject.isPending}
         >

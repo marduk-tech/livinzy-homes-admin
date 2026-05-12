@@ -46,6 +46,7 @@ export interface IInfo {
   configWithPricing: string;
   financialPlan: string;
   amenities: string;
+  otherPhasesRera: string;
   developerId?: string;
   homeType: Array<
     | "farmland"
