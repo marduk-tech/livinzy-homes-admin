@@ -30,6 +30,7 @@ import {
   TableColumnType,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import dayjs, { Dayjs } from "dayjs";
@@ -795,7 +796,6 @@ export function UsersList() {
       sorter: (a, b) =>
         new Date(a.latestRequestDate).getTime() -
         new Date(b.latestRequestDate).getTime(),
-      defaultSortOrder: "descend",
       render: (date: string, record) => {
         const formatted = new Date(date).toLocaleDateString("en-US", {
           year: "numeric",
@@ -894,6 +894,7 @@ export function UsersList() {
     {
       title: "Preferred Callback",
       key: "preferredCallback",
+      defaultSortOrder: "descend",
       sorter: (a, b) => {
         const getTimestamp = (value?: string): number => {
           if (!value) return -1;
@@ -906,7 +907,16 @@ export function UsersList() {
       },
       render: (_, record) => {
         const label = record.profile?.preferredCallbackTime;
-        return label || "-";
+        const category = record.profile?.callbackCategory;
+        const intent = record.profile?.sourceIntent;
+        const tooltipContent =
+          category || intent ? (
+            <div>
+              {category && <div>Callback Category: {category}</div>}
+              {intent && <div>Source: {intent}</div>}
+            </div>
+          ) : undefined;
+        return <Tooltip title={tooltipContent}>{label || "-"}</Tooltip>;
       },
     },
     {
@@ -992,7 +1002,6 @@ export function UsersList() {
       key: "updatedAt",
       sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
-      defaultSortOrder: "descend",
       render: (updatedAt: string) =>
         new Date(updatedAt).toLocaleDateString("en-US", {
           year: "numeric",
