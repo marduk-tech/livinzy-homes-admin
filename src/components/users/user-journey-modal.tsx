@@ -1,11 +1,13 @@
 import axios from "axios";
-import { Button, DatePicker, Input, Modal, Space, Spin, Table, TableColumnType, Typography } from "antd";
+import { Button, DatePicker, Input, Modal, Space, Spin, Table, TableColumnType, Tooltip, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import type { InputRef } from "antd";
 import dayjs from "dayjs";
+import ReactMarkdown from "react-markdown";
 import { User } from "../../types/user";
+import { useAiQuery } from "../../hooks/ai.hooks";
 
 const POSTHOG_HOST = "https://us.posthog.com";
 const POSTHOG_PROJECT_ID = import.meta.env.VITE_POSTHOG_PROJECT_ID;
@@ -17,18 +19,52 @@ interface UserJourneyModalProps {
   onClose: () => void;
 }
 
+const AI_QUERY_PROMPT = `summarize this user journey in terms of 
+ - User Timeline - brief day wise segregation (1-2 lines per day) of user actions and pages visited with total time spent
+ - Primary Insights - primary insights in terms of information or projects user is looking for (2-3 lines)
+ - Other Insights - any other specific insight including unanswered question, user flow that is worth highlighting (2-3 lines) 
+ 
+ output in simple markdown format with above headings and bullet points
+`
+
+function rowsToCsv(rows: Record<string, any>[]): string {
+  const cols = ["action", "time", "details"];
+  const header = cols.join(",");
+  const lines = rows
+    .slice()
+    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+    .map((row) =>
+      cols
+        .map((c) => {
+          const v = row[c] ?? "";
+          const str = typeof v === "object" ? JSON.stringify(v) : String(v);
+          return `"${str.replace(/"/g, '""')}"`;
+        })
+        .join(","),
+    );
+  return [header, ...lines].join("\n");
+}
 
 export function UserJourneyModal({ user, open, onClose }: UserJourneyModalProps) {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { mutate: runAiQuery, data: summary, isPending: summaryLoading, reset: resetSummary } = useAiQuery();
+  const summaryRequestedRef = useRef(false);
 
   useEffect(() => {
-    if (!open || !user) return;
+    if (!open || !user) {
+      summaryRequestedRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
 
     setLoading(true);
     setError(null);
     setRows([]);
+    resetSummary();
+    summaryRequestedRef.current = false;
 
     const query = {
       kind: "HogQLQuery",
@@ -47,6 +83,7 @@ export function UserJourneyModal({ user, open, onClose }: UserJourneyModalProps)
         },
       )
       .then((response) => {
+        if (cancelled) return;
         const columns: string[] = response.data.columns || [];
         const results: any[][] = response.data.results || [];
         const mapped = results.map((row, i) => {
@@ -57,13 +94,20 @@ export function UserJourneyModal({ user, open, onClose }: UserJourneyModalProps)
           return obj;
         });
         setRows(mapped);
+        if (mapped.length > 0 && !summaryRequestedRef.current) {
+          summaryRequestedRef.current = true;
+          runAiQuery({ query: AI_QUERY_PROMPT, context: rowsToCsv(mapped) });
+        }
       })
       .catch((err) => {
+        if (cancelled) return;
         setError(
           err.response?.data?.detail || err.message || "Failed to fetch journey data",
         );
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [open, user?._id]);
 
   const searchInputRef = useRef<InputRef>(null);
@@ -164,10 +208,28 @@ export function UserJourneyModal({ user, open, onClose }: UserJourneyModalProps)
       key: "details",
       ...textFilterProps("details"),
       render: (val: any) => {
-        if (typeof val === "object" && val !== null) {
-          return <Typography.Text code>{JSON.stringify(val)}</Typography.Text>;
-        }
-        return val ?? "-";
+        const content =
+          typeof val === "object" && val !== null
+            ? JSON.stringify(val)
+            : (val ?? "-");
+        const strContent = String(content);
+        return (
+          <Tooltip title={strContent}>
+            <Typography.Text
+              code={typeof val === "object" && val !== null}
+              style={{
+                maxWidth: 300,
+                display: "inline-block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                verticalAlign: "bottom",
+              }}
+            >
+              {strContent}
+            </Typography.Text>
+          </Tooltip>
+        );
       },
     },
   ];
@@ -189,13 +251,22 @@ export function UserJourneyModal({ user, open, onClose }: UserJourneyModalProps)
       ) : error ? (
         <Typography.Text type="danger">{error}</Typography.Text>
       ) : (
-        <Table
-          dataSource={rows}
-          columns={tableColumns}
-          pagination={{ pageSize: 20 }}
-          scroll={{ x: true }}
-          size="small"
-        />
+        <>
+          <div style={{ marginBottom: 16, padding: 12, background: "#fafafa", borderRadius: 6, border: "1px solid #f0f0f0", height: 300, overflowY: "auto" }}>
+            {summaryLoading ? (
+              <Spin size="small" />
+            ) : (
+              <ReactMarkdown>{summary ?? "—"}</ReactMarkdown>
+            )}
+          </div>
+          <Table
+            dataSource={rows}
+            columns={tableColumns}
+            pagination={{ pageSize: 20 }}
+            scroll={{ x: true, y: 300 }}
+            size="small"
+          />
+        </>
       )}
     </Modal>
   );
