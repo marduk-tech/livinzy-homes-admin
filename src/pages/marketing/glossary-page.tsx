@@ -1,4 +1,4 @@
-import { Button, Flex, Modal, Typography } from "antd";
+import { Button, Flex, Modal } from "antd";
 import { useState } from "react";
 import { GlossaryForm } from "../../components/marketing/glossary-form";
 import { GlossaryList } from "../../components/marketing/glossary-list";
@@ -16,8 +16,6 @@ export function GlossaryPage() {
 
   return (
     <>
-      <Typography.Title level={5}>Marketing - Glossary</Typography.Title>
-
       <Flex justify="flex-end" style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={handleAddClick}>
           Add Glossary Term

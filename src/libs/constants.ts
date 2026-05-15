@@ -23,6 +23,7 @@ export const queryKeys = {
   getLvnzyProjectById: "getLvnzyProjectById",
   getAllUsers: "getAllUsers",
   getAllGlossary: "getAllGlossary",
+  getAllEmailReachouts: "getAllEmailReachouts",
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
 };

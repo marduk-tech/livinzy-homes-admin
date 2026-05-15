@@ -14,7 +14,7 @@ import { BrickfiConfig } from "../pages/brickfi-config";
 import ChromaDocsPage from "../pages/chroma-docs";
 import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
-import { GlossaryPage } from "../pages/marketing/glossary-page";
+import { MarketingPage } from "../pages/marketing/marketing-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -56,7 +56,7 @@ export const Router = () => {
         <Route path="/users" element={<UsersPage />} />
         <Route path="/traces" element={<TracesPage />} />
 
-        <Route path="/marketing/glossary" element={<GlossaryPage />} />
+        <Route path="/marketing" element={<MarketingPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />

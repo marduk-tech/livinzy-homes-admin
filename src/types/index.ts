@@ -72,6 +72,23 @@ export interface IGlossary {
   updatedAt: string;
 }
 
+export interface IEmailReachout {
+  _id: string;
+  type: string;
+  content: {
+    success: boolean;
+    totalEligibleEmails?: number;
+    successEmails?: string[];
+    failureEmails?: string[];
+    templateId?: number;
+    templateTitle?: string;
+    error?: string;
+    timestamp?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IGhostPage {
   id: string;
   title: string;

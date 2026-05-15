@@ -38,7 +38,7 @@ export function UserDropDown() {
     { to: "/encyclopedia", label: "Encyclopedia" },
     { to: "/config", label: "Config" },
     { to: "/brick360", label: "Brick360s" },
-    { to: "/marketing/glossary", label: "Marketing" },
+    { to: "/marketing", label: "Marketing" },
 
     // { to: "/livindex-scores", label: "Livindex Scores" },
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },

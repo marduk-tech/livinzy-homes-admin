@@ -4,12 +4,20 @@ import { AxiosError } from "axios";
 import {
   createGlossary,
   deleteGlossary,
+  getAllEmailReachouts,
   getAllGlossary,
   updateGlossary,
 } from "../libs/api/marketing";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { IGlossary } from "../types";
+
+export function useFetchEmailReachouts() {
+  return useQuery({
+    queryKey: [queryKeys.getAllEmailReachouts],
+    queryFn: () => getAllEmailReachouts(),
+  });
+}
 
 export function useFetchGlossary() {
   return useQuery({
