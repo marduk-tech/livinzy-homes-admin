@@ -89,6 +89,17 @@ export interface IEmailReachout {
   updatedAt: string;
 }
 
+export interface IFeedback {
+  _id: string;
+  type: string;
+  content: {
+    feedback: { question: string; answer: string }[];
+    contact: { name: string; contact: string; mobile?: string; email?: string; userId?: string };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IGhostPage {
   id: string;
   title: string;

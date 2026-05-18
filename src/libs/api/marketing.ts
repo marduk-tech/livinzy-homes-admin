@@ -1,4 +1,4 @@
-import { IEmailReachout, IGhostPage, IGlossary } from "../../types";
+import { IEmailReachout, IFeedback, IGhostPage, IGlossary } from "../../types";
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getAllGlossary = async () => {
@@ -36,6 +36,13 @@ export const getAllEmailReachouts = async () => {
   const endpoint = `/marketing?type=emailReachout`;
   return axiosApiInstance.get(endpoint).then((response) => {
     return response.data as IEmailReachout[];
+  });
+};
+
+export const getAllFeedbacks = async () => {
+  const endpoint = `/marketing/feedback`;
+  return axiosApiInstance.get(endpoint).then((response) => {
+    return response.data as IFeedback[];
   });
 };
 

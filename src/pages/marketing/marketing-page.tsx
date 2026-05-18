@@ -1,6 +1,7 @@
 import { Tabs } from "antd";
 import { EmailReachoutPage } from "./email-reachout-page";
 import { GlossaryPage } from "./glossary-page";
+import { UserFeedbackPage } from "./user-feedback-page";
 
 export function MarketingPage() {
   const tabs = [
@@ -13,6 +14,11 @@ export function MarketingPage() {
       key: "emailReachout",
       label: "Email Reachouts",
       children: <EmailReachoutPage />,
+    },
+    {
+      key: "userFeedback",
+      label: "User Feedback",
+      children: <UserFeedbackPage />,
     },
   ];
 

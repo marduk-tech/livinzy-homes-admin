@@ -24,6 +24,7 @@ export const queryKeys = {
   getAllUsers: "getAllUsers",
   getAllGlossary: "getAllGlossary",
   getAllEmailReachouts: "getAllEmailReachouts",
+  getAllFeedbacks: "getAllFeedbacks",
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
 };

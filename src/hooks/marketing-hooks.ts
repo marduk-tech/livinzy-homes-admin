@@ -5,12 +5,20 @@ import {
   createGlossary,
   deleteGlossary,
   getAllEmailReachouts,
+  getAllFeedbacks,
   getAllGlossary,
   updateGlossary,
 } from "../libs/api/marketing";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { IGlossary } from "../types";
+
+export function useFetchFeedbacks() {
+  return useQuery({
+    queryKey: [queryKeys.getAllFeedbacks],
+    queryFn: () => getAllFeedbacks(),
+  });
+}
 
 export function useFetchEmailReachouts() {
   return useQuery({
