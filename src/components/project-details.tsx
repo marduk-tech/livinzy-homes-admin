@@ -250,6 +250,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     new Set(),
   );
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [bulkWatermarkLoading, setBulkWatermarkLoading] = useState(false);
+  const [bulkWatermarkConfirmVisible, setBulkWatermarkConfirmVisible] =
+    useState(false);
 
   const [watermarkModal, setWatermarkModal] = useState({
     visible: false,
@@ -468,6 +471,95 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
     setSelectedMediaIndices(new Set());
     setDeleteConfirmVisible(false);
+  };
+
+  const handleBulkRemoveWatermark = async () => {
+    setBulkWatermarkConfirmVisible(false);
+    const currentMedia = form.getFieldValue("media") || [];
+    const targets = Array.from(selectedMediaIndices)
+      .map((i) => ({ index: i, url: currentMedia[i]?.image?.url as string | undefined }))
+      .filter((t): t is { index: number; url: string } => !!t.url);
+
+    if (targets.length === 0) return;
+
+    setBulkWatermarkLoading(true);
+
+    const results = await Promise.allSettled(
+      targets.map((t) => removeWatermarkMutation.mutateAsync(t.url)),
+    );
+
+    const updatedMedia = [...currentMedia];
+    let currentUnitConfigs =
+      form.getFieldValue(["info", "unitConfigWithPricing"]) || [];
+    let totalFloorplanUpdates = 0;
+    let successCount = 0;
+    let failCount = 0;
+
+    results.forEach((res, i) => {
+      const { index, url: oldUrl } = targets[i];
+      if (res.status === "fulfilled" && res.value?.processedImageUrl) {
+        const newUrl = res.value.processedImageUrl;
+        updatedMedia[index] = {
+          ...updatedMedia[index],
+          image: { ...updatedMedia[index].image, url: newUrl },
+          hasWatermark: false,
+        };
+
+        const isFloorplan =
+          updatedMedia[index]?.image?.tags?.includes("floorplan");
+        if (isFloorplan && oldUrl) {
+          const { updatedConfigs, updateCount } = updateFloorplanReferences(
+            oldUrl,
+            newUrl,
+            currentUnitConfigs,
+          );
+          if (updateCount > 0) {
+            currentUnitConfigs = updatedConfigs;
+            totalFloorplanUpdates += updateCount;
+          }
+        }
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
+
+    form.setFieldValue("media", updatedMedia);
+    if (totalFloorplanUpdates > 0) {
+      form.setFieldValue(["info", "unitConfigWithPricing"], currentUnitConfigs);
+    }
+
+    if (projectId && successCount > 0) {
+      updateProject.mutate({
+        projectData: {
+          media: updatedMedia,
+          ...(totalFloorplanUpdates > 0 && { info: form.getFieldValue("info") }),
+        },
+      });
+    }
+
+    setBulkWatermarkLoading(false);
+    setSelectedMediaIndices(new Set());
+
+    if (successCount > 0) {
+      notification.success({
+        message: `Removed watermark from ${successCount} image${
+          successCount > 1 ? "s" : ""
+        }${
+          totalFloorplanUpdates > 0
+            ? ` and updated ${totalFloorplanUpdates} floorplan reference${
+                totalFloorplanUpdates > 1 ? "s" : ""
+              }`
+            : ""
+        }${failCount > 0 ? ` (${failCount} failed)` : ""}`,
+      });
+    } else if (failCount > 0) {
+      notification.error({
+        message: `Failed to remove watermark from ${failCount} image${
+          failCount > 1 ? "s" : ""
+        }`,
+      });
+    }
   };
 
   const handleRemoveWatermark = async (imageUrl: string, index: number) => {
@@ -722,13 +814,22 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               <TabPane tab={"Images"} key={"images"}>
                 <Flex justify="end" style={{ marginBottom: 16, gap: 8 }}>
                   {selectedMediaIndices.size > 0 && (
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => setDeleteConfirmVisible(true)}
-                    >
-                      Delete ({selectedMediaIndices.size})
-                    </Button>
+                    <>
+                      <Button
+                        icon={<ScissorOutlined />}
+                        loading={bulkWatermarkLoading}
+                        onClick={() => setBulkWatermarkConfirmVisible(true)}
+                      >
+                        Remove Watermark ({selectedMediaIndices.size})
+                      </Button>
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => setDeleteConfirmVisible(true)}
+                      >
+                        Delete ({selectedMediaIndices.size})
+                      </Button>
+                    </>
                   )}
                   <FileUpload
                     onUploadComplete={(
@@ -935,6 +1036,20 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       ) : null;
                     })}
                   </Flex>
+                </Modal>
+
+                <Modal
+                  title={`Remove watermark from ${selectedMediaIndices.size} image(s)?`}
+                  open={bulkWatermarkConfirmVisible}
+                  onCancel={() => setBulkWatermarkConfirmVisible(false)}
+                  onOk={handleBulkRemoveWatermark}
+                  okText="Remove"
+                  confirmLoading={bulkWatermarkLoading}
+                >
+                  <Typography.Text>
+                    Processed images will replace the originals directly. This
+                    cannot be undone.
+                  </Typography.Text>
                 </Modal>
 
                 {/* Hot fix for video getting deleted on image save  */}
