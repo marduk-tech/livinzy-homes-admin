@@ -1,4 +1,5 @@
 import {
+  CalendarOutlined,
   CopyOutlined,
   DeleteOutlined,
   DownloadOutlined,
@@ -52,6 +53,7 @@ import { ColumnSearch } from "../common/column-search";
 import { UserConversationsModal } from "./user-conversations-modal";
 import { UserJourneyModal } from "./user-journey-modal";
 import { UserForm } from "./user-form";
+import { SetCallbackModal } from "./set-callback-modal";
 import { COLORS } from "../../theme/colors";
 import DynamicReactIcon from "../common/dynamic-react-icon";
 
@@ -104,6 +106,8 @@ export function UsersList() {
     useState(false);
   const [journeyUser, setJourneyUser] = useState<User | null>(null);
   const [isJourneyModalOpen, setIsJourneyModalOpen] = useState(false);
+  const [callbackUser, setCallbackUser] = useState<User | null>(null);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -577,6 +581,16 @@ export function UsersList() {
               setIsJourneyModalOpen(true);
             }}
           />
+          <Button
+            type="default"
+            shape="default"
+            title="Set preferred callback"
+            icon={<CalendarOutlined />}
+            onClick={() => {
+              setCallbackUser(record);
+              setIsCallbackModalOpen(true);
+            }}
+          />
         </Space>
       ),
     },
@@ -896,17 +910,44 @@ export function UsersList() {
       key: "preferredCallback",
       defaultSortOrder: "descend",
       sorter: (a, b) => {
-        const getTimestamp = (value?: string): number => {
+        const getTimestamp = (record: any): number => {
+          if (record.profile?.preferredCallbackTimestamp) {
+            return new Date(record.profile.preferredCallbackTimestamp).getTime();
+          }
+          const value = record.profile?.preferredCallbackTime;
           if (!value) return -1;
           const splits = value.split(",");
           if (splits.length < 2) return -1;
           const t = new Date(splits[1].trim() + " 2026").getTime();
           return isNaN(t) ? -1 : t;
         };
-        return getTimestamp(a.profile?.preferredCallbackTime) - getTimestamp(b.profile?.preferredCallbackTime);
+        return getTimestamp(a) - getTimestamp(b);
       },
       render: (_, record) => {
-        const label = record.profile?.preferredCallbackTime;
+        let label: string | undefined;
+        let callbackTime: Date | undefined;
+        if (record.profile?.preferredCallbackTimestamp) {
+          const start = new Date(record.profile.preferredCallbackTimestamp);
+          callbackTime = start;
+          const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+          const day = start.getDate();
+          const month = start.toLocaleString("en-US", { month: "short" });
+          const fmt = (d: Date) => {
+            const h = d.getHours();
+            return `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
+          };
+          label = `${day} ${month}, ${fmt(start)} - ${fmt(end)}`;
+        } else {
+          const raw = record.profile?.preferredCallbackTime;
+          if (raw) {
+            const splits = raw.split(",");
+            label = splits.length >= 2 ? splits.slice(1).join(",").trim() : raw;
+            if (splits.length >= 2) {
+              const t = new Date(splits[1].trim() + " 2026");
+              if (!isNaN(t.getTime())) callbackTime = t;
+            }
+          }
+        }
         const category = record.profile?.callbackCategory;
         const intent = record.profile?.sourceIntent;
         const tooltipContent =
@@ -916,7 +957,30 @@ export function UsersList() {
               {intent && <div>Source: {intent}</div>}
             </div>
           ) : undefined;
-        return <Tooltip title={tooltipContent}>{label || "-"}</Tooltip>;
+        let tagColor: string | undefined;
+        if (callbackTime) {
+          const diff = callbackTime.getTime() - Date.now();
+          if (diff > 0 && diff <= 24 * 60 * 60 * 1000) {
+            tagColor = COLORS.yellowIdentifier;
+          } else if (diff > 24 * 60 * 60 * 1000) {
+            tagColor = COLORS.redIdentifier;
+          }
+        }
+        return (
+          <Tooltip title={tooltipContent}>
+                <Flex>
+                <Tag
+                  style={{
+                    backgroundColor: COLORS.bgColor,
+                    borderColor: COLORS.borderColor,
+                    color: COLORS.textColorDark,
+                    minWidth: "unset",
+                  }}
+                >{label}</Tag>
+                </Flex>
+             
+          </Tooltip>
+        );
       },
     },
     {
@@ -1044,6 +1108,15 @@ export function UsersList() {
             onClick={() => {
               setJourneyUser(record);
               setIsJourneyModalOpen(true);
+            }}
+          />
+          <Button
+            type="default"
+            title="Set preferred callback"
+            icon={<CalendarOutlined />}
+            onClick={() => {
+              setCallbackUser(record);
+              setIsCallbackModalOpen(true);
             }}
           />
         </Space>
@@ -1378,6 +1451,15 @@ _If you need any kind of assistance with regards to ${
           </Flex>
         </div>
       </Modal>
+
+      <SetCallbackModal
+        user={callbackUser}
+        open={isCallbackModalOpen}
+        onClose={() => {
+          setIsCallbackModalOpen(false);
+          setCallbackUser(null);
+        }}
+      />
 
       <Modal
         title="UTM Tracking History"
