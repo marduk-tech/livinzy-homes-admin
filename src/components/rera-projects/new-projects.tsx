@@ -1,18 +1,21 @@
-import { EyeOutlined, FileTextOutlined } from "@ant-design/icons";
+import { EyeOutlined, FileTextOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
+  Col,
   Flex,
   Modal,
+  Row,
   Table,
   TableColumnType,
   Tooltip,
   Typography,
 } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
 import ReactJson from "react-json-view";
 import { useFetchNewReraProjects } from "../../hooks/rera-projects-hooks";
 import { ReraProject } from "../../types/rera-project";
 import { ColumnSearch } from "../common/column-search";
+import { AssignToDeveloperModal } from "./assign-to-developer-modal";
 import { ReraDocumentsModal } from "./rera-documents-modal";
 
 export function NewProjects() {
@@ -25,6 +28,17 @@ export function NewProjects() {
   const [reraDocsModal, setReraDocsModal] = useState<
     { reraProjectId: string; projectName?: string } | undefined
   >();
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+
+  const selectedProjects = (data ?? [])
+    .filter((p) => selectedRowKeys.includes(p._id))
+    .map((p) => ({
+      id: p._id,
+      name: p.projectDetails.projectName,
+      reraNumber: p.projectDetails.projectRegistrationNumber ?? "",
+    }));
 
   const parseDateString = (dateStr: string | undefined | null) => {
     if (!dateStr || typeof dateStr !== "string") return new Date();
@@ -119,11 +133,29 @@ export function NewProjects() {
 
   return (
     <>
+      {selectedRowKeys.length > 0 && (
+        <Row justify="end" style={{ marginBottom: 12 }}>
+          <Col>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setAssignModalOpen(true)}
+            >
+              Assign to Developer ({selectedRowKeys.length})
+            </Button>
+          </Col>
+        </Row>
+      )}
+
       <Table
         dataSource={data}
         columns={columns}
         loading={isLoading}
-        rowKey="id"
+        rowKey="_id"
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+        }}
       />
 
       <Modal
@@ -188,6 +220,15 @@ export function NewProjects() {
         onClose={() => setReraDocsModal(undefined)}
         reraProjectId={reraDocsModal?.reraProjectId}
         projectName={reraDocsModal?.projectName}
+      />
+
+      <AssignToDeveloperModal
+        open={assignModalOpen}
+        onClose={() => {
+          setAssignModalOpen(false);
+          setSelectedRowKeys([]);
+        }}
+        projects={selectedProjects}
       />
     </>
   );

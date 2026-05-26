@@ -16,6 +16,7 @@ export const queryKeys = {
 
   getAllDevelopers: "getAllDevelopers",
   getDeveloperById: "getDeveloperById",
+  getDeveloperNames: "getDeveloperNames",
 
   getAllReraProjects: "getAllReraProjects",
   getReraProjectById: "getReraProjectById",

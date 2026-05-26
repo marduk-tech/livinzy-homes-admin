@@ -33,3 +33,21 @@ export const deleteDeveloper = async (id: string) => {
   );
   return response.data;
 };
+
+export const getDeveloperNames = async (): Promise<
+  { _id: string; name: string }[]
+> => {
+  const response = await axiosApiInstance.get("/real-estate-developer/names");
+  return response.data;
+};
+
+export const addProjectsToDeveloper = async (
+  developerId: string,
+  projects: { id: string; name: string; reraNumber: string }[]
+): Promise<{ message: string; added: number }> => {
+  const response = await axiosApiInstance.post(
+    `/real-estate-developer/${developerId}/add-projects`,
+    { projects }
+  );
+  return response.data;
+};

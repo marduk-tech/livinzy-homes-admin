@@ -2,10 +2,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
+  addProjectsToDeveloper,
   createDeveloper,
   deleteDeveloper,
   getAllDevelopers,
   getDeveloperById,
+  getDeveloperNames,
   updateDeveloper,
 } from "../libs/api/real-estate-developer";
 import { queryKeys } from "../libs/constants";
@@ -92,6 +94,40 @@ export function useCreateDeveloperMutation() {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllDevelopers],
       });
+    },
+  });
+}
+
+export function useGetDeveloperNames() {
+  return useQuery<{ _id: string; name: string }[], Error>({
+    queryKey: [queryKeys.getDeveloperNames],
+    queryFn: () => getDeveloperNames(),
+  });
+}
+
+export function useAddProjectsToDeveloperMutation() {
+  return useMutation({
+    mutationFn: ({
+      developerId,
+      projects,
+    }: {
+      developerId: string;
+      projects: { id: string; name: string; reraNumber: string }[];
+    }) => addProjectsToDeveloper(developerId, projects),
+
+    onSuccess: (data) => {
+      notification.success({
+        message: data.added > 0
+          ? `Added ${data.added} project(s) to developer`
+          : data.message,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: "Failed to add projects to developer. Please try again.",
+      });
+      console.log(error);
     },
   });
 }
