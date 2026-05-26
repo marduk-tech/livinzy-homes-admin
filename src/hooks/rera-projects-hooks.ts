@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import {
   createReraProject,
   deleteReraProject,
+  fetchNewReraProjects,
   getAllReraProjects,
   getReraProjectById,
   getReraProjectByReraNumber,
@@ -20,6 +21,13 @@ export function useGetAllReraProjects(params?: { keyword?: string }) {
   return useQuery({
     queryKey: [queryKeys.getAllReraProjects, params],
     queryFn: () => getAllReraProjects(params),
+  });
+}
+
+export function useFetchNewReraProjects() {
+  return useQuery({
+    queryKey: [queryKeys.fetchNewReraProjects],
+    queryFn: () => fetchNewReraProjects(),
   });
 }
 

@@ -60,3 +60,10 @@ export async function updateReraProject(
 export async function deleteReraProject(projectId: string): Promise<void> {
   await axiosApiInstance.delete(`/rera-projects/${projectId}`);
 }
+
+export async function fetchNewReraProjects(): Promise<ReraProject[]> {
+  const { data } = await axiosApiInstance.get<ReraProject[]>(
+    "/rera-projects/fetchNewReraProjects"
+  );
+  return data;
+}
