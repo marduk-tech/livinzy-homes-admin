@@ -355,7 +355,7 @@ export function useGenerateScoreCardMutation({
       }
     },
     onError: (error: AxiosError<any>) => {
-      notification.error({ message: `Failed to generate score card.` });
+      notification.error({ message: error.message || `Failed to generate score card.` });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
