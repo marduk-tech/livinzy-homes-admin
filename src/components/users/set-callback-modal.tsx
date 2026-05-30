@@ -1,4 +1,5 @@
 import { CalendarOutlined } from "@ant-design/icons";
+import { useAuth0 } from "@auth0/auth0-react";
 import { DatePicker, Modal, Typography } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { useState } from "react";
@@ -15,9 +16,17 @@ export function SetCallbackModal({ user, open, onClose }: SetCallbackModalProps)
   const defaultDatetime = dayjs().hour(10).minute(0).second(0).millisecond(0);
   const [selectedDatetime, setSelectedDatetime] = useState<Dayjs>(defaultDatetime);
   const updateUserMutation = useUpdateUserMutation();
+  const { user: authUser } = useAuth0();
 
   const handleOk = () => {
     if (!user) return;
+    const now = new Date().toISOString();
+    const newComment = {
+      comment: `callback/followup rescheduled to ${selectedDatetime.toISOString()}`,
+      dateAdded: now,
+      dateOriginal: now,
+      addedBy: authUser?.email,
+    };
     updateUserMutation.mutate(
       {
         userId: user._id,
@@ -30,6 +39,9 @@ export function SetCallbackModal({ user, open, onClose }: SetCallbackModalProps)
           },
           savedLvnzyProjects: user.savedLvnzyProjects,
           status: user.status,
+          leadTrail: {
+            comments: [...(user.leadTrail?.comments ?? []), newComment],
+          },
         },
       },
       { onSuccess: onClose },

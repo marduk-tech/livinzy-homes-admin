@@ -74,6 +74,7 @@ export interface LeadTrailComment {
   comment: string;
   dateAdded: string;
   dateOriginal?: string;
+  addedBy?: string;
 }
 
 export interface LeadTrail {
@@ -112,4 +113,5 @@ export interface UpdateUserPayload {
   profile: UserProfile;
   savedLvnzyProjects: SavedLvnzyProject[];
   status?: string;
+  leadTrail?: LeadTrail;
 }

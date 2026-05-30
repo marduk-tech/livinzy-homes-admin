@@ -59,11 +59,12 @@ export const getAggregatedReports = async (): Promise<AggregatedReportRow[]> => 
 export const addLeadTrailComment = async (
   userId: string,
   comment: string,
-  dateOriginal?: string
+  dateOriginal?: string,
+  addedBy?: string
 ): Promise<User> => {
   const { data } = await axiosApiInstance.post<User>(
     `/user/${userId}/lead-trail`,
-    { comment, dateOriginal }
+    { comment, dateOriginal, addedBy }
   );
   return data;
 };

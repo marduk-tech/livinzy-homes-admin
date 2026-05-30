@@ -127,12 +127,14 @@ export function useAddLeadTrailCommentMutation() {
       userId,
       comment,
       dateOriginal,
+      addedBy,
     }: {
       userId: string;
       comment: string;
       dateOriginal?: string;
+      addedBy?: string;
     }) => {
-      return addLeadTrailComment(userId, comment, dateOriginal);
+      return addLeadTrailComment(userId, comment, dateOriginal, addedBy);
     },
 
     onSuccess: () => {

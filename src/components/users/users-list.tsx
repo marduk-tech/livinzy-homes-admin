@@ -37,6 +37,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
@@ -65,6 +66,7 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 export function UsersList() {
+  const { user: authUser } = useAuth0();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
 
   const { data, isLoading, isError } = useGetAllUsers({
@@ -1008,6 +1010,52 @@ export function UsersList() {
     {
       title: "Lead Trail",
       key: "leadTrail",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search comments"
+            value={selectedKeys[0] as string}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block", width: 188 }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => clearFilters?.()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const comments = record.leadTrail?.comments;
+        if (!comments?.length) return false;
+        const search = String(value).toLowerCase();
+        return comments.some((c: any) =>
+          c.comment?.toLowerCase().includes(search)
+        );
+      },
       render: (_, record) => {
         return (
           <Typography.Link
@@ -1131,6 +1179,7 @@ export function UsersList() {
         userId: leadTrailUser._id,
         comment: newComment.trim(),
         dateOriginal: selectedOriginalDate?.toISOString(),
+        addedBy: authUser?.email,
       },
       {
         onSuccess: (updatedUser) => {
@@ -1380,9 +1429,10 @@ _If you need any kind of assistance with regards to ${
                             month: "short",
                             day: "numeric",
                           })}
+                          {c.addedBy && ` · ${c.addedBy}`}
                         </Typography.Text>
                       </div>
-                      {c._id && (
+                      {c._id && Date.now() - new Date(c.dateAdded).getTime() <= 3 * 60 * 60 * 1000 && (
                         <Popconfirm
                           title="Delete this comment?"
                           onConfirm={() => {
