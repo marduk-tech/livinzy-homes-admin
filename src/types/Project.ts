@@ -235,7 +235,8 @@ export interface ProjectField {
     | "text"
     | "multi_select"
     | "json"
-    | "unit_config_list";
+    | "unit_config_list"
+    | "date_month_year";
 
   options?: { label: string; value: string }[];
 }

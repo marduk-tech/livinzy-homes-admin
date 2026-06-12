@@ -155,6 +155,17 @@ export function UsersList() {
       render: (name: string, record) => (
         <Space>
           {record.profile?.name || "-"}
+          {record.profile?.callbackCategory && (
+            <Tag
+              style={{
+                backgroundColor: COLORS.bgColor,
+                borderColor: COLORS.borderColor,
+                color: COLORS.textColorDark,
+              }}
+            >
+              {record.profile.callbackCategory}
+            </Tag>
+          )}
           <Typography.Text
             copyable={{
               text: record._id,

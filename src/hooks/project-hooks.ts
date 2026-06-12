@@ -469,11 +469,17 @@ export function useProjectForm() {
         fieldDisplayName: "External websites",
         fieldDescription: "Website for the project.",
       },
-       {
+      {
         dbField: "expertInfo",
         type: "text",
         fieldDisplayName: "Expert Info",
         fieldDescription: "Any specific expert analysis to be provided",
+      },
+      {
+        dbField: ["realTimeStatus", "expectedLaunchDate"],
+        type: "date_month_year",
+        fieldDisplayName: "Expected Launch Date",
+        fieldDescription: "Expected month and year of project launch",
       },
     ],
   };

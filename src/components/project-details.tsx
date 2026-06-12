@@ -6,6 +6,7 @@ import {
   Button,
   Checkbox,
   Col,
+  DatePicker,
   Flex,
   Form,
   FormInstance,
@@ -76,7 +77,8 @@ const RenderFields: React.FC<{
   isMobile: boolean;
   fieldRules: Record<string, any>;
   onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
-}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload }) => (
+  disabledFields?: Record<string, boolean>;
+}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -199,6 +201,18 @@ const RenderFields: React.FC<{
                       );
                     }}
                   />
+                ) : type === "date_month_year" ? (
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    disabledDate={(d) =>
+                      d.isBefore(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
+                    }
+                    disabled={
+                      !!(disabledFields?.[
+                        Array.isArray(dbField) ? dbField.join(".") : dbField
+                      ])
+                    }
+                  />
                 ) : type == "text" ? (
                   <TextArea rows={5} placeholder={fieldDescription} />
                 ) : (
@@ -273,66 +287,78 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const stripIds = (val: any): any => {
+    if (Array.isArray(val)) return val.map(stripIds);
+    if (val && typeof val === "object") {
+      const { _id, __v, ...rest } = val;
+      return Object.fromEntries(
+        Object.keys(rest).sort().map((k) => [k, stripIds(rest[k])])
+      );
+    }
+    return val;
+  };
+
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
 
-      if (projectData && projectData.info && projectData.info.location) {
-        if (values.info.location.mapLink == projectData.info.location) {
-          values.info.location = {
-            ...projectData.info.location,
-            ...values.info.location,
-          };
+      if (projectId) {
+        const payload: any = {};
+
+        const existingInfo = (projectData?.info || {}) as any;
+        const changedInfo: any = {};
+        const allFields = Object.values(projectFields).flat();
+        for (const { dbField } of allFields) {
+          if (Array.isArray(dbField)) {
+            const [parent, child] = dbField;
+            const newVal = values.info?.[parent]?.[child];
+            const oldVal = existingInfo?.[parent]?.[child];
+            if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+              changedInfo[parent] = { ...(changedInfo[parent] || {}), [child]: newVal };
+            }
+          } else {
+            const newVal = values.info?.[dbField];
+            const oldVal = existingInfo?.[dbField];
+            if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+              changedInfo[dbField] = newVal;
+            }
+          }
         }
-      }
 
-      // Preserving other layout values.
-      if (projectData?.info.layout) {
-        values.info.layout = {
-          ...projectData.info.layout,
-          ...values.info.layout,
-        };
-      }
+        if (Object.keys(changedInfo).length > 0) {
+          payload.info = changedInfo;
+          if (payload.info.homeType && !Array.isArray(payload.info.homeType)) {
+            payload.info.homeType = [payload.info.homeType];
+          }
+        }
 
-      // add corridors to info
-      if (
-        projectId &&
-        projectData &&
-        projectData.info &&
-        projectData.info.corridors
-      ) {
-        values.info = {
-          ...projectData.info,
-          ...values.info,
-        };
-      }
+        // Only include media if it changed
+        if (values.media) {
+          const updatedMedia = values.media.map((item: IMedia, index: number) => ({
+            ...item,
+            isPreview: index === previewImageIndex,
+          }));
+          const existingMedia = stripIds(projectData?.media || []);
+          if (JSON.stringify(stripIds(updatedMedia)) !== JSON.stringify(existingMedia)) {
+            payload.media = updatedMedia;
+          }
+        }
 
-      let updatedMedia;
-      if (values.media) {
-        updatedMedia = values.media.map((item: IMedia, index: number) => ({
+        if (Object.keys(payload).length > 0) {
+          updateProject.mutate({ projectData: payload });
+        }
+      } else {
+        const media = values.media?.map((item: IMedia, index: number) => ({
           ...item,
           isPreview: index === previewImageIndex,
         }));
-      }
 
-      // format hometype
-      if (values.info.homeType && !Array.isArray(values.info.homeType)) {
-        values.info.homeType = [values.info.homeType];
-      }
-
-      if (projectId) {
-        if (updatedMedia) {
-          updateProject.mutate({
-            projectData: { ...values, media: updatedMedia },
-          });
-        } else {
-          updateProject.mutate({
-            projectData: { ...values },
-          });
+        if (values.info?.homeType && !Array.isArray(values.info.homeType)) {
+          values.info.homeType = [values.info.homeType];
         }
-      } else {
+
         await createProject
-          .mutateAsync({ ...values, media: updatedMedia })
+          .mutateAsync({ ...values, media })
           .then((data) => {
             navigate(`/projects/${data._id}/edit`);
           });
@@ -704,6 +730,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   };
 
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
+  const watchReraNumber = Form.useWatch(["info", "reraNumber"], form);
+  const disabledFields: Record<string, boolean> = {
+    "otherDetails.expectedLaunchDate": !!watchReraNumber,
+  };
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
 
@@ -724,7 +754,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   }, [watchHomeType, form, projectFields]);
 
   useEffect(() => {
-    if (!projectData && project) {
+    if (project) {
       const uiFormatting: any = {};
       // set the form values directly when project data is available
       const formValues = {
@@ -798,6 +828,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   isMobile={isMobile}
                   fieldRules={fieldRules}
                   onFloorplanUpload={onFloorplanUpload}
+                  disabledFields={disabledFields}
                 />
               </TabPane>
             );
