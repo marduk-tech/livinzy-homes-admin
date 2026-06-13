@@ -131,7 +131,7 @@ export const ProjectsList: React.FC = () => {
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
     statusFilter: projectStatusFilter == "all" ? "" : projectStatusFilter,
     issueType: issueType == "all" ? "" : issueType,
-    limit: 50,
+    limit: 100,
     sortBy: "updatedAt:desc",
     hasStatusComments,
   });
