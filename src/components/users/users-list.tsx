@@ -610,87 +610,97 @@ export function UsersList() {
   ];
 
   const handleCSVExport = () => {
-    // Use filtered data if available, otherwise use all data
-    const dataToExport = filteredUsers.length > 0 ? filteredUsers : data || [];
+    const today = new Date().toISOString().split("T")[0];
 
-    if (dataToExport.length === 0) {
-      notification.warning({
-        message: "No Data to Export",
-        description: "There are no users to export.",
-      });
+    if (activeTab === "reports") {
+      const dataToExport = aggregatedReports || [];
+      if (dataToExport.length === 0) {
+        notification.warning({ message: "No Data to Export", description: "There are no reports to export." });
+        return;
+      }
+      const headers = ["Project Name", "RERA Number", "Brick360 Report ID", "Total Requests", "Latest Request", "All Request Dates"];
+      const rows = dataToExport.map((row) => [
+        row.projectName,
+        row.reraNumber || "",
+        row.lvnzyProjectId || "",
+        String(row.totalRequests),
+        formatDateForCSV(row.latestRequestDate),
+        row.allRequestDates.map((d) => formatDateForCSV(d)).join("; "),
+      ]);
+      downloadCSV(convertToCSV(headers, rows), `reports-export-${today}.csv`);
+      notification.success({ message: "Export Successful", description: `Exported ${dataToExport.length} report(s).` });
       return;
     }
 
-    // Create a map of project IDs to project names
-    const projectIdToNameMap = new Map<string, string>();
-    lvnzyProjects?.forEach((project: any) => {
-      projectIdToNameMap.set(
-        project._id,
-        project.meta?.projectName || "Unknown Project",
-      );
-    });
+    if (activeTab === "leads") {
+      const dataToExport = leadsData || [];
+      if (dataToExport.length === 0) {
+        notification.warning({ message: "No Data to Export", description: "There are no leads to export." });
+        return;
+      }
+      const headers = ["Name", "Mobile", "Status", "Preferred Callback", "Shared Reports", "Requested Reports", "Last Contact", "Date Updated"];
+      const rows = dataToExport.map((user) => {
+        const preferredCallback = user.profile?.preferredCallbackTimestamp
+          ? new Date(user.profile.preferredCallbackTimestamp).toLocaleString()
+          : user.profile?.preferredCallbackTime || "";
+        const firstCollection = user.savedLvnzyProjects?.[0];
+        const sharedReports = firstCollection?.projects?.length
+          ? firstCollection.projects.map((id) => projectIdToNameMap.get(id) || id).join(", ")
+          : "";
+        const requestedReports = user.requestedReports?.length
+          ? user.requestedReports.filter((r) => r?.projectName).map((r) => r.projectName).join(", ")
+          : "";
+        const comments = user.leadTrail?.comments;
+        const lastContact = comments?.length
+          ? formatDateForCSV(comments[comments.length - 1].dateOriginal || comments[comments.length - 1].dateAdded)
+          : "";
+        return [
+          user.profile?.name || "",
+          `${user.countryCode} ${user.mobile}`,
+          user.status || "",
+          preferredCallback,
+          sharedReports,
+          requestedReports,
+          lastContact,
+          formatDateForCSV(user.updatedAt),
+        ];
+      });
+      downloadCSV(convertToCSV(headers, rows), `leads-export-${today}.csv`);
+      notification.success({ message: "Export Successful", description: `Exported ${dataToExport.length} lead(s).` });
+      return;
+    }
 
-    const headers = [
-      "Name",
-      "Created Date",
-      "Last Updated",
-      "Mobile",
-      "Email",
-      "UTM Source",
-      "UTM Campaign",
-      "UTM Medium",
-      "Requested Reports",
-      "Shared Reports",
-    ];
-
+    // activeTab === "users"
+    const dataToExport = filteredUsers.length > 0 ? filteredUsers : data || [];
+    if (dataToExport.length === 0) {
+      notification.warning({ message: "No Data to Export", description: "There are no users to export." });
+      return;
+    }
+    const headers = ["Name", "Created Date", "Last Updated", "Mobile", "Email", "Status", "UTM Source", "UTM Medium", "UTM Campaign", "Requested Reports", "Collections"];
     const rows = dataToExport.map((user) => {
       const mostRecentUtm = user.metrics?.utm?.[user.metrics.utm.length - 1];
-
-      // Get requested reports as comma-separated string
-      const requestedReports =
-        user.requestedReports && user.requestedReports.length > 0
-          ? user.requestedReports
-              .filter((r) => r && r.projectName)
-              .map((r) => r.projectName)
-              .join(", ")
-          : "";
-
-      // Get shared reports from first collection
-      const firstCollection = user.savedLvnzyProjects?.[0];
-      const sharedReports =
-        firstCollection?.projects && firstCollection.projects.length > 0
-          ? firstCollection.projects
-              .map(
-                (projectId) => projectIdToNameMap.get(projectId) || projectId,
-              )
-              .join(", ")
-          : "";
-
+      const requestedReports = user.requestedReports?.length
+        ? user.requestedReports.filter((r) => r?.projectName).map((r) => r.projectName).join(", ")
+        : "";
+      const collections = user.savedLvnzyProjects?.length
+        ? user.savedLvnzyProjects.map((c) => c.collectionName || "Unnamed").join(", ")
+        : "";
       return [
         user.profile?.name || "",
         formatDateForCSV(user.createdAt),
         formatDateForCSV(user.updatedAt),
         `${user.countryCode} ${user.mobile}`,
         user.profile?.email || "",
+        user.status || "",
         mostRecentUtm?.utm_source || "",
-        mostRecentUtm?.utm_campaign || "",
         mostRecentUtm?.utm_medium || "",
+        mostRecentUtm?.utm_campaign || "",
         requestedReports,
-        sharedReports,
+        collections,
       ];
     });
-
-    const csvContent = convertToCSV(headers, rows);
-
-    const today = new Date().toISOString().split("T")[0];
-    const filename = `users-export-${today}.csv`;
-
-    downloadCSV(csvContent, filename);
-
-    notification.success({
-      message: "Export Successful",
-      description: `Exported ${dataToExport.length} user(s) to ${filename}`,
-    });
+    downloadCSV(convertToCSV(headers, rows), `users-export-${today}.csv`);
+    notification.success({ message: "Export Successful", description: `Exported ${dataToExport.length} user(s).` });
   };
 
   const reportsColumns: TableColumnType<AggregatedReportRow>[] = [
