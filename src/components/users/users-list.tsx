@@ -57,6 +57,7 @@ import { UserForm } from "./user-form";
 import { SetCallbackModal } from "./set-callback-modal";
 import { COLORS } from "../../theme/colors";
 import DynamicReactIcon from "../common/dynamic-react-icon";
+import { ActionableLeads } from "./actionable-leads";
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
@@ -93,7 +94,7 @@ export function UsersList() {
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "leads">(
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "leads" | "actionable-leads">(
     "users",
   );
 
@@ -1263,7 +1264,7 @@ _If you need any kind of assistance with regards to ${
 
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as "users" | "reports" | "leads")}
+        onChange={(key) => setActiveTab(key as "users" | "reports" | "leads" | "actionable-leads")}
       >
         <Tabs.TabPane tab="All Users" key="users">
           <Search
@@ -1309,6 +1310,10 @@ _If you need any kind of assistance with regards to ${
             scroll={{ x: true }}
             pagination={{ pageSize: 20 }}
           />
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="Actionable Leads" key="actionable-leads">
+          {activeTab === "actionable-leads" && <ActionableLeads />}
         </Tabs.TabPane>
       </Tabs>
 

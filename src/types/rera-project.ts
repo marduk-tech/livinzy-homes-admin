@@ -21,6 +21,7 @@ interface Tower {
 
 interface ProjectDetails {
   projectName: string;
+  promoterName: string;
   projectDescription: string;
   projectRegistrationNumber: string;
   projectType: string;

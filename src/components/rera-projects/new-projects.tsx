@@ -5,6 +5,7 @@ import {
   Flex,
   Modal,
   Row,
+  Switch,
   Table,
   TableColumnType,
   Tooltip,
@@ -31,6 +32,7 @@ export function NewProjects() {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [filterKnown, setFilterKnown] = useState(false);
 
   const selectedProjects = (data ?? [])
     .filter((p) => selectedRowKeys.includes(p._id))
@@ -48,12 +50,34 @@ export function NewProjects() {
     return new Date(Number(year), Number(month) - 1, Number(day));
   };
 
+  const knownDeveloperKeywords = [
+    'sobha', 'prestige', 'century', 'sumadhura', 'purva', 'provident',
+    'godrej', 'orchid', 'brigade', 'assetz', 'adarsh', 'mana', 'bhartiya', 'sattva', 'nikoo', 'embassy',
+    'aratt', 'ajmera', 'shriram'
+  ];
+
+  const tableData = filterKnown
+    ? (data ?? []).filter((p) => {
+        const name = (p.projectDetails.promoterName ?? "").toLowerCase();
+        const project = (p.projectDetails.projectName ?? "").toLowerCase();
+        return knownDeveloperKeywords.some((kw) => name.includes(kw) || project.includes(kw));
+      })
+    : data;
+
   const columns: TableColumnType<ReraProject>[] = [
     {
       title: "Project Name",
       dataIndex: ["projectDetails", "projectName"],
       key: "projectName",
       ...ColumnSearch(["projectDetails", "projectName"]),
+    },
+    {
+      title: "Promoter Name",
+      dataIndex: ["projectDetails", "promoterName"],
+      key: "promoterName",
+      render: (value: string) => (
+        <Typography.Text>{value || "-"}</Typography.Text>
+      ),
     },
     {
       title: "Registration Number",
@@ -133,8 +157,14 @@ export function NewProjects() {
 
   return (
     <>
-      {selectedRowKeys.length > 0 && (
-        <Row justify="end" style={{ marginBottom: 12 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 12 }}>
+        <Col>
+          <Flex align="center" gap={8}>
+            <Switch checked={filterKnown} onChange={setFilterKnown} />
+            <Typography.Text>Known Developers</Typography.Text>
+          </Flex>
+        </Col>
+        {selectedRowKeys.length > 0 && (
           <Col>
             <Button
               type="primary"
@@ -144,11 +174,11 @@ export function NewProjects() {
               Assign to Developer ({selectedRowKeys.length})
             </Button>
           </Col>
-        </Row>
-      )}
+        )}
+      </Row>
 
       <Table
-        dataSource={data}
+        dataSource={tableData}
         columns={columns}
         loading={isLoading}
         rowKey="_id"
