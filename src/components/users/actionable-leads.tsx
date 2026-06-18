@@ -15,6 +15,8 @@ interface JourneyRow {
   time: string;
   action: string;
   details: string;
+  status: string;
+  callbackTime: string;
 }
 
 interface DetailRow {
@@ -26,6 +28,8 @@ interface AggregatedLead {
   userid: string;
   name: string;
   mobile: string;
+  status: string;
+  callbackTime: string;
   actions: { action: string; count: number }[];
   latestActionDate: string;
   projects: string[];
@@ -70,10 +74,14 @@ function aggregateLeads(rows: JourneyRow[]): AggregatedLead[] {
     }));
 
     const firstRow = userRows[0];
+    const status = userRows.find((r) => r.status)?.status || "";
+    const callbackTime = userRows.find((r) => r.callbackTime)?.callbackTime || "";
     leads.push({
       userid,
       name: firstRow.name || userid,
       mobile: firstRow.mobile || "-",
+      status,
+      callbackTime,
       actions: (() => {
         const countMap = new Map<string, number>();
         sorted360.forEach((r) => countMap.set(r.action, (countMap.get(r.action) || 0) + 1));
@@ -165,6 +173,58 @@ export function ActionableLeads() {
       dataIndex: "name",
       key: "name",
       render: (val: string) => val || "-",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      filters: [
+        { text: "Callback Request", value: "callback-request" },
+        { text: "Active Lead", value: "active-lead" },
+        { text: "Dropped Lead", value: "dropped-lead" },
+        { text: "New Lead", value: "new-lead" },
+      ],
+      onFilter: (value, record) => record.status === value,
+      render: (status: string, record: AggregatedLead) => {
+        if (!status) return "-";
+
+        let callbackLabel: string | undefined;
+        if (record.callbackTime) {
+          const d = new Date(record.callbackTime);
+          if (!isNaN(d.getTime())) {
+            callbackLabel = d.toLocaleDateString("en-US", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            });
+          }
+        }
+
+        const tag =
+          status === "dropped-lead" ? (
+            <Tag style={{ background: "#f0f0f0", color: "#888", borderColor: "#d9d9d9" }}>
+              {status}
+            </Tag>
+          ) : (
+            <Tag
+              color={
+                status === "callback-request"
+                  ? "gold"
+                  : status === "active-lead"
+                  ? "green"
+                  : undefined
+              }
+            >
+              {status}
+            </Tag>
+          );
+
+        return callbackLabel ? (
+          <Tooltip title={callbackLabel}>{tag}</Tooltip>
+        ) : (
+          tag
+        );
+      },
     },
     {
       title: "Mobile",
