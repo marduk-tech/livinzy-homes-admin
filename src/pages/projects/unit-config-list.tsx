@@ -17,7 +17,7 @@ import {
 } from "antd";
 
 import React, { useState } from "react";
-import { FileUpload } from "./common/img-upload";
+import { FileUpload } from "../../components/common/img-upload";
 
 interface UnitConfig {
   config: string;
