@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
 import {
   Button,
   Checkbox,
@@ -52,6 +52,29 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [newlyUploadedImageIds, setNewlyUploadedImageIds] = useState<Set<string>>(new Set());
+  const [sqFtPriceModalVisible, setSqFtPriceModalVisible] = useState(false);
+  const [newSqFtPrice, setNewSqFtPrice] = useState<number | null>(null);
+
+  const validConfigs = value.filter((c) => c.price > 0 && (c.sizeBuiltup ?? 0) > 0);
+  const avgSqFtPrice =
+    validConfigs.length > 0
+      ? Math.round(
+          validConfigs.reduce((sum, c) => sum + c.price / c.sizeBuiltup!, 0) /
+            validConfigs.length,
+        )
+      : null;
+
+  const handleApplySqFtPrice = () => {
+    if (!newSqFtPrice) return;
+    const updated = value.map((c) =>
+      (c.sizeBuiltup ?? 0) > 0
+        ? { ...c, price: Math.round((newSqFtPrice * c.sizeBuiltup!) / 25000) * 25000 }
+        : c,
+    );
+    onChange?.(updated);
+    setSqFtPriceModalVisible(false);
+    setNewSqFtPrice(null);
+  };
 
   // Helper function to get which unit config is using each floorplan
   const getFloorplanUsage = () => {
@@ -158,15 +181,27 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   return (
     <div>
       <Flex
-        
         align="center"
-        style={{
-          marginBottom: 16,
-        }}
+        style={{ marginBottom: 16 }}
         gap={8}
       >
-        <Typography.Text style={{fontSize: 14}}>Total {value.length} configurations</Typography.Text>
-        <Button style={{marginLeft: "auto"}} icon={<PlusOutlined />} onClick={handleAdd}>
+        <Typography.Text style={{ fontSize: 14 }}>
+          Total {value.length} configurations
+        </Typography.Text>
+        {avgSqFtPrice !== null && (
+          <Typography.Text style={{ fontSize: 14, color: "#888" }}>
+            · Avg Rs. {avgSqFtPrice.toLocaleString()}/sq ft
+          </Typography.Text>
+        )}
+        <Button
+          style={{ marginLeft: "auto" }}
+          icon={<RetweetOutlined />}
+          onClick={() => setSqFtPriceModalVisible(true)}
+          disabled={validConfigs.length === 0}
+        >
+          Update Sq Ft Price
+        </Button>
+        <Button icon={<PlusOutlined />} onClick={handleAdd}>
           Add Unit Configuration
         </Button>
       </Flex>
@@ -583,6 +618,38 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             </Checkbox.Group>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Update Pricing by Sq Ft Rate"
+        open={sqFtPriceModalVisible}
+        onOk={handleApplySqFtPrice}
+        okText="Apply"
+        okButtonProps={{ disabled: !newSqFtPrice }}
+        onCancel={() => {
+          setSqFtPriceModalVisible(false);
+          setNewSqFtPrice(null);
+        }}
+        destroyOnClose
+      >
+        {avgSqFtPrice !== null && (
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+            Current average: Rs. {avgSqFtPrice.toLocaleString()}/sq ft
+          </Typography.Text>
+        )}
+        <InputNumber
+          style={{ width: "100%" }}
+          placeholder="New price per sq ft (e.g. 8000)"
+          min={1}
+          value={newSqFtPrice}
+          onChange={(v) => setNewSqFtPrice(v)}
+          formatter={(v) => `Rs. ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+          parser={(v) => v!.replace(/Rs.\s?|(,*)/g, "") as any}
+          autoFocus
+        />
+        <Typography.Text type="secondary" style={{ display: "block", marginTop: 8, fontSize: 12 }}>
+          Applies to all configurations that have a built-up area set. New price = rate × built-up area.
+        </Typography.Text>
       </Modal>
     </div>
   );
