@@ -1,10 +1,11 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Select, Space, Typography } from "antd";
+import { Button, Checkbox, Form, Input, Modal, Select, Space, Typography } from "antd";
 import PhoneInput from "antd-phone-input";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
   useCreateUserMutation,
+  useSendReportEmailMutation,
   useUpdateUserMutation,
 } from "../../hooks/user-hooks";
 
@@ -27,6 +28,8 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
 
   const createUserMutation = useCreateUserMutation();
   const updateUserMutation = useUpdateUserMutation();
+  const sendReportEmailMutation = useSendReportEmailMutation();
+  const [sendEmailForNewProjects, setSendEmailForNewProjects] = useState(true);
   const { data: projects, isLoading: projectsLoading } =
     useGetAllLvnzyProjects();
 
@@ -94,6 +97,20 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           userId: data._id,
           userData: payload,
         });
+
+        const oldProjectIds = new Set(
+          (data.savedLvnzyProjects || []).flatMap((c: CreateSavedLvnzyProject) => c.projects)
+        );
+        const newProjectIds = savedLvnzyProjects
+          .flatMap((c: CreateSavedLvnzyProject) => c.projects)
+          .filter((id: string) => !oldProjectIds.has(id));
+
+        if (sendEmailForNewProjects && newProjectIds.length > 0) {
+          sendReportEmailMutation.mutate({
+            userId: data._id,
+            projectIds: newProjectIds,
+          });
+        }
       } else {
         //  new user
         const payload: CreateUserPayload = {
@@ -329,6 +346,16 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
               </>
             )}
           </Form.List>
+
+          {data && (
+            <Checkbox
+              checked={sendEmailForNewProjects}
+              onChange={(e) => setSendEmailForNewProjects(e.target.checked)}
+              style={{ marginTop: 8 }}
+            >
+              Send email for new projects
+            </Checkbox>
+          )}
         </Form>
       </Modal>
     </>
