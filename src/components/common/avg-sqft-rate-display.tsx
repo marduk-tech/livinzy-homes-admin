@@ -21,15 +21,13 @@ export const AVGSQFTRateDisplay: React.FC<Props> = ({
   record,
   projects,
 }) => {
-  if (!details?.minimumUnitCost || !details?.minimumUnitSize) {
-    return "-";
-  }
-  const cost = details.minimumUnitCost;
-  const size = details.minimumUnitSize;
-  if (isNaN(cost) || isNaN(size) || size <= 0) {
-    return "-";
-  }
-  const rate = Math.round(cost / size);
+  const validConfigs = (record.info.unitConfigWithPricing ?? []).filter(
+    (c) => c.price > 0 && (c.sizeBuiltup ?? 0) > 0
+  );
+  if (validConfigs.length === 0) return "-";
+  const rate = Math.round(
+    validConfigs.reduce((sum, c) => sum + c.price / c.sizeBuiltup!, 0) / validConfigs.length
+  );
 
     return (
       <Tooltip

@@ -76,6 +76,7 @@ export interface IInfo {
     _id?: string;
     config: string;
     price: number;
+    sizeBuiltup?: number;
     floorplans: string[];
   }>;
   layout?: {
