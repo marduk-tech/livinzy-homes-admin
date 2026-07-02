@@ -221,7 +221,7 @@ export function ActionableLeads() {
 
   const columns: TableColumnType<AggregatedLead>[] = [
     {
-      title: "Name",
+      title: "Name/ ID",
       dataIndex: "name",
       key: "name",
       ...nameFilter,
