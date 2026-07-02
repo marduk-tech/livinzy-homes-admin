@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UnitConfigList } from "./unit-config-list";
 
 import {
@@ -33,9 +33,25 @@ import {
   DownloadOutlined,
   FilePdfOutlined,
   FileTextOutlined,
+  HolderOutlined,
   ScissorOutlined,
   TableOutlined,
 } from "@ant-design/icons";
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import { useRemoveWatermark } from "../../hooks/dewatermark-hooks";
@@ -66,6 +82,38 @@ import WatermarkPreviewModal from "../../components/watermark-preview-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
+
+const DraggableRow = ({ children, ...props }: React.HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: string }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: props["data-row-key"] ?? "",
+  });
+  return (
+    <tr
+      {...props}
+      ref={setNodeRef}
+      style={{
+        ...props.style,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        ...(isDragging ? { position: "relative", zIndex: 9999, background: "#fafafa" } : {}),
+      }}
+      {...attributes}
+    >
+      {React.Children.map(children as React.ReactElement[], (child) =>
+        child && (child as React.ReactElement).key === "sort"
+          ? React.cloneElement(child as React.ReactElement, {
+              children: (
+                <HolderOutlined
+                  style={{ touchAction: "none", cursor: "grab" }}
+                  {...listeners}
+                />
+              ),
+            })
+          : child
+      )}
+    </tr>
+  );
+};
 
 interface ProjectFormProps {
   projectId?: string;
@@ -284,6 +332,33 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [imageViewMode, setImageViewMode] = useState<"default" | "table">("default");
 
   const removeWatermarkMutation = useRemoveWatermark();
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 1 } }));
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!active || !over || active.id === over.id) return;
+    const currentMedia: IMedia[] = form.getFieldValue("media") || [];
+    const imageIndices = currentMedia
+      .map((item, i) => ({ item, i }))
+      .filter(({ item }) => item?.type === "image")
+      .map(({ i }) => i);
+    const imageItems = imageIndices.map((i) => currentMedia[i]);
+    const oldIdx = imageIndices.indexOf(Number(active.id));
+    const newIdx = imageIndices.indexOf(Number(over.id));
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(imageItems, oldIdx, newIdx);
+    const updatedMedia = [...currentMedia];
+    imageIndices.forEach((mediaIdx, pos) => {
+      updatedMedia[mediaIdx] = {
+        ...reordered[pos],
+        image: { ...reordered[pos].image!, sequence: pos },
+      };
+    });
+    form.setFieldValue("media", updatedMedia);
+    if (projectId) {
+      updateProject.mutate({ projectData: { media: updatedMedia } });
+    }
+  };
 
   const handlePreviewImageChange = (index: number, checked: boolean) => {
     if (checked) {
@@ -1057,6 +1132,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     })}
                   </Flex>
                 ) : (
+                  <DndContext
+                    sensors={sensors}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                  >
+                  <SortableContext
+                    items={(project?.media || [])
+                      .map((item: IMedia, i: number) => ({ item, i }))
+                      .filter(({ item }: { item: IMedia; i: number }) => item?.type === "image")
+                      .map(({ i }: { item: IMedia; i: number }) => String(i))}
+                    strategy={verticalListSortingStrategy}
+                  >
                   <Table
                     size="small"
                     pagination={false}
@@ -1064,8 +1151,14 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     dataSource={project?.media
                       ?.map((item: IMedia, index: number) => ({ item, index }))
                       .filter(({ item }) => item?.type === "image")}
-                    rowKey={({ index }) => index}
+                    rowKey={({ index }) => String(index)}
+                    components={{ body: { row: DraggableRow } }}
                     columns={[
+                      {
+                        key: "sort",
+                        width: 40,
+                        render: () => null,
+                      },
                       {
                         title: () => {
                           const imageIndices = (project?.media || [])
@@ -1219,6 +1312,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       },
                     ]}
                   />
+                  </SortableContext>
+                  </DndContext>
                 )}
 
                 <Modal

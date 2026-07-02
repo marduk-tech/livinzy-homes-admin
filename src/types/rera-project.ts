@@ -47,6 +47,7 @@ export interface ReraDocument {
   url: string;
   name: string;
   urlText: string;
+  summary?: string;
 }
 
 export interface ReraProject {

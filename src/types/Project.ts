@@ -8,6 +8,7 @@ export interface IMedia {
     url: string;
     tags: string[];
     caption?: string;
+    sequence?: number;
   };
   isPreview: boolean;
   hasWatermark: boolean;

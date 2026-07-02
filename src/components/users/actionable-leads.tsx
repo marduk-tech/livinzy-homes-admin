@@ -1,7 +1,8 @@
 import axios from "axios";
-import { Button, Modal, Space, Spin, Table, TableColumnType, Tag, Tooltip, Typography } from "antd";
-import { useEffect, useState } from "react";
-import { FileTextOutlined } from "@ant-design/icons";
+import { Button, Input, Modal, Space, Spin, Table, TableColumnType, Tag, Tooltip, Typography } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { FileTextOutlined, SearchOutlined } from "@ant-design/icons";
+import type { FilterDropdownProps } from "antd/es/table/interface";
 import { COLORS } from "../../theme/colors";
 
 const POSTHOG_HOST = "https://us.posthog.com";
@@ -123,11 +124,62 @@ function renderLineWithLinks(line: string): React.ReactNode {
   });
 }
 
+function useStringFilter<T>(dataIndex: keyof T) {
+  const searchInput = useRef<any>(null);
+
+  const filterDropdown = ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+  }: FilterDropdownProps) => (
+    <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+      <Input
+        ref={searchInput}
+        placeholder={`Search ${String(dataIndex)}`}
+        value={selectedKeys[0] as string}
+        onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+        onPressEnter={() => confirm()}
+        style={{ display: "block", marginBottom: 8 }}
+      />
+      <Space>
+        <Button
+          type="primary"
+          icon={<SearchOutlined />}
+          size="small"
+          onClick={() => confirm()}
+        >
+          Search
+        </Button>
+        <Button size="small" onClick={() => { clearFilters?.(); confirm(); }}>
+          Reset
+        </Button>
+      </Space>
+    </div>
+  );
+
+  return {
+    filterDropdown,
+    filterIcon: (filtered: boolean) => (
+      <SearchOutlined style={{ color: filtered ? COLORS.primary || "#1677ff" : undefined }} />
+    ),
+    onFilter: (value: boolean | React.Key, record: T) =>
+      String(record[dataIndex] ?? "")
+        .toLowerCase()
+        .includes(String(value).toLowerCase()),
+    onFilterDropdownOpenChange: (open: boolean) => {
+      if (open) setTimeout(() => searchInput.current?.select(), 100);
+    },
+  };
+}
+
 export function ActionableLeads() {
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState<AggregatedLead[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [detailsUser, setDetailsUser] = useState<AggregatedLead | null>(null);
+  const nameFilter = useStringFilter<AggregatedLead>("name");
+  const mobileFilter = useStringFilter<AggregatedLead>("mobile");
 
   useEffect(() => {
     setLoading(true);
@@ -172,6 +224,7 @@ export function ActionableLeads() {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      ...nameFilter,
       render: (val: string) => val || "-",
     },
     {
@@ -230,6 +283,7 @@ export function ActionableLeads() {
       title: "Mobile",
       dataIndex: "mobile",
       key: "mobile",
+      ...mobileFilter,
       render: (val: string) => val || "-",
     },
     {

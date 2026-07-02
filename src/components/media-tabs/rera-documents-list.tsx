@@ -1,6 +1,6 @@
 import { DownloadOutlined, FilePdfOutlined, SearchOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Empty, Flex, Input, Radio, Space, Spin, Table, Typography } from "antd";
+import { Button, Empty, Flex, Input, Modal, Radio, Space, Spin, Table, Typography } from "antd";
 import { useState } from "react";
 import { FilterDropdownProps } from "antd/es/table/interface";
 
@@ -17,6 +17,7 @@ export const ReraDocumentsList = ({
   const [documentFilter, setDocumentFilter] = useState<"available" | "all">(
     "available"
   );
+  const [summaryModal, setSummaryModal] = useState<string | null>(null);
 
   // if reraProjectId is a string (ID) or object (populated)
   const isPopulated =
@@ -185,6 +186,33 @@ export const ReraDocumentsList = ({
             ),
           },
           {
+            title: "Summary",
+            key: "summary",
+            render: (_, record: ReraDocument) => {
+              if (!record.summary) return null;
+              const words = record.summary.split(" ");
+              const truncated = words.slice(0, 20).join(" ");
+              const isTruncated = words.length > 20;
+              return (
+                <Flex align="center" gap={8}>
+                  <Typography.Text style={{ fontSize: "12px" }}>
+                    {isTruncated ? `${truncated}...` : truncated}
+                  </Typography.Text>
+                  {isTruncated && (
+                    <Button
+                      type="link"
+                      size="small"
+                      style={{ padding: 0, fontSize: "12px" }}
+                      onClick={() => setSummaryModal(record.summary!)}
+                    >
+                      View more
+                    </Button>
+                  )}
+                </Flex>
+              );
+            },
+          },
+          {
             title: "Actions",
             key: "actions",
             render: (_, record: ReraDocument) => (
@@ -211,6 +239,14 @@ export const ReraDocumentsList = ({
           },
         ]}
       />
+      <Modal
+        open={!!summaryModal}
+        onCancel={() => setSummaryModal(null)}
+        footer={null}
+        title="Summary"
+      >
+        <Typography.Text>{summaryModal}</Typography.Text>
+      </Modal>
     </>
   );
 };
