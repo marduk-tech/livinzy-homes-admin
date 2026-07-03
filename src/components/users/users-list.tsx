@@ -1010,6 +1010,19 @@ export function UsersList() {
     {
       title: "Shared Reports",
       key: "sharedReports",
+      filters: [
+        { text: "Reports shared", value: "non-empty" },
+        { text: "Reports NOT shared", value: "empty" },
+      ],
+      onFilter: (value, record) => {
+        const hasReports = !!record.savedLvnzyProjects?.[0]?.projects?.length;
+        if (value === "non-empty") return hasReports;
+        if (value === "empty") return !hasReports;
+        return true;
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (_, record) => {
         const firstCollection = record.savedLvnzyProjects?.[0];
         if (!firstCollection?.projects?.length) return "-";
@@ -1021,6 +1034,19 @@ export function UsersList() {
     {
       title: "Requested Reports",
       key: "requestedReports",
+      filters: [
+        { text: "Has Requested Reports", value: "non-empty" },
+        { text: "No Requested Reports", value: "empty" },
+      ],
+      onFilter: (value, record) => {
+        const hasReports = !!record.requestedReports?.filter((r) => r?.projectName).length;
+        if (value === "non-empty") return hasReports;
+        if (value === "empty") return !hasReports;
+        return true;
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (_, record) =>
         record.requestedReports?.length
           ? record.requestedReports
