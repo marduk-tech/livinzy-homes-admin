@@ -161,7 +161,7 @@ function useStringFilter<T>(dataIndex: keyof T) {
   return {
     filterDropdown,
     filterIcon: (filtered: boolean) => (
-      <SearchOutlined style={{ color: filtered ? COLORS.primary || "#1677ff" : undefined }} />
+      <SearchOutlined style={{ color: filtered ? COLORS.primaryColor || "#1677ff" : undefined }} />
     ),
     onFilter: (value: boolean | React.Key, record: T) =>
       String(record[dataIndex] ?? "")
