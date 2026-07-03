@@ -122,12 +122,20 @@ export function UsersList() {
   >(null);
 
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<User[]>([]);
+  const [filteredReports, setFilteredReports] = useState<AggregatedReportRow[]>([]);
 
   useEffect(() => {
-    if (data) {
-      setFilteredUsers(data);
-    }
+    if (data) setFilteredUsers(data);
   }, [data]);
+
+  useEffect(() => {
+    if (leadsData) setFilteredLeads(leadsData);
+  }, [leadsData]);
+
+  useEffect(() => {
+    if (aggregatedReports) setFilteredReports(aggregatedReports);
+  }, [aggregatedReports]);
 
   const handleSendEmail = () => {
     if (selectedUser && selectedProjectIds.length > 0) {
@@ -933,6 +941,22 @@ export function UsersList() {
       title: "Preferred Callback",
       key: "preferredCallback",
       defaultSortOrder: "descend",
+      filters: [
+        { text: "Has Callback Request", value: "non-empty" },
+        { text: "No Callback Request", value: "empty" },
+      ],
+      onFilter: (value, record) => {
+        const hasCallback = !!(
+          record.profile?.preferredCallbackTimestamp ||
+          record.profile?.preferredCallbackTime
+        );
+        if (value === "non-empty") return hasCallback;
+        if (value === "empty") return !hasCallback;
+        return true;
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       sorter: (a, b) => {
         const getTimestamp = (record: any): number => {
           if (record.profile?.preferredCallbackTimestamp) {
@@ -949,10 +973,8 @@ export function UsersList() {
       },
       render: (_, record) => {
         let label: string | undefined;
-        let callbackTime: Date | undefined;
         if (record.profile?.preferredCallbackTimestamp) {
           const start = new Date(record.profile.preferredCallbackTimestamp);
-          callbackTime = start;
           const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
           const day = start.getDate();
           const month = start.toLocaleString("en-US", { month: "short" });
@@ -966,10 +988,6 @@ export function UsersList() {
           if (raw) {
             const splits = raw.split(",");
             label = splits.length >= 2 ? splits.slice(1).join(",").trim() : raw;
-            if (splits.length >= 2) {
-              const t = new Date(splits[1].trim() + " 2026");
-              if (!isNaN(t.getTime())) callbackTime = t;
-            }
           }
         }
         const category = record.profile?.callbackCategory;
@@ -981,15 +999,6 @@ export function UsersList() {
               {intent && <div>Source: {intent}</div>}
             </div>
           ) : undefined;
-        let tagColor: string | undefined;
-        if (callbackTime) {
-          const diff = callbackTime.getTime() - Date.now();
-          if (diff > 0 && diff <= 24 * 60 * 60 * 1000) {
-            tagColor = COLORS.yellowIdentifier;
-          } else if (diff > 24 * 60 * 60 * 1000) {
-            tagColor = COLORS.redIdentifier;
-          }
-        }
         return (
           <Tooltip title={tooltipContent}>
                 <Flex>
@@ -1302,8 +1311,9 @@ _If you need any kind of assistance with regards to ${
             }}
             onSearch={(value: string) => setSearchKeyword(value)}
             enterButton="Search"
-            style={{ width: 350, marginBottom: 16 }}
+            style={{ width: 350, marginBottom: 8 }}
           />
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredUsers.length}/{data?.length ?? 0} rows</Typography.Text>
           <Table
             dataSource={data}
             columns={columns}
@@ -1317,6 +1327,7 @@ _If you need any kind of assistance with regards to ${
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="Requested Reports" key="reports">
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredReports.length}/{aggregatedReports?.length ?? 0} rows</Typography.Text>
           <Table
             dataSource={aggregatedReports}
             columns={reportsColumns}
@@ -1324,10 +1335,14 @@ _If you need any kind of assistance with regards to ${
             rowKey={(record) => record.projectId}
             scroll={{ x: true }}
             pagination={{ pageSize: 10 }}
+            onChange={(pagination, filters, sorter, extra) => {
+              setFilteredReports(extra.currentDataSource);
+            }}
           />
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="Leads" key="leads">
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredLeads.length}/{leadsData?.length ?? 0} rows</Typography.Text>
           <Table
             dataSource={leadsData}
             columns={leadsColumns}
@@ -1335,6 +1350,9 @@ _If you need any kind of assistance with regards to ${
             rowKey="_id"
             scroll={{ x: true }}
             pagination={{ pageSize: 20 }}
+            onChange={(pagination, filters, sorter, extra) => {
+              setFilteredLeads(extra.currentDataSource);
+            }}
           />
         </Tabs.TabPane>
 
