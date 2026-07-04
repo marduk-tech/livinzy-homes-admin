@@ -501,9 +501,19 @@ export function UsersList() {
         clearFilters,
       }) => (
         <div style={{ padding: 8 }}>
+          <div style={{ marginBottom: 8 }}>
+            <Checkbox
+              checked={selectedKeys.includes("__empty__")}
+              onChange={(e) => {
+                setSelectedKeys(e.target.checked ? ["__empty__"] : []);
+              }}
+            >
+              Has reports
+            </Checkbox>
+          </div>
           <Input
             placeholder="Search project name"
-            value={selectedKeys[0]}
+            value={selectedKeys.includes("__empty__") ? "" : selectedKeys[0]}
             onChange={(e) =>
               setSelectedKeys(e.target.value ? [e.target.value] : [])
             }
@@ -537,6 +547,9 @@ export function UsersList() {
         <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
       onFilter: (value, record) => {
+        if (value === "__empty__") {
+          return !!record.requestedReports && record.requestedReports.length > 0;
+        }
         if (!record.requestedReports || record.requestedReports.length === 0) {
           return false;
         }
@@ -556,20 +569,33 @@ export function UsersList() {
           : "-",
     },
     {
-      title: "Collections",
-      key: "collections",
+      title: "Shared Reports",
+      key: "sharedReports",
       width: 250,
-      render: (_, record) => (
-        <>
-          {record.savedLvnzyProjects?.length
-            ? record.savedLvnzyProjects.map((collection) => (
-                <Tag key={collection._id} style={{ margin: "2px" }}>
-                  {collection.collectionName || "Unnamed Collection"}
-                </Tag>
-              ))
-            : "-"}
-        </>
+      filters: [
+        { text: "Reports shared", value: "non-empty" },
+        { text: "Reports NOT shared", value: "empty" },
+      ],
+      onFilter: (value, record) => {
+        const hasReports = !!record.savedLvnzyProjects?.[0]?.projects?.length;
+        if (value === "non-empty") return hasReports;
+        if (value === "empty") return !hasReports;
+        return true;
+      },
+      filterIcon: (filtered: boolean) => (
+        <FilterOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
       ),
+      render: (_, record) => {
+        const firstCollection = record.savedLvnzyProjects?.[0];
+        if (!firstCollection?.projects?.length) return "-";
+        const idToName = new Map<string, string>();
+        lvnzyProjects?.forEach((p: any) => {
+          idToName.set(p._id, p.meta?.projectName || "Unknown Project");
+        });
+        return firstCollection.projects
+          .map((id) => idToName.get(id) || id)
+          .join(", ");
+      },
     },
     {
       title: "Actions",
