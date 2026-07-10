@@ -73,6 +73,7 @@ import {
 } from "../../types/Project";
 import DynamicReactIcon from "../../components/common/dynamic-react-icon";
 import { FileUpload } from "../../components/common/img-upload";
+import { ImagePdfUpload } from "../../components/common/image-pdf-upload";
 import { Loader } from "../../components/common/loader";
 import { DocumentsList } from "../../components/media-tabs/documents-list";
 import { ReraDocumentsModal } from "../../components/rera-projects/rera-documents-modal";
@@ -458,6 +459,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     originalNames: string[],
     index?: number,
     mediaType: "image" | "document" | "video" = "image",
+    captions?: string[],
   ) => {
     notification.success({
       message: `${urls.length} ${mediaType}s uploaded successfully`,
@@ -491,7 +493,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               image: {
                 url,
                 tags: [],
-                caption: "",
+                caption: captions?.[index] ?? "",
               },
             };
           default:
@@ -961,14 +963,20 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         </Button>
                       </>
                     )}
-                    <FileUpload
+                    <ImagePdfUpload
                       onUploadComplete={(
                         urls: string[],
                         originalNames: string[],
+                        captions: string[],
                       ) =>
-                        onUploadComplete(urls, originalNames, undefined, "image")
+                        onUploadComplete(
+                          urls,
+                          originalNames,
+                          undefined,
+                          "image",
+                          captions,
+                        )
                       }
-                      fileType="image"
                       button={{
                         label: "Upload Images",
                         type: "primary",
