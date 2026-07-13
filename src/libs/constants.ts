@@ -152,3 +152,14 @@ export const CommunicationPreference = [
 
 export const PROJECTS_CHROMA_COLLECTION = "livinzy-homes-projects";
 export const AREA_CHROMA_COLLECTION = "livinzy-homes-area";
+
+export const USER_STATUS_OPTIONS: { text: string; value: string }[] = [
+  { text: "360 Lead", value: "new-lead" },
+  { text: "Callback Request", value: "callback-request" },
+  { text: "Active Lead", value: "active-lead" },
+  { text: "Dropped Lead", value: "dropped-lead" },
+];
+
+export const USER_STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  USER_STATUS_OPTIONS.map((o) => [o.value, o.text]),
+);

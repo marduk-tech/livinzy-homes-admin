@@ -48,6 +48,7 @@ import {
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
+import { USER_STATUS_LABELS, USER_STATUS_OPTIONS } from "../../libs/constants";
 import { AggregatedReportRow, User } from "../../types/user";
 import { useNavigate } from "react-router-dom";
 import { ColumnSearch } from "../common/column-search";
@@ -309,14 +310,10 @@ export function UsersList() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      filters: [
-        { text: "New Lead", value: "new-lead" },
-        { text: "Callback Request", value: "callback-request" },
-        { text: "Active Lead", value: "active-lead" },
-        { text: "Dropped Lead", value: "dropped-lead" },
-      ],
+      filters: USER_STATUS_OPTIONS,
       onFilter: (value, record) => record.status === value,
-      render: (status: string) => status ? <Tag>{status}</Tag> : "-",
+      render: (status: string) =>
+        status ? <Tag>{USER_STATUS_LABELS[status] || status}</Tag> : "-",
     },
     {
       title: "Source",
@@ -939,13 +936,10 @@ export function UsersList() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      filters: [
-        { text: "Callback Request", value: "callback-request" },
-        { text: "Active Lead", value: "active-lead" },
-        { text: "Dropped Lead", value: "dropped-lead" },
-      ],
+      filters: USER_STATUS_OPTIONS.filter((o) => o.value !== "new-lead"),
       onFilter: (value, record) => record.status === value,
       render: (status: string) => {
+        const label = USER_STATUS_LABELS[status] || status;
         if (status === "dropped-lead") {
           return (
             <Tag
@@ -955,12 +949,12 @@ export function UsersList() {
                 borderColor: "#d9d9d9",
               }}
             >
-              {status}
+              {label}
             </Tag>
           );
         }
         const color = status === "callback-request" ? "gold" : "green";
-        return <Tag color={color}>{status}</Tag>;
+        return <Tag color={color}>{label}</Tag>;
       },
     },
     {
@@ -1218,6 +1212,16 @@ export function UsersList() {
           />
           <Button
             type="default"
+            icon={<SendOutlined />}
+            disabled={!record.profile?.email && !record.mobile}
+            title="Send email and WhatsApp notification"
+            onClick={() => {
+              setSelectedUser(record);
+              setIsEmailModalOpen(true);
+            }}
+          />
+          <Button
+            type="default"
             title="View conversations"
             icon={
               <DynamicReactIcon
@@ -1383,7 +1387,15 @@ _If you need any kind of assistance with regards to ${
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="Actionable Leads" key="actionable-leads">
-          {activeTab === "actionable-leads" && <ActionableLeads />}
+          {activeTab === "actionable-leads" && (
+            <ActionableLeads
+              users={data || []}
+              onSendNotification={(user) => {
+                setSelectedUser(user);
+                setIsEmailModalOpen(true);
+              }}
+            />
+          )}
         </Tabs.TabPane>
       </Tabs>
 

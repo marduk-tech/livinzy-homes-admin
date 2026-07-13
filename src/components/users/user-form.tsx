@@ -186,7 +186,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
               <Select
                 placeholder="Select status"
                 options={[
-                  { label: "New Lead", value: "new-lead" },
+                  { label: "360 Lead", value: "new-lead" },
                   { label: "Active Lead", value: "active-lead" },
                   { label: "Dropped Lead", value: "dropped-lead" },
                 ]}

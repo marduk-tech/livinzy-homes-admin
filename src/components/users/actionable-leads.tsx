@@ -1,9 +1,11 @@
 import axios from "axios";
 import { Button, Input, Modal, Space, Spin, Table, TableColumnType, Tag, Tooltip, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { FileTextOutlined, SearchOutlined } from "@ant-design/icons";
+import { FileTextOutlined, SearchOutlined, SendOutlined } from "@ant-design/icons";
 import type { FilterDropdownProps } from "antd/es/table/interface";
 import { COLORS } from "../../theme/colors";
+import { User } from "../../types/user";
+import { USER_STATUS_LABELS, USER_STATUS_OPTIONS } from "../../libs/constants";
 
 const POSTHOG_HOST = "https://us.posthog.com";
 const POSTHOG_PROJECT_ID = import.meta.env.VITE_POSTHOG_PROJECT_ID;
@@ -173,7 +175,12 @@ function useStringFilter<T>(dataIndex: keyof T) {
   };
 }
 
-export function ActionableLeads() {
+interface ActionableLeadsProps {
+  users: User[];
+  onSendNotification: (user: User) => void;
+}
+
+export function ActionableLeads({ users, onSendNotification }: ActionableLeadsProps) {
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState<AggregatedLead[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -231,15 +238,12 @@ export function ActionableLeads() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      filters: [
-        { text: "Callback Request", value: "callback-request" },
-        { text: "Active Lead", value: "active-lead" },
-        { text: "Dropped Lead", value: "dropped-lead" },
-        { text: "New Lead", value: "new-lead" },
-      ],
+      filters: USER_STATUS_OPTIONS,
       onFilter: (value, record) => record.status === value,
       render: (status: string, record: AggregatedLead) => {
         if (!status) return "-";
+
+        const label = USER_STATUS_LABELS[status] || status;
 
         let callbackLabel: string | undefined;
         if (record.callbackTime) {
@@ -256,7 +260,7 @@ export function ActionableLeads() {
         const tag =
           status === "dropped-lead" ? (
             <Tag style={{ background: "#f0f0f0", color: "#888", borderColor: "#d9d9d9" }}>
-              {status}
+              {label}
             </Tag>
           ) : (
             <Tag
@@ -268,7 +272,7 @@ export function ActionableLeads() {
                   : undefined
               }
             >
-              {status}
+              {label}
             </Tag>
           );
 
@@ -355,16 +359,21 @@ export function ActionableLeads() {
     {
       title: "Details",
       key: "details",
-      width: 80,
+      width: 120,
       align: "center",
-      render: (_: any, record: AggregatedLead) => (
-        <Button
-          type="text"
-          icon={<FileTextOutlined style={{ color: COLORS.textColorLight }} />}
-          onClick={() => setDetailsUser(record)}
-          title="View full journey details"
-        />
-      ),
+      render: (_: any, record: AggregatedLead) => {
+        const user = users.find((u) => u._id === record.userid);
+        return (
+          <Space>
+            <Button
+              type="text"
+              icon={<FileTextOutlined style={{ color: COLORS.textColorLight }} />}
+              onClick={() => setDetailsUser(record)}
+              title="View full journey details"
+            />
+          </Space>
+        );
+      },
     },
   ];
 
