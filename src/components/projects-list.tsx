@@ -1036,7 +1036,9 @@ export const ProjectsList: React.FC = () => {
                     borderBottom: "1px solid",
                     borderColor: COLORS.borderColorDark,
                   }}
-                  gap={0}
+                  vertical
+                  gap={8}
+                  align="flex-start"
                 >
                   <Flex vertical>
                     <Flex>
@@ -1070,7 +1072,7 @@ export const ProjectsList: React.FC = () => {
                     ) : null}
                   </Flex>
                   {i.resolved ? (
-                    <Flex vertical style={{ marginLeft: "auto" }}>
+                    <Flex vertical style={{  }}>
                       <Typography.Text>Resolved</Typography.Text>
                       <Typography.Text
                         style={{
@@ -1084,7 +1086,6 @@ export const ProjectsList: React.FC = () => {
                   ) : (
                     <Button
                       size="small"
-                      style={{ marginLeft: "auto" }}
                       onClick={() => {
                         setsSelectedIssueToResolve(i);
                       }}
