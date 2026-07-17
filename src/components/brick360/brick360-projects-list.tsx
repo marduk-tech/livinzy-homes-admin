@@ -9,7 +9,7 @@ import { Loader } from "../common/loader";
 
 export const Brick360ProjectsList: React.FC = () => {
   const { data: projects, isFetching: projectsLoading } =
-    useGetAllLvnzyProjects();
+    useGetAllLvnzyProjects(true);
 
   const brickfiAppUrl =
     import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";

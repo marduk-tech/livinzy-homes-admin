@@ -1,10 +1,14 @@
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export const getAllLvnzyProjects = async () => {
+export const getAllLvnzyProjects = async (onlyVerifiedReports?: boolean) => {
   const endpoint = `/lvnzy-projects`;
-  return axiosApiInstance.get(endpoint).then((response) => {
-    return response.data;
-  });
+  return axiosApiInstance
+    .get(endpoint, {
+      params: onlyVerifiedReports ? { onlyVerifiedReports: "true" } : undefined,
+    })
+    .then((response) => {
+      return response.data;
+    });
 };
 
 export const getLvnzyProjectById = async (id: string) => {

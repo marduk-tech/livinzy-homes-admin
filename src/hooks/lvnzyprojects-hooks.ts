@@ -10,10 +10,10 @@ import {
 import { queryKeys } from "../libs/constants";
 import { LvnzyProject } from "../types/lvnzy-project";
 
-export function useGetAllLvnzyProjects() {
+export function useGetAllLvnzyProjects(onlyVerifiedReports?: boolean) {
   return useQuery({
-    queryKey: [queryKeys.lvnzyProjects],
-    queryFn: () => getAllLvnzyProjects(),
+    queryKey: [queryKeys.lvnzyProjects, onlyVerifiedReports],
+    queryFn: () => getAllLvnzyProjects(onlyVerifiedReports),
     refetchOnMount: false,
     refetchOnWindowFocus: false
   });
