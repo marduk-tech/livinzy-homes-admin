@@ -5,6 +5,7 @@ import {
   createDeveloper,
   deleteDeveloper,
   generateDeveloperInfo,
+  generateDeveloperInfoV2,
   getAllDevelopers,
   getDeveloperById,
   updateDeveloper,
@@ -122,7 +123,7 @@ export function useDeleteDeveloperMutation() {
 export function useGenerateDeveloperInfoMutation() {
   return useMutation({
     mutationFn: (developerId: string) => {
-      return generateDeveloperInfo(developerId);
+      return generateDeveloperInfoV2(developerId);
     },
     onSuccess: () => {
       notification.success({ message: `Developer info generation initiated!` });

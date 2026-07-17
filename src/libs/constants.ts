@@ -2,6 +2,7 @@ export const envMode = import.meta.env.MODE;
 
 export const baseApiUrl = import.meta.env.VITE_API_URL;
 export const apiKey = import.meta.env.VITE_ADMIN_API_KEY;
+export const scriptServerApiUrl = import.meta.env.VITE_SCRIPT_SERVER_API_URL;
 
 export const queryKeys = {
   projects: "projects",
