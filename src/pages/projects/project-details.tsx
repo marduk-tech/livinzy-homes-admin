@@ -53,6 +53,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TextArea from "antd/es/input/TextArea";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useRemoveWatermark } from "../../hooks/dewatermark-hooks";
 import {
@@ -142,6 +143,7 @@ const RenderFields: React.FC<{
         hide,
         type,
         options,
+        dependencies,
       }) => {
         if (hide) {
           return null;
@@ -157,6 +159,9 @@ const RenderFields: React.FC<{
                     ? [category, ...dbField]
                     : [category, dbField]
                 }
+                dependencies={dependencies?.map((dep) =>
+                  Array.isArray(dep) ? [category, ...dep] : [category, dep],
+                )}
                 label={
                   <Flex gap={8} align="center">
                     <Typography.Text style={{ fontWeight: "bold" }}>
@@ -214,6 +219,15 @@ const RenderFields: React.FC<{
                       : dbField) as keyof (typeof fieldRules)[keyof typeof fieldRules]
                   ] || []
                 }
+                {...(type === "date_month_year"
+                  ? {
+                      getValueProps: (value) => ({
+                        value: value ? dayjs(value) : undefined,
+                      }),
+                      normalize: (value) =>
+                        value ? dayjs(value).toISOString() : value,
+                    }
+                  : {})}
               >
                 {type === "unit_config_list" ? (
                   <UnitConfigList
@@ -290,7 +304,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [uiInstructionsModalOpen, setUiInstructionsModalOpen] = useState(false);
   const [uiInstructions, setUiInstructions] = useState<string>();
 
-  const { fieldRules, projectFields } = useProjectForm();
+  const { fieldRules, projectFields } = useProjectForm(form);
 
   const { data: project, isLoading: projectIsLoading } = useQuery({
     ...queries.getProjectById(projectId as string),
@@ -815,7 +829,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
   const watchReraNumber = Form.useWatch(["info", "reraNumber"], form);
   const disabledFields: Record<string, boolean> = {
-    "otherDetails.expectedLaunchDate": !!watchReraNumber,
+    "realTimeStatus.expectedLaunchDate": !!watchReraNumber,
   };
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();

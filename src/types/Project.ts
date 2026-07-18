@@ -231,6 +231,7 @@ export interface ProjectField {
   fieldDescription: string;
   mustHave?: boolean;
   hide?: boolean;
+  dependencies?: (string | string[])[];
 
   type?:
     | "single_select"

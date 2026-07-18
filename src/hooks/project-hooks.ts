@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
+import { FormInstance, notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
 import {
@@ -363,7 +363,7 @@ export function useGenerateScoreCardMutation({
   });
 }
 
-export function useProjectForm() {
+export function useProjectForm(form: FormInstance) {
   const { data: developers = [] } = useFetchDevelopers();
 
   const projectStructure: ProjectStructure = {
@@ -384,8 +384,17 @@ export function useProjectForm() {
       {
         dbField: "reraNumber",
         mustHave: true,
+        dependencies: [["realTimeStatus", "expectedLaunchDate"]],
         fieldDisplayName: "Rera Number",
         fieldDescription: "Provide relevant details.",
+      },
+      {
+        dbField: ["realTimeStatus", "expectedLaunchDate"],
+        mustHave: true,
+        dependencies: ["reraNumber"],
+        type: "date_month_year",
+        fieldDisplayName: "Expected Launch Date",
+        fieldDescription: "Expected month and year of project launch",
       },
       {
         dbField: "otherPhasesRera",
@@ -475,12 +484,6 @@ export function useProjectForm() {
         fieldDisplayName: "Expert Info",
         fieldDescription: "Any specific expert analysis to be provided",
       },
-      {
-        dbField: ["realTimeStatus", "expectedLaunchDate"],
-        type: "date_month_year",
-        fieldDisplayName: "Expected Launch Date",
-        fieldDescription: "Expected month and year of project launch",
-      },
     ],
   };
 
@@ -500,6 +503,36 @@ export function useProjectForm() {
       homeType: [{ required: true, message: "Please select the Home Type" }],
     },
     land: {},
+    info: {
+      reraNumber: [
+        {
+          validator: async (_: unknown, value: string) => {
+            const expectedLaunchDate = form.getFieldValue([
+              "info",
+              "realTimeStatus",
+              "expectedLaunchDate",
+            ]);
+            if (!value && !expectedLaunchDate) {
+              throw new Error(
+                "Either Rera Number or Expected Launch Date is required",
+              );
+            }
+          },
+        },
+      ],
+      "realTimeStatus.expectedLaunchDate": [
+        {
+          validator: async (_: unknown, value: string) => {
+            const reraNumber = form.getFieldValue(["info", "reraNumber"]);
+            if (!value && !reraNumber) {
+              throw new Error(
+                "Either Rera Number or Expected Launch Date is required",
+              );
+            }
+          },
+        },
+      ],
+    },
   };
 
   return {
