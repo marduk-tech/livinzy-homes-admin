@@ -16,7 +16,7 @@ import {
   Typography,
 } from "antd";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FileUpload } from "../../components/common/img-upload";
 
 interface UnitConfig {
@@ -54,6 +54,13 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   const [newlyUploadedImageIds, setNewlyUploadedImageIds] = useState<Set<string>>(new Set());
   const [sqFtPriceModalVisible, setSqFtPriceModalVisible] = useState(false);
   const [newSqFtPrice, setNewSqFtPrice] = useState<number | null>(null);
+  const sizeBuiltupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (sizeBuiltupTimeoutRef.current) clearTimeout(sizeBuiltupTimeoutRef.current);
+    };
+  }, []);
 
   const validConfigs = value.filter((c) => c.price > 0 && (c.sizeBuiltup ?? 0) > 0);
   const avgSqFtPrice =
@@ -347,6 +354,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => {
+          if (sizeBuiltupTimeoutRef.current) clearTimeout(sizeBuiltupTimeoutRef.current);
           setIsModalVisible(false);
           setNewlyUploadedImageIds(new Set());
           resetModalState();
@@ -378,6 +386,29 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               style={{ width: "100%" }}
               placeholder="e.g., 1200"
               min={0}
+              onChange={(sizeBuiltup) => {
+                if (sizeBuiltupTimeoutRef.current) {
+                  clearTimeout(sizeBuiltupTimeoutRef.current);
+                }
+                if (!sizeBuiltup) return;
+
+                sizeBuiltupTimeoutRef.current = setTimeout(() => {
+                  const otherConfigs = value.filter(
+                    (c, i) =>
+                      c.price > 0 && (c.sizeBuiltup ?? 0) > 0 && i !== editingIndex,
+                  );
+                  if (otherConfigs.length === 0) return;
+
+                  const avgSqFtPrice =
+                    otherConfigs.reduce((sum, c) => sum + c.price / c.sizeBuiltup!, 0) /
+                    otherConfigs.length;
+
+                  form.setFieldValue(
+                    "price",
+                    Math.round((avgSqFtPrice * (sizeBuiltup as number)) / 25000) * 25000,
+                  );
+                }, 500);
+              }}
             />
           </Form.Item>
 
