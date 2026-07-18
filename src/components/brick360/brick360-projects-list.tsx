@@ -1,5 +1,6 @@
 import { ContainerOutlined, DatabaseOutlined, EditOutlined, FileTextOutlined, LinkOutlined } from "@ant-design/icons";
-import { Button, Flex, Table, TableColumnType } from "antd";
+import { Button, Flex, Switch, Table, TableColumnType, Typography } from "antd";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
@@ -9,7 +10,9 @@ import { Loader } from "../common/loader";
 
 export const Brick360ProjectsList: React.FC = () => {
   const { data: projects, isFetching: projectsLoading } =
-    useGetAllLvnzyProjects(true);
+    useGetAllLvnzyProjects(false);
+
+  const [showUnverified, setShowUnverified] = useState(false);
 
   const brickfiAppUrl =
     import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
@@ -92,10 +95,20 @@ export const Brick360ProjectsList: React.FC = () => {
 
 
   return !projects || !projects.length ? <Loader></Loader> :
-    <Table
-      dataSource={projects.filter((p: any) => !!p && !!p.score)}
-      columns={columns}
-      rowKey="_id"
-      loading={projectsLoading}
-    />
+    <>
+      <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+        <Switch checked={showUnverified} onChange={setShowUnverified} />
+        <Typography.Text>View unverified reports</Typography.Text>
+      </Flex>
+      <Table
+        dataSource={projects.filter((p: any) => {
+          if (!p || !p.score) return false;
+          const isVerified = p.originalProjectId?.info?.status === "report-verified";
+          return showUnverified ? !isVerified : isVerified;
+        })}
+        columns={columns}
+        rowKey="_id"
+        loading={projectsLoading}
+      />
+    </>
 };
