@@ -31,7 +31,7 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
   const sendReportEmailMutation = useSendReportEmailMutation();
   const [sendEmailForNewProjects, setSendEmailForNewProjects] = useState(true);
   const { data: projects, isLoading: projectsLoading } =
-    useGetAllLvnzyProjects();
+    useGetAllLvnzyProjects(true);
 
   // Pre-populate form when in edit mode
   useEffect(() => {
