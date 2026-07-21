@@ -1794,9 +1794,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         ),
                       },
                       {
-                        title: "Caption",
-                        dataIndex: "caption",
-                        render: (caption: string | undefined) => caption || "—",
+                        title: "Unit Type",
+                        dataIndex: "type",
+                        render: (type: string | undefined) => type || "—",
                       },
                       {
                         title: "Used",
@@ -1812,12 +1812,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                           ) : (
                             "—"
                           ),
-                      },
-                      {
-                        title: "Unit Type",
-                        dataIndex: "type",
-                        render: (type: string | undefined) => type || "—",
-                      },
+                      }
+                      
                     ]}
                   />
                 )}
