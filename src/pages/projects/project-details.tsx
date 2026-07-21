@@ -672,7 +672,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       updateProject.mutate({
         projectData: {
           media: updatedMedia,
-          ...(totalFloorplanUpdates > 0 && { info: form.getFieldValue("info") }),
+          ...(totalFloorplanUpdates > 0 && {
+            info: { unitConfigWithPricing: currentUnitConfigs } as any,
+          }),
         },
       });
     }
@@ -801,7 +803,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
       updateProject.mutate({
         projectData: {
           media: updatedMedia,
-          ...(totalFloorplanUpdates > 0 && { info: form.getFieldValue("info") }),
+          ...(totalFloorplanUpdates > 0 && {
+            info: { unitConfigWithPricing: currentUnitConfigs } as any,
+          }),
         },
       });
     }
