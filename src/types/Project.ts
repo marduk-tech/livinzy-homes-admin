@@ -79,6 +79,7 @@ export interface IInfo {
     price: number;
     sizeBuiltup?: number;
     floorplans: string[];
+    type: string;
   }>;
   layout?: {
     unitCount?: number;

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { UnitConfigList } from "./unit-config-list";
 
 import {
@@ -84,6 +84,9 @@ import WatermarkPreviewModal from "../../components/watermark-preview-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
+
+const isNonFloorplanImage = (item?: IMedia) =>
+  item?.type === "image" && !item.image?.tags?.includes("floorplan");
 
 const DraggableRow = ({ children, ...props }: React.HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: string }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -345,6 +348,19 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const [reraDocsModalOpen, setReraDocsModalOpen] = useState(false);
   const [imageViewMode, setImageViewMode] = useState<"default" | "table">("default");
+  const [floorplanViewMode, setFloorplanViewMode] = useState<"default" | "table">("default");
+
+  const [selectedFloorplanUrls, setSelectedFloorplanUrls] = useState<
+    Set<string>
+  >(new Set());
+  const [floorplanDeleteConfirmVisible, setFloorplanDeleteConfirmVisible] =
+    useState(false);
+  const [floorplanBulkWatermarkLoading, setFloorplanBulkWatermarkLoading] =
+    useState(false);
+  const [
+    floorplanBulkWatermarkConfirmVisible,
+    setFloorplanBulkWatermarkConfirmVisible,
+  ] = useState(false);
 
   const removeWatermarkMutation = useRemoveWatermark();
 
@@ -355,7 +371,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     const currentMedia: IMedia[] = form.getFieldValue("media") || [];
     const imageIndices = currentMedia
       .map((item, i) => ({ item, i }))
-      .filter(({ item }) => item?.type === "image")
+      .filter(({ item }) => isNonFloorplanImage(item))
       .map(({ i }) => i);
     const imageItems = imageIndices.map((i) => currentMedia[i]);
     const oldIdx = imageIndices.indexOf(Number(active.id));
@@ -685,6 +701,135 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const handleFloorplanToggleSelect = (url: string) => {
+    setSelectedFloorplanUrls((prev) => {
+      const next = new Set(prev);
+      if (next.has(url)) next.delete(url);
+      else next.add(url);
+      return next;
+    });
+  };
+
+  const handleFloorplanBulkDelete = () => {
+    const deletableItems = floorplanItems.filter(
+      (item) =>
+        selectedFloorplanUrls.has(item.url) &&
+        !item.used &&
+        item.mediaIndex !== undefined,
+    );
+    const skippedCount = selectedFloorplanUrls.size - deletableItems.length;
+    const deleteIndices = new Set(
+      deletableItems.map((item) => item.mediaIndex!),
+    );
+
+    const currentMedia = form.getFieldValue("media") || [];
+    const updatedMedia = currentMedia.filter(
+      (_: any, i: number) => !deleteIndices.has(i),
+    );
+    form.setFieldValue("media", updatedMedia);
+    if (projectId) {
+      updateProject.mutate({ projectData: { media: updatedMedia } });
+    }
+    setSelectedFloorplanUrls(new Set());
+    setFloorplanDeleteConfirmVisible(false);
+
+    if (skippedCount > 0) {
+      notification.info({
+        message: `Skipped ${skippedCount} image${skippedCount > 1 ? "s" : ""}`,
+        description:
+          "Images used in a unit configuration cannot be deleted.",
+      });
+    }
+  };
+
+  const handleFloorplanBulkRemoveWatermark = async () => {
+    setFloorplanBulkWatermarkConfirmVisible(false);
+    const targets = floorplanItems.filter((item) =>
+      selectedFloorplanUrls.has(item.url),
+    );
+
+    if (targets.length === 0) return;
+
+    setFloorplanBulkWatermarkLoading(true);
+
+    const results = await Promise.allSettled(
+      targets.map((t) => removeWatermarkMutation.mutateAsync(t.url)),
+    );
+
+    const currentMedia = form.getFieldValue("media") || [];
+    const updatedMedia = [...currentMedia];
+    let currentUnitConfigs =
+      form.getFieldValue(["info", "unitConfigWithPricing"]) || [];
+    let totalFloorplanUpdates = 0;
+    let successCount = 0;
+    let failCount = 0;
+
+    results.forEach((res, i) => {
+      const { url: oldUrl, mediaIndex } = targets[i];
+      if (res.status === "fulfilled" && res.value?.processedImageUrl) {
+        const newUrl = res.value.processedImageUrl;
+
+        if (mediaIndex !== undefined) {
+          updatedMedia[mediaIndex] = {
+            ...updatedMedia[mediaIndex],
+            image: { ...updatedMedia[mediaIndex].image, url: newUrl },
+            hasWatermark: false,
+          };
+        }
+
+        const { updatedConfigs, updateCount } = updateFloorplanReferences(
+          oldUrl,
+          newUrl,
+          currentUnitConfigs,
+        );
+        if (updateCount > 0) {
+          currentUnitConfigs = updatedConfigs;
+          totalFloorplanUpdates += updateCount;
+        }
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
+
+    form.setFieldValue("media", updatedMedia);
+    if (totalFloorplanUpdates > 0) {
+      form.setFieldValue(["info", "unitConfigWithPricing"], currentUnitConfigs);
+    }
+
+    if (projectId && successCount > 0) {
+      updateProject.mutate({
+        projectData: {
+          media: updatedMedia,
+          ...(totalFloorplanUpdates > 0 && { info: form.getFieldValue("info") }),
+        },
+      });
+    }
+
+    setFloorplanBulkWatermarkLoading(false);
+    setSelectedFloorplanUrls(new Set());
+
+    if (successCount > 0) {
+      notification.success({
+        message: `Removed watermark from ${successCount} image${
+          successCount > 1 ? "s" : ""
+        }${
+          totalFloorplanUpdates > 0
+            ? ` and updated ${totalFloorplanUpdates} floorplan reference${
+                totalFloorplanUpdates > 1 ? "s" : ""
+              }`
+            : ""
+        }${failCount > 0 ? ` (${failCount} failed)` : ""}`,
+      });
+    } else if (failCount > 0) {
+      notification.error({
+        message: `Failed to remove watermark from ${failCount} image${
+          failCount > 1 ? "s" : ""
+        }`,
+      });
+    }
+  };
+
   const handleRemoveWatermark = async (imageUrl: string, index: number) => {
     setWatermarkModal({
       visible: true,
@@ -878,6 +1023,67 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   }, [project, form]);
 
+  const floorplanItems = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        url: string;
+        caption?: string;
+        type: string;
+        used: boolean;
+        mediaIndex?: number;
+      }
+    >();
+
+    // Every media image, keyed by URL, so unit-config references can find
+    // their mediaIndex even if the underlying media item isn't (or is no
+    // longer) tagged "floorplan".
+    const mediaIndexByUrl = new Map<string, number>();
+    (project?.media || []).forEach((item: IMedia, idx: number) => {
+      if (item?.type === "image" && item.image?.url && !mediaIndexByUrl.has(item.image.url)) {
+        mediaIndexByUrl.set(item.image.url, idx);
+      }
+    });
+
+    (project?.media || []).forEach((item: IMedia, idx: number) => {
+      if (item?.type === "image" && item.image?.tags?.includes("floorplan")) {
+        map.set(item.image.url, {
+          url: item.image.url,
+          caption: item.image.caption,
+          type: "",
+          used: false,
+          mediaIndex: idx,
+        });
+      }
+    });
+
+    (project?.info?.unitConfigWithPricing || []).forEach((unitConfig) => {
+      (unitConfig.floorplans || []).forEach((url) => {
+        const existing = map.get(url);
+        if (existing) {
+          existing.used = true;
+          existing.type = (unitConfig as any).type || existing.type;
+        } else {
+          map.set(url, {
+            url,
+            type: (unitConfig as any).type || "",
+            used: true,
+            mediaIndex: mediaIndexByUrl.get(url),
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => Number(b.used) - Number(a.used),
+    );
+  }, [project]);
+
+  const floorplanByUrl = useMemo(
+    () => new Map(floorplanItems.map((item) => [item.url, item])),
+    [floorplanItems],
+  );
+
   const screens = useBreakpoint();
 
   if (projectIsLoading) {
@@ -1006,7 +1212,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     wrap="wrap"
                   >
                     {project?.media?.map((item: IMedia, index) => {
-                      if (item?.type === "image") {
+                      if (isNonFloorplanImage(item)) {
                         return (
                           <Flex
                             key={item._id || index}
@@ -1162,7 +1368,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   <SortableContext
                     items={(project?.media || [])
                       .map((item: IMedia, i: number) => ({ item, i }))
-                      .filter(({ item }: { item: IMedia; i: number }) => item?.type === "image")
+                      .filter(({ item }: { item: IMedia; i: number }) => isNonFloorplanImage(item))
                       .map(({ i }: { item: IMedia; i: number }) => String(i))}
                     strategy={verticalListSortingStrategy}
                   >
@@ -1172,7 +1378,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     scroll={{ y: 500 }}
                     dataSource={project?.media
                       ?.map((item: IMedia, index: number) => ({ item, index }))
-                      .filter(({ item }) => item?.type === "image")}
+                      .filter(({ item }) => isNonFloorplanImage(item))}
                     rowKey={({ index }) => String(index)}
                     components={{ body: { row: DraggableRow } }}
                     columns={[
@@ -1185,7 +1391,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         title: () => {
                           const imageIndices = (project?.media || [])
                             .map((item: IMedia, i: number) => ({ item, i }))
-                            .filter(({ item }: { item: IMedia; i: number }) => item?.type === "image")
+                            .filter(({ item }: { item: IMedia; i: number }) => isNonFloorplanImage(item))
                             .map(({ i }: { item: IMedia; i: number }) => i);
                           const allSelected =
                             imageIndices.length > 0 &&
@@ -1414,6 +1620,269 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     handleDeleteMedia={handleDeleteMedia}
                   />
                 </div>
+              </TabPane>
+
+              <TabPane tab={"Floorplans"} key={"floorplans"}>
+                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+                  <Space align="center">
+                    <AppstoreOutlined />
+                    <Switch
+                      checked={floorplanViewMode === "table"}
+                      onChange={(checked) => setFloorplanViewMode(checked ? "table" : "default")}
+                    />
+                    <TableOutlined />
+                  </Space>
+                  {selectedFloorplanUrls.size > 0 && (
+                    <Space>
+                      <Button
+                        icon={<ScissorOutlined />}
+                        loading={floorplanBulkWatermarkLoading}
+                        onClick={() => setFloorplanBulkWatermarkConfirmVisible(true)}
+                      >
+                        Remove Watermark ({selectedFloorplanUrls.size})
+                      </Button>
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => setFloorplanDeleteConfirmVisible(true)}
+                      >
+                        Delete ({selectedFloorplanUrls.size})
+                      </Button>
+                    </Space>
+                  )}
+                </Flex>
+
+                {floorplanItems.length === 0 ? (
+                  <Typography.Text type="secondary">
+                    No floorplan images found. Tag images as "floorplan" in
+                    the Images tab or add them via unit configurations.
+                  </Typography.Text>
+                ) : floorplanViewMode === "default" ? (
+                  <Image.PreviewGroup>
+                    <Flex
+                      gap={24}
+                      style={{
+                        width: "100%",
+                        maxHeight: 550,
+                        overflowY: "scroll",
+                      }}
+                      wrap="wrap"
+                    >
+                      {floorplanItems.map((item) => {
+                        return (
+                          <Flex
+                            key={item.url}
+                            vertical
+                            align="center"
+                            gap={8}
+                            style={{ width: 180 }}
+                          >
+                            <div style={{ position: "relative" }}>
+                              <Image
+                                width={160}
+                                height={120}
+                                src={item.url}
+                                style={{ borderRadius: 8, objectFit: "cover" }}
+                              />
+                              <Checkbox
+                                checked={selectedFloorplanUrls.has(item.url)}
+                                onChange={() =>
+                                  handleFloorplanToggleSelect(item.url)
+                                }
+                                style={{
+                                  position: "absolute",
+                                  top: 4,
+                                  left: 4,
+                                }}
+                              />
+                              {item.used && (
+                                <div
+                                  title="Used in a unit configuration"
+                                  style={{
+                                    position: "absolute",
+                                    top: 4,
+                                    right: 4,
+                                    background: "#fff",
+                                    borderRadius: "50%",
+                                    width: 22,
+                                    height: 22,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    boxShadow: "0 0 2px rgba(0,0,0,0.4)",
+                                  }}
+                                >
+                                  <DynamicReactIcon
+                                    iconSet="io"
+                                    iconName="IoIosCheckmarkCircle"
+                                    color={COLORS.textColorDark}
+                                    size={20}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </Flex>
+                        );
+                      })}
+                    </Flex>
+                  </Image.PreviewGroup>
+                ) : (
+                  <Table
+                    size="small"
+                    pagination={false}
+                    scroll={{ y: 500 }}
+                    dataSource={floorplanItems}
+                    rowKey={(item) => item.url}
+                    columns={[
+                      {
+                        title: () => {
+                          const allUrls = floorplanItems.map(
+                            (item) => item.url,
+                          );
+                          const allSelected =
+                            allUrls.length > 0 &&
+                            allUrls.every((url) =>
+                              selectedFloorplanUrls.has(url),
+                            );
+                          const someSelected =
+                            !allSelected &&
+                            allUrls.some((url) =>
+                              selectedFloorplanUrls.has(url),
+                            );
+                          return (
+                            <Checkbox
+                              checked={allSelected}
+                              indeterminate={someSelected}
+                              disabled={allUrls.length === 0}
+                              onChange={() => {
+                                if (allSelected) {
+                                  setSelectedFloorplanUrls(new Set());
+                                } else {
+                                  setSelectedFloorplanUrls(new Set(allUrls));
+                                }
+                              }}
+                            />
+                          );
+                        },
+                        width: 40,
+                        render: (item: (typeof floorplanItems)[number]) => (
+                          <Checkbox
+                            checked={selectedFloorplanUrls.has(item.url)}
+                            onChange={() =>
+                              handleFloorplanToggleSelect(item.url)
+                            }
+                          />
+                        ),
+                      },
+                      {
+                        title: "Image",
+                        width: 100,
+                        render: (item: (typeof floorplanItems)[number]) => (
+                          <Image
+                            width={80}
+                            src={item.url}
+                            style={{
+                              borderRadius: 6,
+                              objectFit: "cover",
+                              aspectRatio: "1 / 1",
+                            }}
+                          />
+                        ),
+                      },
+                      {
+                        title: "Caption",
+                        dataIndex: "caption",
+                        render: (caption: string | undefined) => caption || "—",
+                      },
+                      {
+                        title: "Used",
+                        width: 90,
+                        render: (item: (typeof floorplanItems)[number]) =>
+                          item.used ? (
+                            <DynamicReactIcon
+                              iconSet="io"
+                              iconName="IoIosCheckmarkCircle"
+                              color={COLORS.textColorDark}
+                              size={20}
+                            />
+                          ) : (
+                            "—"
+                          ),
+                      },
+                      {
+                        title: "Unit Type",
+                        dataIndex: "type",
+                        render: (type: string | undefined) => type || "—",
+                      },
+                    ]}
+                  />
+                )}
+
+                <Modal
+                  title={`Delete ${
+                    Array.from(selectedFloorplanUrls).filter(
+                      (url) => !floorplanByUrl.get(url)?.used,
+                    ).length
+                  } image(s)?`}
+                  open={floorplanDeleteConfirmVisible}
+                  onCancel={() => setFloorplanDeleteConfirmVisible(false)}
+                  onOk={handleFloorplanBulkDelete}
+                  okText="Delete"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Typography.Text>
+                    The following images will be permanently deleted:
+                  </Typography.Text>
+                  <Flex
+                    gap={8}
+                    style={{
+                      marginTop: 12,
+                      overflowX: "auto",
+                      paddingBottom: 8,
+                    }}
+                  >
+                    {Array.from(selectedFloorplanUrls)
+                      .filter((url) => !floorplanByUrl.get(url)?.used)
+                      .map((url) => (
+                        <img
+                          key={url}
+                          src={url}
+                          alt="Selected"
+                          style={{
+                            width: 80,
+                            height: 80,
+                            objectFit: "cover",
+                            borderRadius: 6,
+                            flexShrink: 0,
+                          }}
+                        />
+                      ))}
+                  </Flex>
+                  {Array.from(selectedFloorplanUrls).some(
+                    (url) => floorplanByUrl.get(url)?.used,
+                  ) && (
+                    <Typography.Text
+                      type="secondary"
+                      style={{ display: "block", marginTop: 12 }}
+                    >
+                      Images used in a unit configuration will be skipped.
+                    </Typography.Text>
+                  )}
+                </Modal>
+
+                <Modal
+                  title={`Remove watermark from ${selectedFloorplanUrls.size} image(s)?`}
+                  open={floorplanBulkWatermarkConfirmVisible}
+                  onCancel={() => setFloorplanBulkWatermarkConfirmVisible(false)}
+                  onOk={handleFloorplanBulkRemoveWatermark}
+                  okText="Remove"
+                  confirmLoading={floorplanBulkWatermarkLoading}
+                >
+                  <Typography.Text>
+                    Processed images will replace the originals directly. This
+                    cannot be undone.
+                  </Typography.Text>
+                </Modal>
               </TabPane>
 
               <TabPane tab={"Videos"} key={"videos"}>
