@@ -1,12 +1,12 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
 import {
+  AutoComplete,
   Button,
   Checkbox,
   Col,
   Flex,
   Form,
   Image,
-  Input,
   InputNumber,
   List,
   Modal,
@@ -40,13 +40,40 @@ interface UnitConfigListProps {
     };
   }>;
   onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
+  homeTypes?: string[];
 }
+
+const PLOT_TYPE_OPTIONS = [
+  "Plot - 30x40",
+  "Plot - 30x50",
+  "Plot - 30x60",
+  "Plot - 40x50",
+  "Plot - 40x60",
+  "Odd Sized",
+];
+
+const BHK_TYPE_OPTIONS = [
+  "Studio",
+  "1 BHK",
+  "1.5 BHK",
+  "2 BHK",
+  "2.5 BHK",
+  "3 BHK",
+  "3.5 BHK",
+  "4 BHK",
+  "4.5 BHK",
+  "5 BHK",
+  "5.5 BHK",
+  "6 BHK",
+  "6.5 BHK",
+];
 
 export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   value = [],
   onChange,
   media = [],
   onFloorplanUpload,
+  homeTypes = [],
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -441,7 +468,18 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             label="Type"
             rules={[{ required: true, message: "Please input the unit type!" }]}
           >
-            <Input placeholder="e.g., 2 BHK, 3 BHK" />
+            <AutoComplete
+              options={(homeTypes.includes("plot")
+                ? PLOT_TYPE_OPTIONS
+                : BHK_TYPE_OPTIONS
+              ).map((option) => ({ value: option }))}
+              filterOption={(inputValue, option) =>
+                (option?.value ?? "")
+                  .toLowerCase()
+                  .includes(inputValue.toLowerCase())
+              }
+              placeholder="e.g., 2 BHK, 3 BHK"
+            />
           </Form.Item>
 
           <Form.Item

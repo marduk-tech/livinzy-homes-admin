@@ -250,6 +250,7 @@ const RenderFields: React.FC<{
                     }}
                     media={form.getFieldValue("media") || []}
                     onFloorplanUpload={onFloorplanUpload}
+                    homeTypes={form.getFieldValue(["info", "homeType"]) || []}
                   />
                 ) : type === "single_select" || type == "multi_select" ? (
                   <Select
