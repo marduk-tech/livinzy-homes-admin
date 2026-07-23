@@ -59,6 +59,12 @@ import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
 const { Search } = Input;
 
+const RESOLVABLE_ISSUE_FIELDS = [
+  "Project Density",
+  "Open Area",
+  "Sqft Pricing",
+];
+
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
   const { data: corridors, isLoading: isCorridorsDataLoading } =
@@ -1084,14 +1090,23 @@ export const ProjectsList: React.FC = () => {
                       </Typography.Text>
                     </Flex>
                   ) : (
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        setsSelectedIssueToResolve(i);
-                      }}
+                    <Tooltip
+                      title={
+                        RESOLVABLE_ISSUE_FIELDS.includes(i.field)
+                          ? undefined
+                          : "The flag will be removed automatically once the underlying data issue is fixed"
+                      }
                     >
-                      Resolve
-                    </Button>
+                      <Button
+                        size="small"
+                        disabled={!RESOLVABLE_ISSUE_FIELDS.includes(i.field)}
+                        onClick={() => {
+                          setsSelectedIssueToResolve(i);
+                        }}
+                      >
+                        Resolve
+                      </Button>
+                    </Tooltip>
                   )}
                 </Flex>
               );
