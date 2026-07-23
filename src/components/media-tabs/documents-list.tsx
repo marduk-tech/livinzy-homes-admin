@@ -91,23 +91,24 @@ export const DocumentsList = ({
           {
             title: "Document Type",
             key: "documentType",
-            render: (_, record: IMedia, index) => (
-              <Form.Item
-                name={["media", index, "document", "documentType"]}
-                style={{ margin: 0, minWidth: 200 }}
-              >
-                <Select
-                  placeholder="Select document type"
-                  options={[
-                    { value: "brochure", label: "Brochure" },
-                    {
-                      value: "project-specs",
-                      label: "Project Specification",
-                    },
-                  ]}
-                />
-              </Form.Item>
-            ),
+            render: (_, record: IMedia, index) =>
+              record.type !== "document" ? null : (
+                <Form.Item
+                  name={["media", index, "document", "documentType"]}
+                  style={{ margin: 0, minWidth: 200 }}
+                >
+                  <Select
+                    placeholder="Select document type"
+                    options={[
+                      { value: "brochure", label: "Brochure" },
+                      {
+                        value: "project-specs",
+                        label: "Project Specification",
+                      },
+                    ]}
+                  />
+                </Form.Item>
+              ),
           },
           {
             title: "Actions",
@@ -132,17 +133,21 @@ export const DocumentsList = ({
                 </Space>
 
                 {/* Hidden Fields */}
-                <Form.Item
-                  name={["media", index, "document", "url"]}
-                  hidden
-                ></Form.Item>
+                {record.type === "document" && (
+                  <>
+                    <Form.Item
+                      name={["media", index, "document", "url"]}
+                      hidden
+                    ></Form.Item>
 
-                <Form.Item
-                  name={["media", index, "document", "name"]}
-                  hidden
-                ></Form.Item>
+                    <Form.Item
+                      name={["media", index, "document", "name"]}
+                      hidden
+                    ></Form.Item>
 
-                <Form.Item name={["media", index, "type"]} hidden></Form.Item>
+                    <Form.Item name={["media", index, "type"]} hidden></Form.Item>
+                  </>
+                )}
               </>
             ),
           },
