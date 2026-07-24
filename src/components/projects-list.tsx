@@ -108,7 +108,7 @@ export const ProjectsList: React.FC = () => {
     enableToasts: true,
   });
   const generateScoreCardMutation = useGenerateScoreCardMutation({
-    enableToasts: true,
+    enableToasts: false,
   });
   const { user } = useAuth0();
 
@@ -693,11 +693,7 @@ export const ProjectsList: React.FC = () => {
                 <Button
                   type="link"
                   shape="default"
-                  disabled={isProcessing || generateScoreCardMutation.isPending}
-                  loading={
-                    generateScoreCardMutation.isPending &&
-                    generateScoreCardMutation.variables?.projectId === id
-                  }
+                  disabled={isProcessing}
                   icon={
                     <DynamicReactIcon
                       color={getScoreCardColor()}

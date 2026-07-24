@@ -70,6 +70,7 @@ dayjs.extend(isSameOrBefore);
 export function UsersList() {
   const { user: authUser } = useAuth0();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [leadsSearchKeyword, setLeadsSearchKeyword] = useState<string>("");
 
   const { data, isLoading, isError } = useGetAllUsers({
     limit: 1000,
@@ -82,6 +83,7 @@ export function UsersList() {
     limit: 500,
     sortBy: "updatedAt:desc",
     status: "callback-request,active-lead,dropped-lead",
+    search: leadsSearchKeyword,
   });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
@@ -1372,6 +1374,17 @@ _If you need any kind of assistance with regards to ${
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="Leads" key="leads">
+          <Search
+            loading={isLeadsLoading}
+            placeholder="Search by name, mobile, email or project"
+            allowClear
+            onChange={(e) => {
+              if (e.target.value === "") setLeadsSearchKeyword("");
+            }}
+            onSearch={(value: string) => setLeadsSearchKeyword(value)}
+            enterButton="Search"
+            style={{ width: 350, marginBottom: 8 }}
+          />
           <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredLeads.length}/{leadsData?.length ?? 0} rows</Typography.Text>
           <Table
             dataSource={leadsData}
