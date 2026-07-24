@@ -1343,7 +1343,7 @@ _If you need any kind of assistance with regards to ${
             }}
             onSearch={(value: string) => setSearchKeyword(value)}
             enterButton="Search"
-            style={{ width: 350, marginBottom: 8 }}
+            style={{ width: 400, marginBottom: 8 }}
           />
           <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredUsers.length}/{data?.length ?? 0} rows</Typography.Text>
           <Table
@@ -1383,7 +1383,7 @@ _If you need any kind of assistance with regards to ${
             }}
             onSearch={(value: string) => setLeadsSearchKeyword(value)}
             enterButton="Search"
-            style={{ width: 350, marginBottom: 8 }}
+            style={{ width: 400, marginBottom: 8 }}
           />
           <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>{filteredLeads.length}/{leadsData?.length ?? 0} rows</Typography.Text>
           <Table
