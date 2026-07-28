@@ -514,7 +514,7 @@ export function useProjectForm(form: FormInstance) {
             ]);
             if (!value && !expectedLaunchDate) {
               throw new Error(
-                "Either Rera Number or Expected Launch Date is required",
+                "Either Rera Number or Launch Date is required",
               );
             }
           },
@@ -526,7 +526,7 @@ export function useProjectForm(form: FormInstance) {
             const reraNumber = form.getFieldValue(["info", "reraNumber"]);
             if (!value && !reraNumber) {
               throw new Error(
-                "Either Rera Number or Expected Launch Date is required",
+                "Either Rera Number or Launch Date is required",
               );
             }
           },
