@@ -31,6 +31,7 @@ import {
   DeleteOutlined,
   DeleteRowOutlined,
   DownloadOutlined,
+  EditOutlined,
   FilePdfOutlined,
   FileTextOutlined,
   HolderOutlined,
@@ -81,6 +82,7 @@ import { ReraDocumentsModal } from "../../components/rera-projects/rera-document
 import { VideoUpload } from "../../components/media-tabs/video-tab";
 import { JsonEditor } from "../../components/update-json-modal";
 import WatermarkPreviewModal from "../../components/watermark-preview-modal";
+import { ImageAnnotateModal } from "../../components/media-tabs/image-annotate-modal";
 
 const { TabPane } = Tabs;
 const { useBreakpoint } = Grid;
@@ -344,6 +346,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     visible: false,
     originalUrl: "",
     processedUrl: null as string | null,
+    mediaIndex: -1,
+  });
+
+  const [annotateModal, setAnnotateModal] = useState({
+    visible: false,
+    imageUrl: "",
     mediaIndex: -1,
   });
 
@@ -976,6 +984,62 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     });
   };
 
+  const handleOpenAnnotate = (imageUrl: string, index: number) => {
+    setAnnotateModal({ visible: true, imageUrl, mediaIndex: index });
+  };
+
+  const handleCloseAnnotate = () => {
+    setAnnotateModal({ visible: false, imageUrl: "", mediaIndex: -1 });
+  };
+
+  const handleSaveAnnotation = (newUrl: string) => {
+    const { imageUrl: originalUrl, mediaIndex } = annotateModal;
+
+    if (mediaIndex < 0) {
+      return;
+    }
+
+    form.setFieldValue(["media", mediaIndex, "image", "url"], newUrl);
+
+    // If it's a floorplan, update all references in unit configurations
+    const currentMedia = form.getFieldValue("media") || [];
+    const mediaItem = currentMedia[mediaIndex];
+    const isFloorplan = mediaItem?.image?.tags?.includes("floorplan");
+
+    let floorplanUpdateCount = 0;
+
+    if (isFloorplan && originalUrl) {
+      const currentUnitConfigs =
+        form.getFieldValue(["info", "unitConfigWithPricing"]) || [];
+
+      const { updatedConfigs, updateCount } = updateFloorplanReferences(
+        originalUrl,
+        newUrl,
+        currentUnitConfigs,
+      );
+
+      floorplanUpdateCount = updateCount;
+
+      if (updateCount > 0) {
+        form.setFieldValue(["info", "unitConfigWithPricing"], updatedConfigs);
+      }
+    }
+
+    if (projectId) {
+      const updatedMedia = form.getFieldValue("media");
+      const updatedInfo = form.getFieldValue("info");
+
+      updateProject.mutate({
+        projectData: {
+          media: updatedMedia,
+          ...(floorplanUpdateCount > 0 && { info: updatedInfo }),
+        },
+      });
+    }
+
+    handleCloseAnnotate();
+  };
+
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
   const watchReraNumber = Form.useWatch(["info", "reraNumber"], form);
   const disabledFields: Record<string, boolean> = {
@@ -1354,6 +1418,20 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                 />
 
                                 <Button
+                                  icon={<EditOutlined />}
+                                  style={{
+                                    marginRight: 10,
+                                  }}
+                                  onClick={() =>
+                                    handleOpenAnnotate(
+                                      item.image?.url || "",
+                                      index,
+                                    )
+                                  }
+                                  title="Annotate"
+                                />
+
+                                <Button
                                   icon={<DeleteOutlined />}
                                   onClick={() => handleDeleteMedia(index)}
                                 ></Button>
@@ -1535,6 +1613,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                 watermarkModal.mediaIndex === index
                               }
                               title="Remove Watermark"
+                            />
+                            <Button
+                              icon={<EditOutlined />}
+                              onClick={() =>
+                                handleOpenAnnotate(item.image?.url || "", index)
+                              }
+                              title="Annotate"
                             />
                             <Button
                               icon={<DeleteOutlined />}
@@ -1996,6 +2081,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           loading={removeWatermarkMutation.isPending}
           onApprove={handleApproveWatermarkRemoval}
           onReject={handleRejectWatermarkRemoval}
+        />
+
+        <ImageAnnotateModal
+          visible={annotateModal.visible}
+          imageUrl={annotateModal.imageUrl}
+          onCancel={handleCloseAnnotate}
+          onSave={handleSaveAnnotation}
         />
 
         <ReraDocumentsModal

@@ -13,7 +13,7 @@ export interface RemoveWatermarkResponse {
 export const removeWatermark = async (
   imageUrl: string
 ): Promise<RemoveWatermarkResponse> => {
-  const endpoint = `/dewatermark/remove`;
+  const endpoint = `/image-process/remove-watermark`;
   const response = await axiosApiInstance.post<RemoveWatermarkResponse>(
     endpoint,
     { imageUrl }
