@@ -393,8 +393,8 @@ export function useProjectForm(form: FormInstance) {
         mustHave: true,
         dependencies: ["reraNumber"],
         type: "date_month_year",
-        fieldDisplayName: "Expected Launch Date",
-        fieldDescription: "Expected month and year of project launch",
+        fieldDisplayName: "Launch Date",
+        fieldDescription: "Month and year of project launch",
       },
       {
         dbField: "otherPhasesRera",

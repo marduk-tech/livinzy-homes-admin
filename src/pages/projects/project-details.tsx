@@ -278,9 +278,6 @@ const RenderFields: React.FC<{
                 ) : type === "date_month_year" ? (
                   <DatePicker
                     style={{ width: "100%" }}
-                    disabledDate={(d) =>
-                      d.isBefore(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
-                    }
                     disabled={
                       !!(disabledFields?.[
                         Array.isArray(dbField) ? dbField.join(".") : dbField
