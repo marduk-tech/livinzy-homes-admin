@@ -253,6 +253,10 @@ export const ProjectsList: React.FC = () => {
     },
 
     {
+      title: "Developer",
+      dataIndex: ["info", "developerId", "name"],
+    },
+    {
       title: "Corridors",
       dataIndex: ["info", "corridors"],
       render: (projectCorridors: any) => {
