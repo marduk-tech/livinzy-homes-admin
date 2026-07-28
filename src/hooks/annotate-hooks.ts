@@ -6,11 +6,11 @@ export const useAnnotateImage = () => {
   return useMutation({
     mutationFn: ({
       imageUrl,
-      svgOverlay,
+      overlayImage,
     }: {
       imageUrl: string;
-      svgOverlay: string;
-    }) => annotateImage(imageUrl, svgOverlay),
+      overlayImage: string;
+    }) => annotateImage(imageUrl, overlayImage),
     onError: (error: any) => {
       message.error(error?.message || "Failed to save annotated image");
       console.error("Image annotation error:", error);

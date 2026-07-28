@@ -8,12 +8,12 @@ export interface AnnotateImageResponse {
 
 export const annotateImage = async (
   imageUrl: string,
-  svgOverlay: string,
+  overlayImage: string,
 ): Promise<AnnotateImageResponse> => {
   const endpoint = `/image-process/annotate`;
   const response = await axiosApiInstance.post<AnnotateImageResponse>(
     endpoint,
-    { imageUrl, svgOverlay },
+    { imageUrl, overlayImage },
   );
   return response.data;
 };

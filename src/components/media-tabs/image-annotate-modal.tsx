@@ -34,14 +34,6 @@ const COLORS = ["#ff3b30", "#ffcc00", "#34c759", "#0a84ff", "#ffffff", "#000000"
 const MAX_DISPLAY_WIDTH = 800;
 const MAX_DISPLAY_HEIGHT = 520;
 
-const escapeXml = (value: string) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-
 const arrowHead = (x1: number, y1: number, x2: number, y2: number, strokeWidth: number) => {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const headLen = Math.max(10, strokeWidth * 4);
@@ -93,30 +85,6 @@ const drawShape = (ctx: CanvasRenderingContext2D, shape: Shape) => {
     ctx.strokeText(shape.text, shape.x, shape.y);
     ctx.fillText(shape.text, shape.x, shape.y);
   }
-};
-
-const shapeToSvg = (shape: Shape): string => {
-  if (shape.type === "rect") {
-    return `<rect x="${shape.x}" y="${shape.y}" width="${shape.w}" height="${shape.h}" fill="none" stroke="${shape.color}" stroke-width="${shape.strokeWidth}" />`;
-  }
-  if (shape.type === "ellipse") {
-    return `<ellipse cx="${shape.cx}" cy="${shape.cy}" rx="${Math.abs(shape.rx)}" ry="${Math.abs(shape.ry)}" fill="none" stroke="${shape.color}" stroke-width="${shape.strokeWidth}" />`;
-  }
-  if (shape.type === "arrow") {
-    const { p2, p3 } = arrowHead(shape.x1, shape.y1, shape.x2, shape.y2, shape.strokeWidth);
-    return (
-      `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" stroke="${shape.color}" stroke-width="${shape.strokeWidth}" stroke-linecap="round" />` +
-      `<polygon points="${shape.x2},${shape.y2} ${p2.x},${p2.y} ${p3.x},${p3.y}" fill="${shape.color}" />`
-    );
-  }
-  if (shape.type === "pen") {
-    const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
-    return `<polyline points="${points}" fill="none" stroke="${shape.color}" stroke-width="${shape.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" />`;
-  }
-  return (
-    `<text x="${shape.x}" y="${shape.y}" font-size="${shape.fontSize}" font-weight="600" font-family="sans-serif" ` +
-    `fill="${shape.color}" stroke="rgba(255,255,255,0.9)" stroke-width="${Math.max(2, shape.fontSize / 8)}" paint-order="stroke">${escapeXml(shape.text)}</text>`
-  );
 };
 
 interface ImageAnnotateModalProps {
@@ -282,16 +250,21 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
   const handleClear = () => setShapes([]);
 
   const handleSave = async () => {
-    if (!naturalSize) return;
+    const canvas = canvasRef.current;
+    if (!naturalSize || !canvas) return;
     if (shapes.length === 0) {
       message.info("Draw at least one annotation before saving");
       return;
     }
-    const body = shapes.map(shapeToSvg).join("");
-    const svgOverlay = `<svg xmlns="http://www.w3.org/2000/svg" width="${naturalSize.w}" height="${naturalSize.h}">${body}</svg>`;
+
+    // Rasterize the annotation layer in the browser (which reliably has
+    // fonts) rather than shipping SVG <text> for the server to render —
+    // server-side SVG text rendering depends on fonts being installed on
+    // that host, which isn't guaranteed.
+    const overlayImage = canvas.toDataURL("image/png");
 
     try {
-      const result = await annotateMutation.mutateAsync({ imageUrl, svgOverlay });
+      const result = await annotateMutation.mutateAsync({ imageUrl, overlayImage });
       message.success("Annotated image saved");
       onSave(result.annotatedImageUrl);
     } catch {
