@@ -153,6 +153,24 @@ export function cleanYouTubeUrl(url: string): string | null {
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
+export function extractVimeoVideoId(url: string): string | null {
+  if (!url) return null;
+
+  const vimeoRegex = /vimeo\.com\/(?:.*\/)?(?:video\/)?(\d+)/i;
+  const match = url.match(vimeoRegex);
+
+  return match && match[1] ? match[1] : null;
+}
+
+export function cleanVimeoUrl(url: string): string | null {
+  if (!url) return null;
+
+  const videoId = extractVimeoVideoId(url);
+  if (!videoId) return null;
+
+  return `https://vimeo.com/${videoId}`;
+}
+
 // CSV export utilities
 export function convertToCSV(headers: string[], rows: string[][]): string {
   const escapeCSV = (value: string): string => {

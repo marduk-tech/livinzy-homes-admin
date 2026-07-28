@@ -27,7 +27,11 @@ import { useUpdateProjectMutation } from "../../hooks/project-hooks";
 import { useBunnyUploader } from "../../hooks/use-bunny-uploader";
 import { useDevice } from "../../hooks/use-device";
 import { api } from "../../libs/api";
-import { cleanYouTubeUrl, extractYouTubeVideoId } from "../../libs/utils";
+import {
+  cleanVimeoUrl,
+  cleanYouTubeUrl,
+  extractYouTubeVideoId,
+} from "../../libs/utils";
 import { IMedia, Project } from "../../types/Project";
 
 interface VideoUploadProps {
@@ -54,35 +58,66 @@ export function VideoUpload({
   allTags,
 }: VideoUploadProps) {
   const [isYoutubeModalVisible, setIsYoutubeModalVisible] = useState(false);
-  const [youtubeLink, setYoutubeLink] = useState("");
+  const [videoLink, setVideoLink] = useState("");
 
   const updateProject = useUpdateProjectMutation({
     projectId: projectId || "",
   });
 
-  const handleYoutubeSave = () => {
-    if (!youtubeLink) return;
+  const handleVideoLinkSave = () => {
+    if (!videoLink) return;
 
-    const cleanedUrl = cleanYouTubeUrl(youtubeLink);
-    if (!cleanedUrl) {
+    const currentMedia = form.getFieldValue("media") || [];
+
+    const cleanedYoutubeUrl = cleanYouTubeUrl(videoLink);
+    if (cleanedYoutubeUrl) {
+      const videoId = extractYouTubeVideoId(cleanedYoutubeUrl);
+
+      // Add new YouTube video media
+      const newMedia = {
+        type: "video",
+        video: {
+          tags: [],
+          caption: "",
+          isYoutube: true,
+          youtubeUrl: cleanedYoutubeUrl,
+          thumbnailUrl: `https://img.youtube.com/vi/${videoId}/0.jpg`,
+        },
+      };
+
+      currentMedia.push(newMedia);
+      form.setFieldValue("media", currentMedia);
+
+      if (projectId) {
+        updateProject.mutate({
+          projectData: {
+            media: currentMedia,
+          },
+        });
+      }
+
+      setVideoLink("");
+      setIsYoutubeModalVisible(false);
+      return;
+    }
+
+    const cleanedVimeoUrl = cleanVimeoUrl(videoLink);
+    if (!cleanedVimeoUrl) {
       notification.error({
-        message: "Invalid YouTube URL or could not extract video ID",
+        message: "Invalid YouTube or Vimeo URL, or could not extract video ID",
       });
       return;
     }
 
-    const videoId = extractYouTubeVideoId(cleanedUrl);
-    const currentMedia = form.getFieldValue("media") || [];
-
-    // Add new YouTube video media
+    // Add new Vimeo video media
     const newMedia = {
       type: "video",
       video: {
         tags: [],
         caption: "",
-        isYoutube: true,
-        youtubeUrl: cleanedUrl,
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/0.jpg`,
+        isVimeo: true,
+        vimeoUrl: cleanedVimeoUrl,
+        url: cleanedVimeoUrl,
       },
     };
 
@@ -97,7 +132,7 @@ export function VideoUpload({
       });
     }
 
-    setYoutubeLink("");
+    setVideoLink("");
     setIsYoutubeModalVisible(false);
   };
 
@@ -183,7 +218,7 @@ export function VideoUpload({
         open={isYoutubeModalVisible}
         onCancel={() => {
           setIsYoutubeModalVisible(false);
-          setYoutubeLink("");
+          setVideoLink("");
         }}
         footer={null}
       >
@@ -192,20 +227,20 @@ export function VideoUpload({
           items={[
             {
               key: "youtube",
-              label: "YouTube Link",
+              label: "YouTube or Vimeo Link",
               children: (
                 <div style={{ padding: "20px 0" }}>
                   <Input
                     size="large"
-                    placeholder="Paste YouTube video link here"
-                    value={youtubeLink}
-                    onChange={(e) => setYoutubeLink(e.target.value)}
+                    placeholder="Paste YouTube or Vimeo video link here"
+                    value={videoLink}
+                    onChange={(e) => setVideoLink(e.target.value)}
                     style={{ marginBottom: 16 }}
                   />
                   <Button
                     type="primary"
-                    onClick={handleYoutubeSave}
-                    disabled={!youtubeLink}
+                    onClick={handleVideoLinkSave}
+                    disabled={!videoLink}
                     block
                     size="large"
                   >
@@ -303,7 +338,10 @@ export const VideoItem: React.FC<VideoItemProps> = ({
   const { data: videoStatus, isLoading: videoStatusLoading } = useQuery({
     queryKey: [`video-item-${item._id}`],
     queryFn: () => api.getVideoStatus(item.video!.bunnyVideoId!),
-    enabled: !item.video?.isYoutube && item.video?.status !== "done",
+    enabled:
+      !item.video?.isYoutube &&
+      !item.video?.isVimeo &&
+      item.video?.status !== "done",
     refetchInterval: 5000,
   });
 
@@ -385,6 +423,8 @@ export const VideoItem: React.FC<VideoItemProps> = ({
           src={
             item.video?.isYoutube
               ? item.video.thumbnailUrl
+              : item.video?.isVimeo
+              ? item.video.thumbnailUrl
               : item.video?.status === "done"
               ? previewUrl
               : ""
@@ -405,6 +445,12 @@ export const VideoItem: React.FC<VideoItemProps> = ({
             <Flex>
               <Tag icon={<CheckCircleOutlined />} color="blue">
                 YouTube Video
+              </Tag>
+            </Flex>
+          ) : item.video?.isVimeo ? (
+            <Flex>
+              <Tag icon={<CheckCircleOutlined />} color="cyan">
+                Vimeo Video
               </Tag>
             </Flex>
           ) : item.video?.status == "done" ? (
@@ -470,6 +516,14 @@ export const VideoItem: React.FC<VideoItemProps> = ({
                 >
                   <Button>Watch on YouTube</Button>
                 </a>
+              ) : item.video?.isVimeo ? (
+                <a
+                  href={item.video?.vimeoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button>Watch on Vimeo</Button>
+                </a>
               ) : (
                 <a
                   href={item.video?.directPlayUrl}
@@ -504,6 +558,9 @@ export const VideoItem: React.FC<VideoItemProps> = ({
           <Form.Item name={["media", index, "video", "previewUrl"]} hidden />
           <Form.Item name={["media", index, "video", "isYoutube"]} hidden />
           <Form.Item name={["media", index, "video", "youtubeUrl"]} hidden />
+          <Form.Item name={["media", index, "video", "isVimeo"]} hidden />
+          <Form.Item name={["media", index, "video", "vimeoUrl"]} hidden />
+          <Form.Item name={["media", index, "video", "url"]} hidden />
         </Flex>
       </Col>
     </Row>

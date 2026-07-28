@@ -25,6 +25,8 @@ export interface IMedia {
     previewUrl?: string;
     isYoutube?: boolean;
     youtubeUrl?: string;
+    isVimeo?: boolean;
+    vimeoUrl?: string;
     bunnyLibraryId?: number;
   };
   document?: {
