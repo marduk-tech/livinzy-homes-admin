@@ -13,7 +13,7 @@ import React, { ReactNode, useRef, useState } from "react";
 import { axiosApiInstance } from "../../libs/axios-api-Instance";
 import { PdfPageImage, renderPdfToImages } from "../../libs/pdf-to-images";
 
-const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_MB = 25;
 
 interface UploadItem {
   blob: Blob;

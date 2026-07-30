@@ -4,7 +4,7 @@ import { UploadChangeParam, UploadProps } from "antd/es/upload";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
 import { apiKey, baseApiUrl } from "../../libs/constants";
 
-const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_MB = 25;
 
 interface MediaTabProps {
   onUploadComplete: (urls: string[], originalNames: string[]) => void;
