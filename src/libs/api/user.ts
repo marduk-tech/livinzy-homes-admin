@@ -51,6 +51,15 @@ export const sendReportEmail = async (
   return data;
 };
 
+export const sendLegalDetailsEmail = async (
+  userId: string
+): Promise<{ success: boolean; message: string }> => {
+  const { data } = await axiosApiInstance.post(
+    `/user/${userId}/send-legal-details`
+  );
+  return data;
+};
+
 export const getAggregatedReports = async (): Promise<AggregatedReportRow[]> => {
   const { data } = await axiosApiInstance.get<AggregatedReportRow[]>('/user/aggregated-reports');
   return data;

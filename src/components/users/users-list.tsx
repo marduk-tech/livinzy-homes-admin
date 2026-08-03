@@ -45,6 +45,7 @@ import {
   useDeleteLeadTrailCommentMutation,
   useGetAggregatedReports,
   useGetAllUsers,
+  useSendLegalDetailsEmailMutation,
   useSendReportEmailMutation,
 } from "../../hooks/user-hooks";
 import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
@@ -87,6 +88,7 @@ export function UsersList() {
   });
   const { data: lvnzyProjects } = useGetAllLvnzyProjects();
   const sendReportEmailMutation = useSendReportEmailMutation();
+  const sendLegalDetailsEmailMutation = useSendLegalDetailsEmailMutation();
   const addLeadTrailCommentMutation = useAddLeadTrailCommentMutation();
   const deleteLeadTrailCommentMutation = useDeleteLeadTrailCommentMutation();
 
@@ -94,9 +96,13 @@ export function UsersList() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const [isUtmModalOpen, setIsUtmModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [notificationType, setNotificationType] = useState<
+    "report" | "legal"
+  >("report");
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "leads" | "actionable-leads">(
     "users",
   );
@@ -141,19 +147,30 @@ export function UsersList() {
   }, [aggregatedReports]);
 
   const handleSendEmail = () => {
-    if (selectedUser && selectedProjectIds.length > 0) {
+    if (!selectedUser) return;
+
+    const onSuccess = () => {
+      setIsEmailModalOpen(false);
+      setSelectedUser(undefined);
+      setSelectedProjectIds([]);
+      setNotificationType("report");
+    };
+
+    if (notificationType === "legal") {
+      sendLegalDetailsEmailMutation.mutate(
+        { userId: selectedUser._id },
+        { onSuccess },
+      );
+      return;
+    }
+
+    if (selectedProjectIds.length > 0) {
       sendReportEmailMutation.mutate(
         {
           userId: selectedUser._id,
           projectIds: selectedProjectIds,
         },
-        {
-          onSuccess: () => {
-            setIsEmailModalOpen(false);
-            setSelectedUser(undefined);
-            setSelectedProjectIds([]);
-          },
-        },
+        { onSuccess },
       );
     }
   };
@@ -643,7 +660,51 @@ export function UsersList() {
     },
   ];
 
+  const getExportHeaders = (tab: typeof activeTab): string[] => {
+    if (tab === "reports") {
+      return [
+        "Project Name",
+        "RERA Number",
+        "Brick360 Report ID",
+        "Total Requests",
+        "Latest Request",
+        "All Request Dates",
+      ];
+    }
+    if (tab === "leads") {
+      return [
+        "Name",
+        "Mobile",
+        "Status",
+        "Preferred Callback",
+        "Shared Reports",
+        "Requested Reports",
+        "Last Contact",
+        "Date Updated",
+        "Trail",
+      ];
+    }
+    return [
+      "Name",
+      "Created Date",
+      "Last Updated",
+      "Mobile",
+      "Email",
+      "Status",
+      "UTM Source",
+      "UTM Medium",
+      "UTM Campaign",
+      "Requested Reports",
+      "Collections",
+    ];
+  };
+
   const handleCSVExport = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const performCSVExport = () => {
+    setIsExportModalOpen(false);
     const today = new Date().toISOString().split("T")[0];
 
     if (activeTab === "reports") {
@@ -652,7 +713,7 @@ export function UsersList() {
         notification.warning({ message: "No Data to Export", description: "There are no reports to export." });
         return;
       }
-      const headers = ["Project Name", "RERA Number", "Brick360 Report ID", "Total Requests", "Latest Request", "All Request Dates"];
+      const headers = getExportHeaders("reports");
       const rows = dataToExport.map((row) => [
         row.projectName,
         row.reraNumber || "",
@@ -672,7 +733,7 @@ export function UsersList() {
         notification.warning({ message: "No Data to Export", description: "There are no leads to export." });
         return;
       }
-      const headers = ["Name", "Mobile", "Status", "Preferred Callback", "Shared Reports", "Requested Reports", "Last Contact", "Date Updated"];
+      const headers = getExportHeaders("leads");
       const rows = dataToExport.map((user) => {
         const preferredCallback = user.profile?.preferredCallbackTimestamp
           ? new Date(user.profile.preferredCallbackTimestamp).toLocaleString()
@@ -688,6 +749,14 @@ export function UsersList() {
         const lastContact = comments?.length
           ? formatDateForCSV(comments[comments.length - 1].dateOriginal || comments[comments.length - 1].dateAdded)
           : "";
+        const trail = comments?.length
+          ? comments
+              .map(
+                (c) =>
+                  `${formatDateForCSV(c.dateOriginal || c.dateAdded)}-${c.comment}`
+              )
+              .join("\n")
+          : "";
         return [
           user.profile?.name || "",
           `${user.countryCode} ${user.mobile}`,
@@ -697,6 +766,7 @@ export function UsersList() {
           requestedReports,
           lastContact,
           formatDateForCSV(user.updatedAt),
+          trail,
         ];
       });
       downloadCSV(convertToCSV(headers, rows), `leads-export-${today}.csv`);
@@ -710,7 +780,7 @@ export function UsersList() {
       notification.warning({ message: "No Data to Export", description: "There are no users to export." });
       return;
     }
-    const headers = ["Name", "Created Date", "Last Updated", "Mobile", "Email", "Status", "UTM Source", "UTM Medium", "UTM Campaign", "Requested Reports", "Collections"];
+    const headers = getExportHeaders("users");
     const rows = dataToExport.map((user) => {
       const mostRecentUtm = user.metrics?.utm?.[user.metrics.utm.length - 1];
       const requestedReports = user.requestedReports?.length
@@ -1439,23 +1509,59 @@ _If you need any kind of assistance with regards to ${
       />
 
       <Modal
-        title="Send Report Notification (Email & WhatsApp)"
+        title="Confirm CSV Export"
+        open={isExportModalOpen}
+        onCancel={() => setIsExportModalOpen(false)}
+        onOk={performCSVExport}
+        okText="Export"
+      >
+        <Typography.Text>
+          The exported CSV will include the following columns:
+        </Typography.Text>
+        <div style={{ marginTop: 12 }}>
+          {getExportHeaders(activeTab).map((header) => (
+            <Tag key={header} style={{ marginBottom: 8 }}>
+              {header}
+            </Tag>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal
+        title="Send Notification"
         open={isEmailModalOpen}
         onCancel={() => {
           setIsEmailModalOpen(false);
           setSelectedUser(undefined);
           setSelectedProjectIds([]);
+          setNotificationType("report");
         }}
         onOk={handleSendEmail}
         okText="Send Notification"
         okButtonProps={{
-          disabled: selectedProjectIds.length === 0,
-          loading: sendReportEmailMutation.isPending,
+          disabled:
+            notificationType === "report" && selectedProjectIds.length === 0,
+          loading:
+            notificationType === "legal"
+              ? sendLegalDetailsEmailMutation.isPending
+              : sendReportEmailMutation.isPending,
         }}
       >
         <div style={{ marginTop: 20 }}>
+          <Select
+            style={{ width: "100%", marginBottom: 16 }}
+            value={notificationType}
+            onChange={setNotificationType}
+            options={[
+              { value: "report", label: "Send report notification" },
+              { value: "legal", label: "Send legal service details" },
+            ]}
+          />
+
           <Typography.Text>
-            Send report notification for selected projects to{" "}
+            {notificationType === "legal"
+              ? "Send legal service details to "
+              : "Send report notification for selected projects to "}
             <strong>{selectedUser?.profile?.name || "user"}</strong>
           </Typography.Text>
 
@@ -1468,33 +1574,36 @@ _If you need any kind of assistance with regards to ${
                 {selectedUser.profile.email}
               </Tag>
             )}
-            {selectedUser?.mobile && (
+            {notificationType === "report" && selectedUser?.mobile && (
               <Tag icon={<WhatsAppOutlined />} color="green">
                 {selectedUser.countryCode} {selectedUser.mobile}
               </Tag>
             )}
-            {!selectedUser?.profile?.email && !selectedUser?.mobile && (
-              <Tag color="red">No contact information available</Tag>
-            )}
+            {!selectedUser?.profile?.email &&
+              (notificationType === "legal" || !selectedUser?.mobile) && (
+                <Tag color="red">No contact information available</Tag>
+              )}
           </Space>
 
-          <Select
-            mode="multiple"
-            showSearch
-            style={{ width: "100%", marginTop: 10 }}
-            placeholder="Select projects"
-            value={selectedProjectIds}
-            onChange={setSelectedProjectIds}
-            filterOption={(input, option) =>
-              String(option?.label ?? "")
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
-            options={lvnzyProjects?.map((project: any) => ({
-              value: project._id,
-              label: project.meta?.projectName || project._id,
-            }))}
-          />
+          {notificationType === "report" && (
+            <Select
+              mode="multiple"
+              showSearch
+              style={{ width: "100%", marginTop: 10 }}
+              placeholder="Select projects"
+              value={selectedProjectIds}
+              onChange={setSelectedProjectIds}
+              filterOption={(input, option) =>
+                String(option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={lvnzyProjects?.map((project: any) => ({
+                value: project._id,
+                label: project.meta?.projectName || project._id,
+              }))}
+            />
+          )}
         </div>
       </Modal>
 

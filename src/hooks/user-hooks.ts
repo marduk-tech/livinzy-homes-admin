@@ -7,6 +7,7 @@ import {
   deleteLeadTrailComment,
   getAggregatedReports,
   getAllUsers,
+  sendLegalDetailsEmail,
   sendReportEmail,
   updateUser,
 } from "../libs/api/user";
@@ -115,6 +116,27 @@ export function useSendReportEmailMutation() {
     onError: (error: AxiosError<any>) => {
       notification.error({
         message: `Failed to send notification. Please try again later.`,
+      });
+      console.log(error);
+    },
+  });
+}
+
+export function useSendLegalDetailsEmailMutation() {
+  return useMutation({
+    mutationFn: ({ userId }: { userId: string }) => {
+      return sendLegalDetailsEmail(userId);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: `Legal service details sent successfully!`,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Failed to send legal service details. Please try again later.`,
       });
       console.log(error);
     },
