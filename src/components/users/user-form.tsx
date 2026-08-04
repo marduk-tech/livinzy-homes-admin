@@ -1,9 +1,11 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Form, Input, Modal, Select, Space, Typography } from "antd";
 import PhoneInput from "antd-phone-input";
+import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import {
+  useAddLeadTrailCommentMutation,
   useCreateUserMutation,
   useSendReportEmailMutation,
   useUpdateUserMutation,
@@ -26,12 +28,30 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { user: authUser } = useAuth0();
   const createUserMutation = useCreateUserMutation();
   const updateUserMutation = useUpdateUserMutation();
   const sendReportEmailMutation = useSendReportEmailMutation();
+  const addLeadTrailCommentMutation = useAddLeadTrailCommentMutation();
   const [sendEmailForNewProjects, setSendEmailForNewProjects] = useState(true);
   const { data: projects, isLoading: projectsLoading } =
     useGetAllLvnzyProjects(true);
+
+  const logSharedProjectsTrail = (userId: string, projectIds: string[]) => {
+    if (projectIds.length === 0) return;
+
+    const projectNames = projectIds
+      .map((id) => projects?.find((p: any) => p._id === id)?.meta?.projectName || id)
+      .join(", ");
+    const now = new Date().toISOString();
+
+    addLeadTrailCommentMutation.mutate({
+      userId,
+      comment: `Brick360 Shared - ${projectNames}`,
+      dateOriginal: now,
+      addedBy: authUser?.email,
+    });
+  };
 
   // Pre-populate form when in edit mode
   useEffect(() => {
@@ -105,6 +125,8 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           .flatMap((c: CreateSavedLvnzyProject) => c.projects)
           .filter((id: string) => !oldProjectIds.has(id));
 
+        logSharedProjectsTrail(data._id, newProjectIds);
+
         if (sendEmailForNewProjects && newProjectIds.length > 0) {
           sendReportEmailMutation.mutate({
             userId: data._id,
@@ -123,7 +145,12 @@ export function UserForm({ data, users, onClose }: UserFormProps) {
           savedLvnzyProjects,
         };
 
-        await createUserMutation.mutateAsync(payload);
+        const createdUser = await createUserMutation.mutateAsync(payload);
+
+        const newProjectIds = savedLvnzyProjects.flatMap(
+          (c: CreateSavedLvnzyProject) => c.projects
+        );
+        logSharedProjectsTrail(createdUser._id, newProjectIds);
       }
 
       form.resetFields();
