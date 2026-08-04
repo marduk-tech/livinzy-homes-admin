@@ -151,7 +151,21 @@ export function useUpdateProjectMutation({
       return api.updateProject(projectId, projectData);
     },
 
-    onSuccess: () => {
+    // Write the mutation's own response straight into the cache instead of
+    // invalidating + refetching. Multiple updateProject calls can be in
+    // flight at once (e.g. a floor plan upload alongside a unit-config
+    // auto-save); an invalidate-triggered refetch has no ordering guarantee
+    // against those other in-flight writes, so it can land with a stale
+    // snapshot of a field it never touched (like media) and, via the
+    // project-details form's full setFieldsValue resync, silently revert
+    // that field back to it. Applying each response directly ties the cache
+    // update to that specific request's own (already-authoritative) result.
+    onSuccess: (updatedProject) => {
+      queryClient.setQueryData(
+        [queryKeys.getProjectById, projectId],
+        updatedProject,
+      );
+
       if (enableToasts) {
         notification.success({
           message: `Project updated successfully!`,
@@ -168,10 +182,6 @@ export function useUpdateProjectMutation({
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.getProjectById, projectId],
-      });
-
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllCorridors],
       });
