@@ -27,6 +27,18 @@ export const Brick360ProjectsList: React.FC = () => {
       ...ColumnSearch(["meta", "projectName"]),
     },
     {
+      title: "Developer Name",
+      dataIndex: ["originalProjectId", "info", "developerId", "name"],
+      key: "developerName",
+      sorter: (a, b) =>
+        (a.originalProjectId?.info?.developerId?.name || "").localeCompare(
+          b.originalProjectId?.info?.developerId?.name || "",
+        ),
+      ...ColumnSearch(["originalProjectId", "info", "developerId", "name"]),
+      render: (_: unknown, record: LvnzyProject) =>
+        record.originalProjectId?.info?.developerId?.name || "-",
+    },
+    {
       title: "Date Created",
       dataIndex: "createdAt",
       defaultSortOrder: "descend",

@@ -68,6 +68,38 @@ const { Search } = Input;
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
+// preferredCallbackTimestamp (structured, set via SetCallbackModal) always
+// wins over the legacy free-text preferredCallbackTime ("<date>, <time
+// range>") when both derivations are needed for a record.
+const getPreferredCallbackParts = (
+  record: User,
+): { date?: string; time?: string } => {
+  if (record.profile?.preferredCallbackTimestamp) {
+    const start = new Date(record.profile.preferredCallbackTimestamp);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    const day = start.getDate();
+    const month = start.toLocaleString("en-US", { month: "short" });
+    const year = start.getFullYear();
+    const fmt = (d: Date) => {
+      const h = d.getHours();
+      return `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
+    };
+    return {
+      date: `${day} ${month} ${year}`,
+      time: `${fmt(start)} - ${fmt(end)}`,
+    };
+  }
+  const raw = record.profile?.preferredCallbackTime;
+  if (raw) {
+    const splits = raw.split(",");
+    return {
+      date: splits[0]?.trim(),
+      time: splits.length >= 2 ? splits.slice(1).join(",").trim() : undefined,
+    };
+  }
+  return {};
+};
+
 export function UsersList() {
   const { user: authUser } = useAuth0();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -676,7 +708,8 @@ export function UsersList() {
         "Name",
         "Mobile",
         "Status",
-        "Preferred Callback",
+        "Preferred Callback Date",
+        "Preferred Callback Time",
         "Shared Reports",
         "Requested Reports",
         "Last Contact",
@@ -735,9 +768,8 @@ export function UsersList() {
       }
       const headers = getExportHeaders("leads");
       const rows = dataToExport.map((user) => {
-        const preferredCallback = user.profile?.preferredCallbackTimestamp
-          ? new Date(user.profile.preferredCallbackTimestamp).toLocaleString()
-          : user.profile?.preferredCallbackTime || "";
+        const { date: preferredCallbackDate, time: preferredCallbackTime } =
+          getPreferredCallbackParts(user);
         const firstCollection = user.savedLvnzyProjects?.[0];
         const sharedReports = firstCollection?.projects?.length
           ? firstCollection.projects.map((id) => projectIdToNameMap.get(id) || id).join(", ")
@@ -761,7 +793,8 @@ export function UsersList() {
           user.profile?.name || "",
           `${user.countryCode} ${user.mobile}`,
           user.status || "",
-          preferredCallback,
+          preferredCallbackDate || "",
+          preferredCallbackTime || "",
           sharedReports,
           requestedReports,
           lastContact,
@@ -1064,24 +1097,8 @@ export function UsersList() {
         return getTimestamp(a) - getTimestamp(b);
       },
       render: (_, record) => {
-        let label: string | undefined;
-        if (record.profile?.preferredCallbackTimestamp) {
-          const start = new Date(record.profile.preferredCallbackTimestamp);
-          const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-          const day = start.getDate();
-          const month = start.toLocaleString("en-US", { month: "short" });
-          const fmt = (d: Date) => {
-            const h = d.getHours();
-            return `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
-          };
-          label = `${day} ${month}, ${fmt(start)} - ${fmt(end)}`;
-        } else {
-          const raw = record.profile?.preferredCallbackTime;
-          if (raw) {
-            const splits = raw.split(",");
-            label = splits.length >= 2 ? splits.slice(1).join(",").trim() : raw;
-          }
-        }
+        const { date, time } = getPreferredCallbackParts(record);
+        const label = [date, time].filter(Boolean).join(", ");
         const category = record.profile?.callbackCategory;
         const intent = record.profile?.sourceIntent;
         const tooltipContent =
@@ -1093,17 +1110,18 @@ export function UsersList() {
           ) : undefined;
         return (
           <Tooltip title={tooltipContent}>
-                <Flex>
-                <Tag
-                  style={{
-                    backgroundColor: COLORS.bgColor,
-                    borderColor: COLORS.borderColor,
-                    color: COLORS.textColorDark,
-                    minWidth: "unset",
-                  }}
-                >{label}</Tag>
-                </Flex>
-             
+            <Flex>
+              <Tag
+                style={{
+                  backgroundColor: COLORS.bgColor,
+                  borderColor: COLORS.borderColor,
+                  color: COLORS.textColorDark,
+                  minWidth: "unset",
+                }}
+              >
+                {label}
+              </Tag>
+            </Flex>
           </Tooltip>
         );
       },
