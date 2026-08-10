@@ -136,8 +136,9 @@ const RenderFields: React.FC<{
   fieldRules: Record<string, any>;
   onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
   disabledFields?: Record<string, boolean>;
+  hiddenFields?: Record<string, boolean>;
   onAutoSave?: (category: string, dbField: string | string[], newValue: any) => void;
-}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields, onAutoSave }) => (
+}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields, hiddenFields, onAutoSave }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -150,7 +151,8 @@ const RenderFields: React.FC<{
         options,
         dependencies,
       }) => {
-        if (hide) {
+        const fieldKey = Array.isArray(dbField) ? dbField.join(".") : dbField;
+        if (hide || hiddenFields?.[fieldKey]) {
           return null;
         } else
           return (
@@ -279,9 +281,7 @@ const RenderFields: React.FC<{
                   <DatePicker
                     style={{ width: "100%" }}
                     disabled={
-                      !!(disabledFields?.[
-                        Array.isArray(dbField) ? dbField.join(".") : dbField
-                      ])
+                      !!(disabledFields?.[fieldKey])
                     }
                   />
                 ) : type == "text" ? (
@@ -1039,8 +1039,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
   const watchReraNumber = Form.useWatch(["info", "reraNumber"], form);
+  const watchExpectedLaunchDate = Form.useWatch(
+    ["info", "realTimeStatus", "expectedLaunchDate"],
+    form,
+  );
   const disabledFields: Record<string, boolean> = {
     "realTimeStatus.expectedLaunchDate": !!watchReraNumber,
+  };
+  const hiddenFields: Record<string, boolean> = {
+    "realTimeStatus.expectedCompletionDate": !watchExpectedLaunchDate,
   };
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
@@ -1198,6 +1205,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   fieldRules={fieldRules}
                   onFloorplanUpload={onFloorplanUpload}
                   disabledFields={disabledFields}
+                  hiddenFields={hiddenFields}
                   onAutoSave={(category, dbField, newValue) => {
                     if (!projectId) return;
                     const keys = Array.isArray(dbField) ? dbField : [dbField];
