@@ -407,12 +407,6 @@ export function useProjectForm(form: FormInstance) {
         fieldDescription: "Month and year of project launch",
       },
       {
-        dbField: ["realTimeStatus", "expectedCompletionDate"],
-        type: "date_month_year",
-        fieldDisplayName: "Expected Completion Date",
-        fieldDescription: "Month and year of expected project completion",
-      },
-      {
         dbField: "otherPhasesRera",
         fieldDisplayName: "Other Phases Rera Numbers",
         fieldDescription:
