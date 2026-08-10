@@ -77,6 +77,7 @@ import DynamicReactIcon from "../../components/common/dynamic-react-icon";
 import { FileUpload } from "../../components/common/img-upload";
 import { ImagePdfUpload } from "../../components/common/image-pdf-upload";
 import { Loader } from "../../components/common/loader";
+import { VirtualizedGrid } from "../../components/common/virtualized-grid";
 import { DocumentsList } from "../../components/media-tabs/documents-list";
 import { ReraDocumentsModal } from "../../components/rera-projects/rera-documents-modal";
 import { VideoUpload } from "../../components/media-tabs/video-tab";
@@ -136,8 +137,9 @@ const RenderFields: React.FC<{
   fieldRules: Record<string, any>;
   onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
   disabledFields?: Record<string, boolean>;
+  hiddenFields?: Record<string, boolean>;
   onAutoSave?: (category: string, dbField: string | string[], newValue: any) => void;
-}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields, onAutoSave }) => (
+}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields, hiddenFields, onAutoSave }) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -150,7 +152,8 @@ const RenderFields: React.FC<{
         options,
         dependencies,
       }) => {
-        if (hide) {
+        const fieldKey = Array.isArray(dbField) ? dbField.join(".") : dbField;
+        if (hide || hiddenFields?.[fieldKey]) {
           return null;
         } else
           return (
@@ -279,9 +282,7 @@ const RenderFields: React.FC<{
                   <DatePicker
                     style={{ width: "100%" }}
                     disabled={
-                      !!(disabledFields?.[
-                        Array.isArray(dbField) ? dbField.join(".") : dbField
-                      ])
+                      !!(disabledFields?.[fieldKey])
                     }
                   />
                 ) : type == "text" ? (
@@ -1039,8 +1040,15 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const watchHomeType = Form.useWatch(["info", "homeType"], form);
   const watchReraNumber = Form.useWatch(["info", "reraNumber"], form);
+  const watchExpectedLaunchDate = Form.useWatch(
+    ["info", "realTimeStatus", "expectedLaunchDate"],
+    form,
+  );
   const disabledFields: Record<string, boolean> = {
     "realTimeStatus.expectedLaunchDate": !!watchReraNumber,
+  };
+  const hiddenFields: Record<string, boolean> = {
+    "realTimeStatus.expectedCompletionDate": !watchExpectedLaunchDate,
   };
 
   const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
@@ -1150,6 +1158,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     [floorplanItems],
   );
 
+  // Keeps each entry's original index into project.media (used for
+  // Form.Item paths, selection, delete, etc.) alongside the filtered item.
+  const nonFloorplanMediaItems = useMemo(
+    () =>
+      (project?.media || [])
+        .map((item: IMedia, index: number) => ({ item, index }))
+        .filter(({ item }: { item: IMedia; index: number }) =>
+          isNonFloorplanImage(item),
+        ),
+    [project?.media],
+  );
+
   const screens = useBreakpoint();
 
   if (projectIsLoading) {
@@ -1198,6 +1218,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   fieldRules={fieldRules}
                   onFloorplanUpload={onFloorplanUpload}
                   disabledFields={disabledFields}
+                  hiddenFields={hiddenFields}
                   onAutoSave={(category, dbField, newValue) => {
                     if (!projectId) return;
                     const keys = Array.isArray(dbField) ? dbField : [dbField];
@@ -1219,7 +1240,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             key={"media"}
             disabled={!projectId}
           >
-            <Tabs defaultActiveKey="images">
+            <Tabs defaultActiveKey="images" destroyInactiveTabPane>
               <TabPane tab={"Images"} key={"images"}>
                 <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
                   <Space align="center">
@@ -1272,173 +1293,164 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 </Flex>
 
                 {imageViewMode === "default" ? (
-                  <Flex
-                    gap={48}
-                    style={{ width: "100%", maxHeight: 550, overflowY: "scroll" }}
-                    wrap="wrap"
-                  >
-                    {project?.media?.map((item: IMedia, index) => {
-                      if (isNonFloorplanImage(item)) {
-                        return (
-                          <Flex
-                            key={item._id || index}
-                            gap={8}
-                            align="center"
-                            style={{
-                              border: selectedMediaIndices.has(index)
-                                ? "2px solid #1677ff"
-                                : item.hasWatermark
-                                  ? `2px solid ${COLORS.redIdentifier}`
-                                  : "none",
-                              borderRadius: 8,
-                              padding: 8,
-                            }}
-                          >
-                            <Checkbox
-                              checked={selectedMediaIndices.has(index)}
-                              onChange={() => handleToggleSelect(index)}
-                            />
-                            <Image
-                              width={150}
-                              src={item.image?.url}
-                              alt={item._id}
-                              style={{
-                                borderRadius: 10,
-                                objectFit: "cover",
-                                aspectRatio: "1 / 1",
+                  <VirtualizedGrid
+                    items={nonFloorplanMediaItems}
+                    itemWidth={540}
+                    itemHeight={190}
+                    gap={32}
+                    maxHeight={550}
+                    getKey={({ item, index }) => item._id || index}
+                    renderItem={({ item, index }) => (
+                      <Flex
+                        gap={8}
+                        align="center"
+                        style={{
+                          height: 190,
+                          border: selectedMediaIndices.has(index)
+                            ? "2px solid #1677ff"
+                            : item.hasWatermark
+                              ? `2px solid ${COLORS.redIdentifier}`
+                              : "none",
+                          borderRadius: 8,
+                          padding: 8,
+                        }}
+                      >
+                        <Checkbox
+                          checked={selectedMediaIndices.has(index)}
+                          onChange={() => handleToggleSelect(index)}
+                        />
+                        <Image
+                          width={150}
+                          src={item.image?.url}
+                          alt={item._id}
+                          style={{
+                            borderRadius: 10,
+                            objectFit: "cover",
+                            aspectRatio: "1 / 1",
+                          }}
+                        />
+                        <Flex vertical justify="center" style={{ width: 300 }}>
+                          <Form.Item
+                            name={["media", index, "type"]}
+                            label="Type"
+                            hidden
+                          ></Form.Item>
+                          <Form.Item
+                            name={["media", index, "hasWatermark"]}
+                            label="Has Watermark ?"
+                            hidden
+                          ></Form.Item>
+                          <Form.Item
+                            name={["media", index, "image", "url"]}
+                            label="Tags"
+                            hidden
+                          ></Form.Item>
+                          <Flex gap={8}>
+                            <Form.Item
+                              name={["media", index, "image", "tags"]}
+                              label="Tags"
+                              style={{ width: "100%" }}
+                            >
+                              <Select
+                                style={{
+                                  width: "100%",
+                                  maxWidth: screens.lg ? "600px" : "100%",
+                                }}
+                                placeholder="Enter tags"
+                                options={MediaTags.map((tag) => ({
+                                  value: tag,
+                                  label: tag,
+                                }))}
+                              />
+                            </Form.Item>
+
+                            <Form.Item
+                              name={["media", index, "image", "caption"]}
+                              label="Caption"
+                              style={{ width: "100%" }}
+                            >
+                              <Input
+                                style={{
+                                  width: "100%",
+                                  maxWidth: screens.lg ? "600px" : "100%",
+                                }}
+                                placeholder="Enter caption"
+                              />
+                            </Form.Item>
+                          </Flex>
+
+                          <Flex>
+                            <Form.Item name={["media", index, "isPreview"]}>
+                              <Checkbox
+                                checked={index === previewImageIndex}
+                                onChange={(e) =>
+                                  handlePreviewImageChange(
+                                    index,
+                                    e.target.checked,
+                                  )
+                                }
+                              >
+                                Preview
+                              </Checkbox>
+                            </Form.Item>
+
+                            <FileUpload
+                              onUploadComplete={(
+                                urls: string[],
+                                originalNames: string[],
+                              ) =>
+                                onUploadComplete(
+                                  urls,
+                                  originalNames,
+                                  index,
+                                  "image",
+                                )
+                              }
+                              fileType="image"
+                              isMultiple={false}
+                              button={{
+                                label: "",
                               }}
                             />
-                            <Flex
-                              vertical
-                              justify="center"
-                              style={{ width: 300 }}
-                            >
-                              <Form.Item
-                                name={["media", index, "type"]}
-                                label="Type"
-                                hidden
-                              ></Form.Item>
-                              <Form.Item
-                                name={["media", index, "hasWatermark"]}
-                                label="Has Watermark ?"
-                                hidden
-                              ></Form.Item>
-                              <Form.Item
-                                name={["media", index, "image", "url"]}
-                                label="Tags"
-                                hidden
-                              ></Form.Item>
-                              <Flex gap={8}>
-                                <Form.Item
-                                  name={["media", index, "image", "tags"]}
-                                  label="Tags"
-                                  style={{ width: "100%" }}
-                                >
-                                  <Select
-                                    style={{
-                                      width: "100%",
-                                      maxWidth: screens.lg ? "600px" : "100%",
-                                    }}
-                                    placeholder="Enter tags"
-                                    options={MediaTags.map((tag) => ({
-                                      value: tag,
-                                      label: tag,
-                                    }))}
-                                  />
-                                </Form.Item>
 
-                                <Form.Item
-                                  name={["media", index, "image", "caption"]}
-                                  label="Caption"
-                                  style={{ width: "100%" }}
-                                >
-                                  <Input
-                                    style={{
-                                      width: "100%",
-                                      maxWidth: screens.lg ? "600px" : "100%",
-                                    }}
-                                    placeholder="Enter caption"
-                                  />
-                                </Form.Item>
-                              </Flex>
+                            <Button
+                              icon={<ScissorOutlined />}
+                              style={{
+                                marginRight: 10,
+                              }}
+                              onClick={() =>
+                                handleRemoveWatermark(
+                                  item.image?.url || "",
+                                  index,
+                                )
+                              }
+                              loading={
+                                removeWatermarkMutation.isPending &&
+                                watermarkModal.mediaIndex === index
+                              }
+                              title="Remove Watermark"
+                            />
 
-                              <Flex>
-                                <Form.Item name={["media", index, "isPreview"]}>
-                                  <Checkbox
-                                    checked={index === previewImageIndex}
-                                    onChange={(e) =>
-                                      handlePreviewImageChange(
-                                        index,
-                                        e.target.checked,
-                                      )
-                                    }
-                                  >
-                                    Preview
-                                  </Checkbox>
-                                </Form.Item>
+                            <Button
+                              icon={<EditOutlined />}
+                              style={{
+                                marginRight: 10,
+                              }}
+                              onClick={() =>
+                                handleOpenAnnotate(item.image?.url || "", index)
+                              }
+                              title="Annotate"
+                            />
 
-                                <FileUpload
-                                  onUploadComplete={(
-                                    urls: string[],
-                                    originalNames: string[],
-                                  ) =>
-                                    onUploadComplete(
-                                      urls,
-                                      originalNames,
-                                      index,
-                                      "image",
-                                    )
-                                  }
-                                  fileType="image"
-                                  isMultiple={false}
-                                  button={{
-                                    label: "",
-                                  }}
-                                />
-
-                                <Button
-                                  icon={<ScissorOutlined />}
-                                  style={{
-                                    marginRight: 10,
-                                  }}
-                                  onClick={() =>
-                                    handleRemoveWatermark(
-                                      item.image?.url || "",
-                                      index,
-                                    )
-                                  }
-                                  loading={
-                                    removeWatermarkMutation.isPending &&
-                                    watermarkModal.mediaIndex === index
-                                  }
-                                  title="Remove Watermark"
-                                />
-
-                                <Button
-                                  icon={<EditOutlined />}
-                                  style={{
-                                    marginRight: 10,
-                                  }}
-                                  onClick={() =>
-                                    handleOpenAnnotate(
-                                      item.image?.url || "",
-                                      index,
-                                    )
-                                  }
-                                  title="Annotate"
-                                />
-
-                                <Button
-                                  icon={<DeleteOutlined />}
-                                  onClick={() => handleDeleteMedia(index)}
-                                ></Button>
-                              </Flex>
-                            </Flex>
+                            <Button
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDeleteMedia(index)}
+                            ></Button>
                           </Flex>
-                        );
-                      }
-                    })}
-                  </Flex>
+                        </Flex>
+                      </Flex>
+                    )}
+                  />
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -1452,6 +1464,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       .map(({ i }: { item: IMedia; i: number }) => String(i))}
                     strategy={verticalListSortingStrategy}
                   >
+                  {/* Not virtualized: drag-reorder (dnd-kit SortableContext
+                      above) needs every row actually mounted to be
+                      draggable/droppable - windowing would silently make
+                      off-screen rows unreorderable. */}
                   <Table
                     size="small"
                     pagination={false}
@@ -1745,78 +1761,77 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     the Images tab or add them via unit configurations.
                   </Typography.Text>
                 ) : floorplanViewMode === "default" ? (
+                  // Preview-group next/prev navigation only covers the
+                  // currently-mounted (visible + overscanned) rows, since
+                  // virtualizing means off-screen images aren't rendered.
                   <Image.PreviewGroup>
-                    <Flex
+                    <VirtualizedGrid
+                      items={floorplanItems}
+                      itemWidth={180}
+                      itemHeight={130}
                       gap={24}
-                      style={{
-                        width: "100%",
-                        maxHeight: 550,
-                        overflowY: "scroll",
-                      }}
-                      wrap="wrap"
-                    >
-                      {floorplanItems.map((item) => {
-                        return (
-                          <Flex
-                            key={item.url}
-                            vertical
-                            align="center"
-                            gap={8}
-                            style={{ width: 180 }}
-                          >
-                            <div style={{ position: "relative" }}>
-                              <Image
-                                width={160}
-                                height={120}
-                                src={item.url}
-                                style={{ borderRadius: 8, objectFit: "cover" }}
-                              />
-                              <Checkbox
-                                checked={selectedFloorplanUrls.has(item.url)}
-                                onChange={() =>
-                                  handleFloorplanToggleSelect(item.url)
-                                }
+                      maxHeight={550}
+                      getKey={(item) => item.url}
+                      renderItem={(item) => (
+                        <Flex
+                          vertical
+                          align="center"
+                          gap={8}
+                          style={{ width: 180 }}
+                        >
+                          <div style={{ position: "relative" }}>
+                            <Image
+                              width={160}
+                              height={120}
+                              src={item.url}
+                              style={{ borderRadius: 8, objectFit: "cover" }}
+                            />
+                            <Checkbox
+                              checked={selectedFloorplanUrls.has(item.url)}
+                              onChange={() =>
+                                handleFloorplanToggleSelect(item.url)
+                              }
+                              style={{
+                                position: "absolute",
+                                top: 4,
+                                left: 4,
+                              }}
+                            />
+                            {item.used && (
+                              <div
+                                title="Used in a unit configuration"
                                 style={{
                                   position: "absolute",
                                   top: 4,
-                                  left: 4,
+                                  right: 4,
+                                  background: "#fff",
+                                  borderRadius: "50%",
+                                  width: 22,
+                                  height: 22,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  boxShadow: "0 0 2px rgba(0,0,0,0.4)",
                                 }}
-                              />
-                              {item.used && (
-                                <div
-                                  title="Used in a unit configuration"
-                                  style={{
-                                    position: "absolute",
-                                    top: 4,
-                                    right: 4,
-                                    background: "#fff",
-                                    borderRadius: "50%",
-                                    width: 22,
-                                    height: 22,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    boxShadow: "0 0 2px rgba(0,0,0,0.4)",
-                                  }}
-                                >
-                                  <DynamicReactIcon
-                                    iconSet="io"
-                                    iconName="IoIosCheckmarkCircle"
-                                    color={COLORS.textColorDark}
-                                    size={20}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </Flex>
-                        );
-                      })}
-                    </Flex>
+                              >
+                                <DynamicReactIcon
+                                  iconSet="io"
+                                  iconName="IoIosCheckmarkCircle"
+                                  color={COLORS.textColorDark}
+                                  size={20}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </Flex>
+                      )}
+                    />
                   </Image.PreviewGroup>
                 ) : (
                   <Table
                     size="small"
                     pagination={false}
+                    virtual
                     scroll={{ y: 500 }}
                     dataSource={floorplanItems}
                     rowKey={(item) => item.url}
@@ -1988,7 +2003,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             key={"documents"}
             disabled={!projectId}
           >
-            <Tabs defaultActiveKey="project-documents">
+            <Tabs defaultActiveKey="project-documents" destroyInactiveTabPane>
               <TabPane tab={"Project Documents"} key={"project-documents"}>
                 <DocumentsList
                   project={project!}
