@@ -1,11 +1,21 @@
 import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
 import { Table, TableColumnType, Tag, Tooltip } from "antd";
+import { useMemo } from "react";
 import { useFetchEmailReachouts } from "../../hooks/marketing-hooks";
 import { IEmailReachout } from "../../types";
 import { COLORS } from "../../theme/colors";
 
 export function EmailReachoutList() {
   const { data, isLoading, isError } = useFetchEmailReachouts();
+
+  const templateFilters = useMemo(() => {
+    const titles = new Set(
+      (data ?? []).map((record) => record.content.templateTitle || "-"),
+    );
+    return Array.from(titles)
+      .sort()
+      .map((title) => ({ text: title, value: title }));
+  }, [data]);
 
   const columns: TableColumnType<IEmailReachout>[] = [
     {
@@ -31,6 +41,9 @@ export function EmailReachoutList() {
       key: "templateTitle",
       width: 200,
       render: (title: string) => title || "-",
+      filters: templateFilters,
+      onFilter: (value, record) =>
+        (record.content.templateTitle || "-") === value,
     },
     {
       title: "Total Emails",
