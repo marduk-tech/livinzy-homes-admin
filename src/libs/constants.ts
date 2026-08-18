@@ -30,6 +30,7 @@ export const queryKeys = {
   getAllFeedbacks: "getAllFeedbacks",
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
+  getScripts: "getScripts",
 };
 export const LivIndexDrivers = [
   "road",

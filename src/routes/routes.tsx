@@ -18,6 +18,7 @@ import { MarketingPage } from "../pages/marketing/marketing-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
+import { ScriptsPage } from "../pages/scripts-page";
 import { TracesPage } from "../pages/traces-page";
 import { UsersPage } from "../pages/users-page";
 import { Brick360Data } from "../pages/brick360-projects/brick360-data";
@@ -57,6 +58,7 @@ export const Router = () => {
         <Route path="/traces" element={<TracesPage />} />
 
         <Route path="/marketing" element={<MarketingPage />} />
+        <Route path="/scripts" element={<ScriptsPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />
