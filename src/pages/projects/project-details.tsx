@@ -18,6 +18,7 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Switch,
   Table,
   Tabs,
@@ -63,6 +64,7 @@ import {
   useUpdateProjectMutation,
 } from "../../hooks/project-hooks";
 import { useDevice } from "../../hooks/use-device";
+import { useGetReraProjectByReraNumber } from "../../hooks/rera-projects-hooks";
 import { baseApiUrl, MediaTags } from "../../libs/constants";
 import { queries } from "../../libs/queries";
 import { calculateFieldStatus } from "../../libs/utils";
@@ -296,6 +298,88 @@ const RenderFields: React.FC<{
     )}
   </Row>
 );
+
+function ReraProjectNameCell({
+  reraNumber,
+  fallbackName,
+}: {
+  reraNumber?: string;
+  fallbackName?: string;
+}) {
+  const { data, isLoading } = useGetReraProjectByReraNumber(
+    fallbackName ? undefined : reraNumber,
+  );
+
+  if (isLoading) return <Spin size="small" />;
+
+  return (
+    <Typography.Text>
+      {fallbackName || data?.projectDetails?.projectName || "—"}
+    </Typography.Text>
+  );
+}
+
+const parseReraDateString = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  const [day, month, year] = dateStr.includes("-")
+    ? dateStr.split("-")
+    : dateStr.split("/");
+  return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
+const RERA_MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const formatReraMonthYear = (date: Date | null) => {
+  if (!date) return null;
+  return `${RERA_MONTH_NAMES[date.getMonth()]}, ${date.getFullYear()}`;
+};
+
+function ReraProjectTimelineCell({
+  reraNumber,
+  fallbackExtensions,
+}: {
+  reraNumber?: string;
+  fallbackExtensions?: { startDate: string; completionDate: string }[];
+}) {
+  const { data, isLoading } = useGetReraProjectByReraNumber(
+    fallbackExtensions ? undefined : reraNumber,
+  );
+
+  if (isLoading) return <Spin size="small" />;
+
+  const extensions =
+    fallbackExtensions || data?.projectDetails?.listOfRegistrationsExtensions;
+
+  const launch = extensions?.length
+    ? formatReraMonthYear(parseReraDateString(extensions[0].startDate))
+    : null;
+  const completion = extensions?.length
+    ? formatReraMonthYear(
+        parseReraDateString(extensions[extensions.length - 1].completionDate),
+      )
+    : null;
+
+  if (!launch || !completion) return <Typography.Text>—</Typography.Text>;
+
+  return (
+    <Typography.Text>
+      {launch} - {completion}
+    </Typography.Text>
+  );
+}
 
 export function ProjectDetails({ projectId }: ProjectFormProps) {
   const [form] = Form.useForm();
@@ -2017,6 +2101,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       ? (project?.info?.reraProjectId as any)?.projectDetails
                           ?.projectRegistrationNumber
                       : undefined);
+                  const ownProjectName =
+                    typeof project?.info?.reraProjectId === "object"
+                      ? (project?.info?.reraProjectId as any)?.projectDetails
+                          ?.projectName
+                      : undefined;
+                  const ownExtensions =
+                    typeof project?.info?.reraProjectId === "object"
+                      ? (project?.info?.reraProjectId as any)?.projectDetails
+                          ?.listOfRegistrationsExtensions
+                      : undefined;
 
                   if (!reraId && !reraNumber) {
                     return (
@@ -2026,18 +2120,43 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     );
                   }
 
+                  const reraDocsRows: {
+                    key: string;
+                    reraNumber?: string;
+                    projectName?: string;
+                    extensions?: { startDate: string; completionDate: string }[];
+                  }[] = [
+                    {
+                      key: `r-${reraNumber}`,
+                      reraNumber,
+                      projectName: ownProjectName,
+                      extensions: ownExtensions,
+                    },
+                    ...(project?.info?.otherPhasesRera
+                      ? project.info.otherPhasesRera.split(",").map((r) => {
+                          return { key: `r-${r}`, reraNumber: r };
+                        })
+                      : []),
+                  ];
+
                   return (
                     <Table
-                      dataSource={[
-                        { key: `r-${reraNumber}`, reraNumber },
-                        ...(project?.info?.otherPhasesRera
-                          ? project.info.otherPhasesRera.split(",").map((r) => {
-                              return { key: `r-${reraNumber}`, reraNumber: r };
-                            })
-                          : []),
-                      ]}
+                      dataSource={reraDocsRows}
                       pagination={false}
                       columns={[
+                        {
+                          title: "Project Name",
+                          key: "projectName",
+                          render: (
+                            _: unknown,
+                            row: { reraNumber?: string; projectName?: string },
+                          ) => (
+                            <ReraProjectNameCell
+                              reraNumber={row.reraNumber}
+                              fallbackName={row.projectName}
+                            />
+                          ),
+                        },
                         {
                           title: "RERA Number",
                           dataIndex: "reraNumber",
@@ -2046,6 +2165,25 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                             <Typography.Text copyable={!!val}>
                               {val || "—"}
                             </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: "Timeline",
+                          key: "timeline",
+                          render: (
+                            _: unknown,
+                            row: {
+                              reraNumber?: string;
+                              extensions?: {
+                                startDate: string;
+                                completionDate: string;
+                              }[];
+                            },
+                          ) => (
+                            <ReraProjectTimelineCell
+                              reraNumber={row.reraNumber}
+                              fallbackExtensions={row.extensions}
+                            />
                           ),
                         },
                         {

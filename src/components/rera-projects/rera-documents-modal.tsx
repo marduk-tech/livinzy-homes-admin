@@ -34,11 +34,10 @@ export function ReraDocumentsModal({
   const isError = byNumber.isError || byId.isError;
   const reraProject = byNumber.data || byId.data;
 
-  const titleSuffix =
-    projectName ||
-    reraProject?.projectDetails?.projectName ||
-    trimmedReraNumber ||
-    "Project";
+  const displayProjectName =
+    reraProject?.projectDetails?.projectName || projectName || "Project";
+  const displayReraNumber =
+    trimmedReraNumber || reraProject?.projectDetails?.projectRegistrationNumber;
 
   const renderBody = () => {
     if (!trimmedReraNumber && !reraProjectId) {
@@ -71,7 +70,16 @@ export function ReraDocumentsModal({
   return (
     <Modal
       title={
-        <Typography.Text strong>RERA Documents — {titleSuffix}</Typography.Text>
+        <Flex vertical gap={2}>
+          <Typography.Text strong>
+            RERA Documents — {displayProjectName}
+          </Typography.Text>
+          {displayReraNumber && (
+            <Typography.Text type="secondary" style={{ fontWeight: "normal" }}>
+              RERA Number: {displayReraNumber}
+            </Typography.Text>
+          )}
+        </Flex>
       }
       open={open}
       onCancel={onClose}
