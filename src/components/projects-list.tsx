@@ -650,6 +650,9 @@ export const ProjectsList: React.FC = () => {
         const canShowScoreCard = ["data-verified", "report-ready", "report-verified"].includes(
           record.info.status,
         );
+        const canShowRunChecks = !["basic-details-ready", "new", "disabled"].includes(
+          record.info.status,
+        );
         const reportStatus = record.info.reportStatus?.status;
         const isProcessing =
           reportStatus === "pre-processing" ||
@@ -708,24 +711,26 @@ export const ProjectsList: React.FC = () => {
 
         return (
           <Flex gap={8} justify="end" align="center">
-            <Tooltip title="Run Project Checks">
-              <Button
-                type="link"
-                shape="default"
-                loading={
-                  runProjectChecksMutation.isPending &&
-                  runProjectChecksMutation.variables?.projectId === id
-                }
-                icon={
-                  <DynamicReactIcon
-                    color={COLORS.textColorDark}
-                    iconName="FaListCheck"
-                    iconSet="fa6"
-                  />
-                }
-                onClick={handleRunProjectChecks}
-              />
-            </Tooltip>
+            {canShowRunChecks && (
+              <Tooltip title="Run Project Checks">
+                <Button
+                  type="link"
+                  shape="default"
+                  loading={
+                    runProjectChecksMutation.isPending &&
+                    runProjectChecksMutation.variables?.projectId === id
+                  }
+                  icon={
+                    <DynamicReactIcon
+                      color={COLORS.textColorDark}
+                      iconName="FaListCheck"
+                      iconSet="fa6"
+                    />
+                  }
+                  onClick={handleRunProjectChecks}
+                />
+              </Tooltip>
+            )}
 
             {canShowScoreCard && (
               <Tooltip title={getScoreCardTooltip()}>
