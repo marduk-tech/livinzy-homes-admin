@@ -373,6 +373,32 @@ export function useGenerateScoreCardMutation({
   });
 }
 
+export function useRunProjectChecksMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    mutationFn: ({ projectId }: { projectId: string }) => {
+      return api.runProjectChecksForProject(projectId);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Project checks completed!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message || `Failed to run project checks.`,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+    },
+  });
+}
+
 export function useProjectForm(form: FormInstance) {
   const { data: developers = [] } = useFetchDevelopers();
 

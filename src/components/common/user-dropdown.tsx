@@ -45,6 +45,7 @@ export function UserDropDown() {
     // { to: "/ask", label: "Ask Liv", icon: undefined },
     { to: "/users", label: "Users", icon: undefined },
     { to: "/traces", label: "Traces", icon: undefined },
+    { to: "/scripts", label: "Scripts", icon: undefined },
   ];
 
   return (

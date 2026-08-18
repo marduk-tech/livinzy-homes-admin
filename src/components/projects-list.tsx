@@ -45,6 +45,7 @@ import {
   useGetAllProjects,
   useGetProjectStatusCounts,
   useResolveProjectIssueMutation,
+  useRunProjectChecksMutation,
   useToggleStatusCommentResolvedMutation,
 } from "../hooks/project-hooks";
 import { useDevice } from "../hooks/use-device";
@@ -109,6 +110,9 @@ export const ProjectsList: React.FC = () => {
   });
   const generateScoreCardMutation = useGenerateScoreCardMutation({
     enableToasts: false,
+  });
+  const runProjectChecksMutation = useRunProjectChecksMutation({
+    enableToasts: true,
   });
   const { user } = useAuth0();
 
@@ -690,8 +694,39 @@ export const ProjectsList: React.FC = () => {
           });
         };
 
+        const handleRunProjectChecks = () => {
+          Modal.confirm({
+            title: "Run Project Checks",
+            content: `Are you sure you want to run internal checks for "${record.info.name}"?`,
+            okText: "Run",
+            cancelText: "Cancel",
+            onOk: () => {
+              runProjectChecksMutation.mutate({ projectId: id });
+            },
+          });
+        };
+
         return (
           <Flex gap={8} justify="end" align="center">
+            <Tooltip title="Run Project Checks">
+              <Button
+                type="link"
+                shape="default"
+                loading={
+                  runProjectChecksMutation.isPending &&
+                  runProjectChecksMutation.variables?.projectId === id
+                }
+                icon={
+                  <DynamicReactIcon
+                    color={COLORS.textColorDark}
+                    iconName="FaListCheck"
+                    iconSet="fa6"
+                  />
+                }
+                onClick={handleRunProjectChecks}
+              />
+            </Tooltip>
+
             {canShowScoreCard && (
               <Tooltip title={getScoreCardTooltip()}>
                 <Button

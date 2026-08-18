@@ -174,3 +174,10 @@ export const generateScoreCard = async (projectId: string) => {
   });
 };
 
+export const runProjectChecksForProject = async (projectId: string) => {
+  const endpoint = `/projects/run-checks`;
+  return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
+    return response.data;
+  });
+};
+
