@@ -516,7 +516,7 @@ export function useProjectForm(form: FormInstance) {
       },
       {
         dbField: "externalWebsites",
-        type: "text",
+        type: "external_websites",
         fieldDisplayName: "External websites",
         fieldDescription: "Website for the project.",
       },

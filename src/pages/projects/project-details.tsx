@@ -83,6 +83,7 @@ import { DocumentsList } from "../../components/media-tabs/documents-list";
 import { ReraDocumentsModal } from "../../components/rera-projects/rera-documents-modal";
 import { VideoUpload } from "../../components/media-tabs/video-tab";
 import { JsonEditor } from "../../components/update-json-modal";
+import { MultiUrlEditor } from "../../components/common/multi-url-editor";
 import WatermarkPreviewModal from "../../components/watermark-preview-modal";
 import { ImageAnnotateModal } from "../../components/media-tabs/image-annotate-modal";
 
@@ -195,6 +196,25 @@ const RenderFields: React.FC<{
                         }}
                       />
                     )}
+                    {type === "external_websites" && (
+                      <MultiUrlEditor
+                        title={`Edit ${fieldDisplayName}`}
+                        initialValue={form.getFieldValue(
+                          Array.isArray(dbField)
+                            ? [category, ...dbField]
+                            : [category, dbField],
+                        )}
+                        onChange={(value) => {
+                          form.setFieldValue(
+                            Array.isArray(dbField)
+                              ? [category, ...dbField]
+                              : [category, dbField],
+                            value,
+                          );
+                          onAutoSave?.(category, dbField, value);
+                        }}
+                      />
+                    )}
                     {Array.isArray(dbField) &&
                       dbField[0] === "location" &&
                       dbField[1] === "mapLink" &&
@@ -286,6 +306,14 @@ const RenderFields: React.FC<{
                       !!(disabledFields?.[fieldKey])
                     }
                   />
+                ) : type === "external_websites" ? (
+                  <Typography.Text type="secondary">
+                    {form.getFieldValue(
+                      Array.isArray(dbField)
+                        ? [category, ...dbField]
+                        : [category, dbField],
+                    ) || "No websites added"}
+                  </Typography.Text>
                 ) : type == "text" ? (
                   <TextArea rows={5} placeholder={fieldDescription} />
                 ) : (
