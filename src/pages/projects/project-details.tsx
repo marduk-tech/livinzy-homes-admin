@@ -1928,6 +1928,22 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                                 </div>
                               )}
                             </div>
+                            {item.mediaIndex !== undefined && (
+                              <Form.Item
+                                name={["media", item.mediaIndex, "image", "tags"]}
+                                style={{ width: "100%", margin: 0 }}
+                              >
+                                <Select
+                                  mode="multiple"
+                                  style={{ width: "100%" }}
+                                  placeholder="Enter tags"
+                                  options={MediaTags.map((tag) => ({
+                                    value: tag,
+                                    label: tag,
+                                  }))}
+                                />
+                              </Form.Item>
+                            )}
                           </Flex>
                         );
                       })}
@@ -1995,6 +2011,28 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                             }}
                           />
                         ),
+                      },
+                      {
+                        title: "Tags",
+                        render: (item: (typeof floorplanItems)[number]) =>
+                          item.mediaIndex !== undefined ? (
+                            <Form.Item
+                              name={["media", item.mediaIndex, "image", "tags"]}
+                              style={{ margin: 0 }}
+                            >
+                              <Select
+                                mode="multiple"
+                                style={{ width: 180 }}
+                                placeholder="Enter tags"
+                                options={MediaTags.map((tag) => ({
+                                  value: tag,
+                                  label: tag,
+                                }))}
+                              />
+                            </Form.Item>
+                          ) : (
+                            "—"
+                          ),
                       },
                       {
                         title: "Unit Type",

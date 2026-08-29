@@ -1,11 +1,24 @@
 import { DeleteOutlined, LinkOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, Space, Typography } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Space,
+  Switch,
+  Typography,
+} from "antd";
 import { useEffect, useState } from "react";
 import {
   useCreateDeveloperMutation,
   useUpdateDeveloperMutation,
 } from "../../hooks/developer-hooks";
-import { CreateDeveloperPayload, Developer } from "../../types/developer";
+import {
+  CreateDeveloperPayload,
+  Developer,
+  UpdateDeveloperPayload,
+} from "../../types/developer";
 
 interface DeveloperFormProps {
   data?: Developer;
@@ -24,6 +37,8 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
       form.setFieldsValue({
         name: data.name,
         externalWebsites: data.externalWebsites || [],
+        brkfiScore: { score: data.brkfiScore?.score },
+        brkfiStatus: { isPartner: data.brkfiStatus?.isPartner || false },
       });
       setIsModalVisible(true);
     }
@@ -32,9 +47,24 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
   const handleSubmit = async (values: CreateDeveloperPayload) => {
     try {
       if (data) {
+        // findByIdAndUpdate replaces a nested object wholesale rather than
+        // deep-merging it, so sending just `{ brkfiScore: { score } }` would
+        // wipe out the reasoning already generated for brkfiScore - merge
+        // the edited leaf field onto the existing sub-objects instead
+        const developerData: UpdateDeveloperPayload = {
+          ...values,
+          brkfiScore: {
+            ...data.brkfiScore,
+            score: values.brkfiScore?.score,
+          },
+          brkfiStatus: {
+            ...data.brkfiStatus,
+            isPartner: values.brkfiStatus?.isPartner || false,
+          },
+        };
         await updateMutation.mutateAsync({
           developerId: data._id,
-          developerData: values,
+          developerData,
         });
       } else {
         await createMutation.mutateAsync(values);
@@ -89,6 +119,26 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
           >
             <Input placeholder="Enter developer name" />
           </Form.Item>
+
+          {data && (
+            <Space size="large" style={{ marginBottom: 24 }}>
+              <Form.Item
+                name={["brkfiScore", "score"]}
+                label="BrkFi Score"
+                style={{ marginBottom: 0 }}
+              >
+                <InputNumber min={0} max={100} />
+              </Form.Item>
+              <Form.Item
+                name={["brkfiStatus", "isPartner"]}
+                label="BrkFi Partner"
+                valuePropName="checked"
+                style={{ marginBottom: 0 }}
+              >
+                <Switch />
+              </Form.Item>
+            </Space>
+          )}
 
           <Form.List name="externalWebsites">
             {(fields, { add, remove }) => (

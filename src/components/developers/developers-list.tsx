@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   FileTextOutlined,
+  LinkOutlined,
   PlusOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
@@ -28,12 +29,14 @@ import {
   useGetAllDevelopers,
   useUpdateDeveloperMutation,
 } from "../../hooks/developer-hooks";
+import { useAssignDeveloperToProjectMutation } from "../../hooks/project-hooks";
 import { Developer } from "../../types/developer";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { DeveloperForm } from "./developer-form";
 import ProjectForm from "./project-form";
 import { ReraDocumentsModal } from "../rera-projects/rera-documents-modal";
+import { DeveloperScoreModal } from "./developer-score-modal";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { COLORS } from "../../theme/colors";
 
@@ -55,9 +58,28 @@ export function DevelopersList() {
   const [reraDocsModal, setReraDocsModal] = useState<
     { reraNumber: string; projectName?: string } | undefined
   >();
+  const [scoreModalDeveloper, setScoreModalDeveloper] = useState<
+    Developer | undefined
+  >();
+  const [assignProjectDeveloper, setAssignProjectDeveloper] = useState<
+    Developer | undefined
+  >();
+  const [assignProjectId, setAssignProjectId] = useState<string>("");
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
   const updateDeveloperMutation = useUpdateDeveloperMutation();
   const generateInfoMutation = useGenerateDeveloperInfoMutation();
+  const assignDeveloperToProjectMutation =
+    useAssignDeveloperToProjectMutation();
+
+  const handleAssignToProject = async (): Promise<void> => {
+    if (!assignProjectDeveloper || !assignProjectId.trim()) return;
+    await assignDeveloperToProjectMutation.mutateAsync({
+      projectId: assignProjectId.trim(),
+      developerId: assignProjectDeveloper._id,
+    });
+    setAssignProjectDeveloper(undefined);
+    setAssignProjectId("");
+  };
 
   const handleDelete = async (developerId: string): Promise<void> => {
     deleteDeveloperMutation.mutateAsync(developerId);
@@ -196,6 +218,40 @@ export function DevelopersList() {
       ),
     },
     {
+      title: "BrkFi Score",
+      key: "brkfiScore",
+      sorter: (a, b) =>
+        (a.brkfiScore?.score ?? -1) - (b.brkfiScore?.score ?? -1),
+      render: (_, record) =>
+        record.brkfiScore?.score != null ? (
+          <Tag
+            color={
+              record.brkfiScore.score >= 75
+                ? "green"
+                : record.brkfiScore.score >= 50
+                  ? "gold"
+                  : "red"
+            }
+            style={{ cursor: "pointer" }}
+            onClick={() => setScoreModalDeveloper(record)}
+          >
+            {Math.round(record.brkfiScore.score)}
+          </Tag>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "BrkFi Partner",
+      key: "brkfiPartner",
+      render: (_, record) =>
+        record.brkfiStatus?.isPartner ? (
+          <CheckCircleOutlined style={{ color: "green", fontSize: 18 }} />
+        ) : (
+          "-"
+        ),
+    },
+    {
       title: "Actions",
       key: "actions",
       align: "right",
@@ -230,6 +286,16 @@ export function DevelopersList() {
             }}
           >
             Add Project
+          </Button>
+          <Button
+            type="default"
+            icon={<LinkOutlined />}
+            onClick={() => {
+              setAssignProjectDeveloper(record);
+              setAssignProjectId("");
+            }}
+          >
+            Assign to Project
           </Button>
           <Button
             type="default"
@@ -329,6 +395,32 @@ export function DevelopersList() {
         reraNumber={reraDocsModal?.reraNumber}
         projectName={reraDocsModal?.projectName}
       />
+
+      <DeveloperScoreModal
+        open={!!scoreModalDeveloper}
+        onClose={() => setScoreModalDeveloper(undefined)}
+        developerName={scoreModalDeveloper?.name}
+        brkfiScore={scoreModalDeveloper?.brkfiScore}
+      />
+
+      <Modal
+        title={`Assign "${assignProjectDeveloper?.name}" to Project`}
+        open={!!assignProjectDeveloper}
+        onCancel={() => setAssignProjectDeveloper(undefined)}
+        onOk={handleAssignToProject}
+        okText="Submit"
+        okButtonProps={{
+          loading: assignDeveloperToProjectMutation.isPending,
+          disabled: !assignProjectId.trim(),
+        }}
+      >
+        <Input
+          placeholder="Enter Project Id"
+          value={assignProjectId}
+          onChange={(e) => setAssignProjectId(e.target.value)}
+          onPressEnter={handleAssignToProject}
+        />
+      </Modal>
     </>
   );
 }

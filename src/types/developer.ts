@@ -6,6 +6,24 @@ interface DeveloperProject {
   _id?: string;
 }
 
+export interface DeveloperScoreCriterion {
+  rating?: number;
+  reasoning?: string[];
+}
+
+export interface DeveloperBrkfiScore {
+  score?: number;
+  reasoning?: {
+    experience?: DeveloperScoreCriterion;
+    timeCommitment?: DeveloperScoreCriterion;
+    complaints?: DeveloperScoreCriterion;
+  };
+}
+
+export interface DeveloperBrkfiStatus {
+  isPartner?: boolean;
+}
+
 export interface Developer {
   _id: string;
   name: string;
@@ -13,6 +31,8 @@ export interface Developer {
   genDetails?: object;
   developerProjects: DeveloperProject[];
   externalWebsites?: string[];
+  brkfiScore?: DeveloperBrkfiScore;
+  brkfiStatus?: DeveloperBrkfiStatus;
   createdAt: string;
   updatedAt: string;
 }

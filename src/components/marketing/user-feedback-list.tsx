@@ -1,8 +1,30 @@
-import { Card, Flex, Statistic, Table, TableColumnType, Tag, Tooltip } from "antd";
+import { useState } from "react";
+import { Button, Card, Flex, Modal, Spin, Statistic, Table, TableColumnType, Tag, Tooltip, Typography } from "antd";
+import ReactMarkdown from "react-markdown";
 import { useFetchFeedbacks } from "../../hooks/marketing-hooks";
+import { useAiQuery } from "../../hooks/ai.hooks";
 import { IFeedback } from "../../types";
 
 const COL_WIDTH = 200;
+
+const AI_SUMMARY_PROMPT = `You are analyzing user feedback submissions. Segregate and summarize the feedback into exactly these three sections:
+ - Bugs / Errors / Complaints - 3-4 bullet points summarizing the key issues raised
+ - Positive Feedback - 3-4 bullet points summarizing what users liked
+ - Good-to-have UI / Other Features - 3-4 bullet points summarizing feature requests and suggestions
+
+Output only these three headings with their bullet points in simple markdown format. Do not include any other section, preamble, or closing remarks.`;
+
+function feedbackToCsv(rows: IFeedback[]): string {
+  const lines = rows.map((r) => {
+    const name = r.content.contact?.name ?? "-";
+    const qa = r.content.feedback
+      .map((f) => `${f.question}: ${f.answer}`)
+      .join(" | ");
+    const str = `${name} (${r.createdAt}): ${qa}`;
+    return `"${str.replace(/"/g, '""')}"`;
+  });
+  return lines.join("\n");
+}
 
 function median(values: number[]): number | null {
   if (!values.length) return null;
@@ -72,6 +94,20 @@ function FeedbackSummary({ data }: { data: IFeedback[] }) {
 
 export function UserFeedbackList() {
   const { data, isLoading, isError } = useFetchFeedbacks();
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const {
+    mutate: runAiQuery,
+    data: summary,
+    isPending: summaryLoading,
+    isError: summaryError,
+    reset: resetSummary,
+  } = useAiQuery();
+
+  const handleSummarize = () => {
+    resetSummary();
+    setSummaryOpen(true);
+    runAiQuery({ query: AI_SUMMARY_PROMPT, context: feedbackToCsv(data ?? []) });
+  };
 
   const allQuestions: string[] = Array.from(
     new Set(
@@ -171,6 +207,33 @@ export function UserFeedbackList() {
   return (
     <>
       {data && <FeedbackSummary data={data} />}
+      <Flex justify="flex-end" style={{ marginBottom: 12 }}>
+        <Button
+          type="primary"
+          onClick={handleSummarize}
+          disabled={!data || data.length === 0}
+          loading={summaryLoading}
+        >
+          Summarize Feedback (AI)
+        </Button>
+      </Flex>
+      <Modal
+        title="AI Feedback Summary"
+        open={summaryOpen}
+        onCancel={() => setSummaryOpen(false)}
+        footer={null}
+        width="70%"
+      >
+        {summaryLoading ? (
+          <Spin style={{ display: "block", margin: "40px auto" }} />
+        ) : summaryError ? (
+          <Typography.Text type="danger">
+            Failed to generate summary. Please try again.
+          </Typography.Text>
+        ) : (
+          <ReactMarkdown>{summary ?? "—"}</ReactMarkdown>
+        )}
+      </Modal>
       <Table
         dataSource={data}
         columns={columns}

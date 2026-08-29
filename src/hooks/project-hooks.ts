@@ -193,6 +193,41 @@ export function useUpdateProjectMutation({
   });
 }
 
+export function useAssignDeveloperToProjectMutation() {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      developerId,
+    }: {
+      projectId: string;
+      developerId: string;
+    }) => {
+      return api.updateProject(projectId, { info: { developerId } } as Partial<Project>);
+    },
+
+    onSuccess: () => {
+      notification.success({
+        message: `Developer assigned to project successfully!`,
+      });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message ||
+          `An unexpected error occurred. Please try again later.`,
+      });
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projects],
+      });
+    },
+  });
+}
+
 export function useResolveProjectIssueMutation({
   enableToasts = true,
 }: {
