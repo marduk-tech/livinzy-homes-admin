@@ -56,6 +56,7 @@ export interface ReraProject {
   projectAmenities: Record<string, any>;
   documents: ReraDocument[];
   landDetails: Record<string, any>;
+  promoterDetails?: Record<string, any>;
 
   complaints: Record<string, any>;
   createdAt: string;

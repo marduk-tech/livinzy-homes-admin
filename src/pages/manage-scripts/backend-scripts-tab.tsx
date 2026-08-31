@@ -1,14 +1,12 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { Button, Flex, List, message, Tag, Typography } from "antd";
-import { useGetScripts, useRunScript } from "../hooks/scripts-hooks";
-import { Loader } from "../components/common/loader";
+import { useGetScripts, useRunScript } from "../../hooks/scripts-hooks";
 
-export function ScriptsPage() {
-  const { data: scripts, isLoading, refetch } = useGetScripts();
+export function BackendScriptsTab() {
+  const { data: scripts, isLoading } = useGetScripts();
   const runScript = useRunScript();
 
   const handleRun = (scriptName: string) => {
-    refetch();
     runScript.mutate(scriptName, {
       onSuccess: (data) => {
         message.success(data.message);
@@ -22,8 +20,13 @@ export function ScriptsPage() {
   };
 
   return (
-    <>
-      <Typography.Title level={4}>Scripts</Typography.Title>
+    <Flex vertical gap={12}>
+      <Typography.Text type="secondary">
+        These run in-process on the main API, not the script server — the request
+        blocks until the script finishes, so there is no job id, no logs and no
+        stop. The Running tag refreshes on a 30s poll.
+      </Typography.Text>
+
       <List
         loading={isLoading}
         bordered
@@ -32,6 +35,7 @@ export function ScriptsPage() {
           <List.Item
             actions={[
               <Button
+                key="run"
                 disabled={script.isRunning}
                 type="primary"
                 onClick={() => handleRun(script.scriptName)}
@@ -43,14 +47,14 @@ export function ScriptsPage() {
             <Flex gap={16}>
               <Typography.Text>{script.scriptName}</Typography.Text>
               {script.isRunning && (
-                  <Tag icon={<LoadingOutlined spin />} color="processing">
-                    Running
-                  </Tag>
+                <Tag icon={<LoadingOutlined spin />} color="processing">
+                  Running
+                </Tag>
               )}
             </Flex>
           </List.Item>
         )}
       />
-    </>
+    </Flex>
   );
 }

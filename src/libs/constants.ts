@@ -3,6 +3,7 @@ export const envMode = import.meta.env.MODE;
 export const baseApiUrl = import.meta.env.VITE_API_URL;
 export const apiKey = import.meta.env.VITE_ADMIN_API_KEY;
 export const scriptServerApiUrl = import.meta.env.VITE_SCRIPT_SERVER_API_URL;
+export const scriptServerApiKey = import.meta.env.VITE_SCRIPT_SERVER_API_KEY;
 
 export const queryKeys = {
   projects: "projects",
@@ -31,6 +32,11 @@ export const queryKeys = {
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
   getScripts: "getScripts",
+
+  getScriptManifest: "getScriptManifest",
+  getScriptJobs: "getScriptJobs",
+  getScriptJob: "getScriptJob",
+  getReraProjectNames: "getReraProjectNames",
 };
 export const LivIndexDrivers = [
   "road",

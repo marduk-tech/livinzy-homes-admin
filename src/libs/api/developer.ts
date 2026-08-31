@@ -1,11 +1,10 @@
-import axios from "axios";
 import {
   CreateDeveloperPayload,
   Developer,
   UpdateDeveloperPayload,
 } from "../../types/developer";
 import { axiosApiInstance } from "../axios-api-Instance";
-import { scriptServerApiUrl } from "../constants";
+import { scriptServerApiInstance } from "../script-server-axios-instance";
 
 export const getAllDevelopers = async (params?: {
   keyword?: string;
@@ -65,9 +64,8 @@ export const generateDeveloperInfo = async (developerId: string) => {
 };
 
 export const generateDeveloperInfoV2 = async (developerId: string) => {
-  const { data } = await axios.post(
-    `${scriptServerApiUrl.replace(/\/$/, "")}/developer-gen`,
-    { developerId }
-  );
+  const { data } = await scriptServerApiInstance.post("/developer-gen", {
+    developerId,
+  });
   return data;
 };

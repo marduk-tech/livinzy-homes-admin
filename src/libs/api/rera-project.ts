@@ -67,3 +67,22 @@ export async function fetchNewReraProjects(): Promise<ReraProject[]> {
   );
   return data;
 }
+
+export interface ReraProjectName {
+  projectId: string;
+  projectName: string;
+  projectReraNumber?: string;
+  readyScore?: boolean;
+}
+
+export async function getReraProjectNames(params?: {
+  keyword?: string;
+  limit?: number;
+  reraNumbers?: string;
+}): Promise<ReraProjectName[]> {
+  const { data } = await axiosApiInstance.get<ReraProjectName[]>(
+    "/rera-projects/names",
+    { params }
+  );
+  return data;
+}
