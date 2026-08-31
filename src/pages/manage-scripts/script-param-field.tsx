@@ -34,9 +34,15 @@ export function ScriptParamField({
     dependsOnValue,
   );
 
-  const text = typeof value === "string" ? value.trim() : "";
-  const badFormat =
-    param.expects === "objectId" && !!text && !OBJECT_ID.test(text);
+  const entries = (Array.isArray(value) ? value : [value])
+    .filter((v): v is string => typeof v === "string" && !!v.trim())
+    .map((v) => v.trim());
+
+  const malformed =
+    param.expects === "objectId"
+      ? entries.filter((v) => !OBJECT_ID.test(v))
+      : [];
+  const badFormat = malformed.length > 0;
 
   // Checking a malformed id against the db would just stack a second error on it.
   const { unknown, checking } = useUnknownValues(
@@ -147,7 +153,11 @@ export function ScriptParamField({
           type="error"
           showIcon
           style={{ marginTop: 8 }}
-          message="Expecting a 24-character Mongo id"
+          message={
+            malformed.length > 1
+              ? `Not 24-character Mongo ids: ${malformed.join(", ")}`
+              : `Not a 24-character Mongo id: ${malformed[0]}`
+          }
         />
       );
     }
@@ -164,7 +174,7 @@ export function ScriptParamField({
         style={{ marginTop: 8 }}
         message={
           isDeveloper
-            ? `"${unknown[0]}" was not found`
+            ? `Not found: ${unknown.join(", ")}`
             : `Not in reraprojects: ${unknown.join(", ")}`
         }
         description="You can still run it — the script may find it, or fail with a list of near matches."

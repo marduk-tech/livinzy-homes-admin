@@ -12,6 +12,7 @@ export type ArgStyle =
   | { style: "positional" }
   | { style: "positional-csv" }
   | { style: "flag"; flag: string }
+  | { style: "flag-repeat"; flag: string }
   | { style: "bool"; flag: string };
 
 export type ScriptParam = {

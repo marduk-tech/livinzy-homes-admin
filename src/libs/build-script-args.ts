@@ -24,6 +24,13 @@ function toArgv(param: ScriptParam, value: unknown): string[] {
       return value === true ? [param.arg.flag] : [];
     case "flag":
       return [`${param.arg.flag}=${String(value).trim()}`];
+    case "flag-repeat": {
+      const flag = param.arg.flag;
+      return (Array.isArray(value) ? value : [value])
+        .map((v) => String(v).trim())
+        .filter(Boolean)
+        .map((v) => `${flag}=${v}`);
+    }
     case "positional":
       return [String(value).trim()];
     case "positional-csv": {
