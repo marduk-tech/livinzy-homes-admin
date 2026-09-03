@@ -465,6 +465,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
   });
 
   const [reraDocsModalOpen, setReraDocsModalOpen] = useState(false);
+  const [selectedReraDocsRow, setSelectedReraDocsRow] = useState<{
+    reraNumber?: string;
+    reraProjectId?: string;
+    projectName?: string;
+  } | null>(null);
   const [imageViewMode, setImageViewMode] = useState<"default" | "table">("default");
   const [floorplanViewMode, setFloorplanViewMode] = useState<"default" | "table">("default");
 
@@ -2189,18 +2194,21 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                   const reraDocsRows: {
                     key: string;
                     reraNumber?: string;
+                    reraProjectId?: string;
                     projectName?: string;
                     extensions?: { startDate: string; completionDate: string }[];
                   }[] = [
                     {
                       key: `r-${reraNumber}`,
                       reraNumber,
+                      reraProjectId: reraId,
                       projectName: ownProjectName,
                       extensions: ownExtensions,
                     },
                     ...(project?.info?.otherPhasesRera
                       ? project.info.otherPhasesRera.split(",").map((r) => {
-                          return { key: `r-${r}`, reraNumber: r };
+                          const trimmed = r.trim();
+                          return { key: `r-${trimmed}`, reraNumber: trimmed };
                         })
                       : []),
                   ];
@@ -2256,11 +2264,25 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                           title: "",
                           key: "actions",
                           align: "right",
-                          render: () => (
+                          render: (
+                            _: unknown,
+                            row: {
+                              reraNumber?: string;
+                              reraProjectId?: string;
+                              projectName?: string;
+                            },
+                          ) => (
                             <Button
                               type="primary"
                               icon={<FileTextOutlined />}
-                              onClick={() => setReraDocsModalOpen(true)}
+                              onClick={() => {
+                                setSelectedReraDocsRow({
+                                  reraNumber: row.reraNumber,
+                                  reraProjectId: row.reraProjectId,
+                                  projectName: row.projectName,
+                                });
+                                setReraDocsModalOpen(true);
+                              }}
                             >
                               View Documents
                             </Button>
@@ -2302,13 +2324,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
         <ReraDocumentsModal
           open={reraDocsModalOpen}
           onClose={() => setReraDocsModalOpen(false)}
-          reraProjectId={
-            typeof project?.info?.reraProjectId === "object"
-              ? (project?.info?.reraProjectId as any)?._id
-              : (project?.info?.reraProjectId as string | undefined)
-          }
-          reraNumber={project?.info?.reraNumber}
-          projectName={project?.info?.name}
+          reraProjectId={selectedReraDocsRow?.reraProjectId}
+          reraNumber={selectedReraDocsRow?.reraNumber}
+          projectName={selectedReraDocsRow?.projectName || project?.info?.name}
         />
       </Form>
     );
