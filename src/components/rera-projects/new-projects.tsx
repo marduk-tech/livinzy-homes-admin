@@ -51,10 +51,35 @@ export function NewProjects() {
   };
 
   const knownDeveloperKeywords = [
-    'sobha', 'prestige', 'century', 'sumadhura', 'purva', 'provident',
-    'godrej', 'orchid', 'brigade', 'assetz', 'adarsh', 'mana', 'bhartiya', 'sattva', 'nikoo', 'embassy',
-    'aratt', 'ajmera', 'shriram'
-  ];
+      'sobha',
+      'prestige',
+      'century',
+      'sumadhura',
+      'purva',
+      'provident',
+      'godrej',
+      'orchid',
+      'brigade',
+      'assetz',
+      'nambiar',
+      'snn',
+      'sattva',
+      'total',
+      'dsr',
+      'embassy',
+      'mana',
+      'arvind',
+      'birla',
+      'tata',
+      'concorde',
+      'dnr',
+      'aratt',
+      'kalyani',
+      'ncc',
+      'adarsh',
+      'mana',
+      'bhartiya',
+    ];
 
   const tableData = filterKnown
     ? (data ?? []).filter((p) => {
