@@ -4,12 +4,16 @@ import {
   EditOutlined,
   FileTextOutlined,
   LinkOutlined,
+  LoadingOutlined,
   PlusOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
+  Alert,
   Button,
+  Checkbox,
   Col,
+  Drawer,
   Flex,
   Input,
   Modal,
@@ -20,28 +24,41 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import { useState } from "react";
-
-const { Search } = Input;
+import { useEffect, useState } from "react";
 import {
   useDeleteDeveloperMutation,
   useGenerateDeveloperInfoMutation,
   useGetAllDevelopers,
   useUpdateDeveloperMutation,
 } from "../../hooks/developer-hooks";
+import { useScriptJob, useStopJob } from "../../hooks/manage-scripts-hooks";
 import { useAssignDeveloperToProjectMutation } from "../../hooks/project-hooks";
+import { queryKeys } from "../../libs/constants";
+import { queryClient } from "../../libs/query-client";
+import { JobLogViewer } from "../../pages/manage-scripts/job-log-viewer";
+import { COLORS } from "../../theme/colors";
+import { FONT_SIZES } from "../../theme/font-sizes";
 import { Developer } from "../../types/developer";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
-import { DeveloperForm } from "./developer-form";
-import ProjectForm from "./project-form";
 import { ReraDocumentsModal } from "../rera-projects/rera-documents-modal";
+import { DeveloperDetailsDrawer } from "./developer-details-drawer";
+import { DeveloperForm } from "./developer-form";
 import { DeveloperScoreModal } from "./developer-score-modal";
-import { FONT_SIZES } from "../../theme/font-sizes";
-import { COLORS } from "../../theme/colors";
+import ProjectForm from "./project-form";
+
+const { Search } = Input;
+
+const JOB_STATUS_COLOR: Record<string, string> = {
+  running: "processing",
+  done: "success",
+  error: "error",
+  stopped: "default",
+};
 
 export function DevelopersList() {
-  const brickfiAppUrl = import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
+  const brickfiAppUrl =
+    import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const { data, isLoading, isError } = useGetAllDevelopers({
     keyword: searchKeyword,
@@ -65,6 +82,23 @@ export function DevelopersList() {
     Developer | undefined
   >();
   const [assignProjectId, setAssignProjectId] = useState<string>("");
+  const [detailsDeveloper, setDetailsDeveloper] = useState<
+    Developer | undefined
+  >();
+
+  const [generateTarget, setGenerateTarget] = useState<Developer | undefined>();
+  const [forceRegenerate, setForceRegenerate] = useState(false);
+  const [genJobId, setGenJobId] = useState<string | undefined>();
+
+  const { data: genJob } = useScriptJob(genJobId);
+  const stopJobMutation = useStopJob();
+
+  useEffect(() => {
+    if (genJob?.status === "done") {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.getAllDevelopers] });
+    }
+  }, [genJob?.status]);
+
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
   const updateDeveloperMutation = useUpdateDeveloperMutation();
   const generateInfoMutation = useGenerateDeveloperInfoMutation();
@@ -141,7 +175,7 @@ export function DevelopersList() {
             icon={<EditOutlined />}
             onClick={() => {
               setSelectedDeveloper(
-                data?.find((dev) => dev.developerProjects.includes(record))
+                data?.find((dev) => dev.developerProjects.includes(record)),
               );
               setSelectedProjectIndex(index);
             }}
@@ -150,11 +184,11 @@ export function DevelopersList() {
           <DeletePopconfirm
             handleOk={async () => {
               const parentDeveloper = data?.find((dev) =>
-                dev.developerProjects.includes(record)
+                dev.developerProjects.includes(record),
               );
               if (!parentDeveloper) return;
               const updatedProjects = parentDeveloper.developerProjects.filter(
-                (_, i) => i !== index
+                (_, i) => i !== index,
               );
               return void updateDeveloperMutation.mutateAsync({
                 developerId: parentDeveloper._id,
@@ -204,8 +238,16 @@ export function DevelopersList() {
       title: "Details Generated",
       key: "detailsGenerated",
       render: (_, record) =>
-        record.genDetails ? (
-          <CheckCircleOutlined style={{ color: "green", fontSize: 18 }} />
+        record.genDetails || record.info ? (
+          <Tooltip title="View generated details">
+            <Button
+              type="text"
+              icon={
+                <CheckCircleOutlined style={{ color: "green", fontSize: 18 }} />
+              }
+              onClick={() => setDetailsDeveloper(record)}
+            />
+          </Tooltip>
         ) : (
           "-"
         ),
@@ -262,18 +304,17 @@ export function DevelopersList() {
               type="default"
               shape="default"
               icon={<ThunderboltOutlined />}
-              loading={generateInfoMutation.isPending && generateInfoMutation.variables === record._id}
-              disabled={generateInfoMutation.isPending && generateInfoMutation.variables !== record._id}
+              loading={
+                generateInfoMutation.isPending &&
+                generateInfoMutation.variables?.developerId === record._id
+              }
+              disabled={
+                generateInfoMutation.isPending &&
+                generateInfoMutation.variables?.developerId !== record._id
+              }
               onClick={() => {
-                Modal.confirm({
-                  title: "Generate Developer Info",
-                  content: `Are you sure you want to generate info for "${record.name}"? This may take a few minutes.`,
-                  okText: "Generate",
-                  cancelText: "Cancel",
-                  onOk: () => {
-                    generateInfoMutation.mutate(record._id);
-                  },
-                });
+                setGenerateTarget(record);
+                setForceRegenerate(false);
               }}
             />
           </Tooltip>
@@ -421,6 +462,90 @@ export function DevelopersList() {
           onPressEnter={handleAssignToProject}
         />
       </Modal>
+
+      <Modal
+        title="Generate Developer Info"
+        open={!!generateTarget}
+        onCancel={() => setGenerateTarget(undefined)}
+        okText="Generate"
+        okButtonProps={{ loading: generateInfoMutation.isPending }}
+        onOk={async () => {
+          if (!generateTarget) return;
+          const job = await generateInfoMutation.mutateAsync({
+            developerId: generateTarget._id,
+            force: forceRegenerate,
+          });
+          setGenerateTarget(undefined);
+          setGenJobId(job.jobId);
+        }}
+      >
+        <Flex vertical gap={12}>
+          <Typography.Text>
+            Generate info for "{generateTarget?.name}"? This takes a few
+            minutes.
+          </Typography.Text>
+          <Checkbox
+            checked={forceRegenerate}
+            onChange={(e) => setForceRegenerate(e.target.checked)}
+          >
+            Force regenerate (ignore existing data)
+          </Checkbox>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            Without this, a developer that already has generated details is
+            skipped and nothing changes.
+          </Typography.Text>
+        </Flex>
+      </Modal>
+
+      <Drawer
+        open={!!genJobId}
+        onClose={() => setGenJobId(undefined)}
+        width={820}
+        title={
+          <Flex align="center" gap={12}>
+            <Tag
+              color={JOB_STATUS_COLOR[genJob?.status ?? "running"]}
+              icon={
+                genJob?.status === "running" ? (
+                  <LoadingOutlined spin />
+                ) : undefined
+              }
+            >
+              {genJob?.status ?? "starting"}
+            </Tag>
+            <Typography.Text>Developer generate</Typography.Text>
+          </Flex>
+        }
+        extra={
+          genJob?.status === "running" && (
+            <Button
+              danger
+              size="small"
+              onClick={() => stopJobMutation.mutate(genJob.id)}
+            >
+              Stop
+            </Button>
+          )
+        }
+      >
+        <Flex vertical gap={12}>
+          {genJob?.status === "running" && (
+            <Typography.Text type="secondary">
+              Closing this drawer won't stop the job — it also shows up under
+              Manage Scripts → Runs.
+            </Typography.Text>
+          )}
+          {genJob?.error && (
+            <Alert type="error" showIcon message={genJob.error} />
+          )}
+          <JobLogViewer logs={genJob?.logs ?? []} height={520} />
+        </Flex>
+      </Drawer>
+
+      <DeveloperDetailsDrawer
+        developer={detailsDeveloper}
+        onClose={() => setDetailsDeveloper(undefined)}
+      />
     </>
   );
 }

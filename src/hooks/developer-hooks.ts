@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
+import { errorMessage } from "../libs/api-error";
 import {
   createDeveloper,
   deleteDeveloper,
   generateDeveloperInfo,
-  generateDeveloperInfoV2,
   getAllDevelopers,
   getDeveloperById,
   updateDeveloper,
@@ -122,19 +122,22 @@ export function useDeleteDeveloperMutation() {
 
 export function useGenerateDeveloperInfoMutation() {
   return useMutation({
-    mutationFn: (developerId: string) => {
-      return generateDeveloperInfoV2(developerId);
-    },
+    mutationFn: ({
+      developerId,
+      force,
+    }: {
+      developerId: string;
+      force?: boolean;
+    }) => generateDeveloperInfo(developerId, force),
+
     onSuccess: () => {
-      notification.success({ message: `Developer info generation initiated!` });
+      notification.success({ message: `Generation started` });
     },
-    onError: (error: AxiosError<any>) => {
-      notification.error({ message: `Failed to generate developer info.` });
-      console.log(error);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.getAllDevelopers],
+
+    onError: (error) => {
+      notification.error({
+        message: "Could not start generation",
+        description: errorMessage(error, "Failed to generate developer info."),
       });
     },
   });

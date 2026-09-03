@@ -5,6 +5,14 @@ import {
 } from "../../types/developer";
 import { axiosApiInstance } from "../axios-api-Instance";
 import { scriptServerApiInstance } from "../script-server-axios-instance";
+import { JobStatus } from "./manage-scripts";
+
+export interface GenerateDeveloperInfoResponse {
+  jobId: string;
+  developerId: string;
+  force?: boolean;
+  status: JobStatus;
+}
 
 export const getAllDevelopers = async (params?: {
   keyword?: string;
@@ -56,16 +64,14 @@ export const deleteDeveloper = async (developerId: string): Promise<void> => {
   await axiosApiInstance.delete(`/real-estate-developer/${developerId}`);
 };
 
-export const generateDeveloperInfo = async (developerId: string) => {
-  const { data } = await axiosApiInstance.post(
-    `/real-estate-developer/${developerId}/generate-info`
-  );
-  return data;
-};
-
-export const generateDeveloperInfoV2 = async (developerId: string) => {
-  const { data } = await scriptServerApiInstance.post("/developer-gen", {
-    developerId,
-  });
+export const generateDeveloperInfo = async (
+  developerId: string,
+  force = false
+): Promise<GenerateDeveloperInfoResponse> => {
+  const { data } =
+    await scriptServerApiInstance.post<GenerateDeveloperInfoResponse>(
+      "/developer-gen",
+      { developerId, force }
+    );
   return data;
 };
