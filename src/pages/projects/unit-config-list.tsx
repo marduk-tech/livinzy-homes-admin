@@ -26,6 +26,8 @@ interface UnitConfig {
   type?: string;
   price: number;
   floorplans?: string[];
+  description?: string;
+  spaceBreakup?: { roomType: string; roomSize: number }[];
 }
 
 interface UnitConfigListProps {
@@ -190,7 +192,10 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
       // Generate backward-compatible config string
       const configString = `${data.type} - ${data.sizeBuiltup} sq ft`;
 
+      const existingUnitConfig = editingIndex !== null ? value[editingIndex] : {};
+
       const unitConfig = {
+        ...existingUnitConfig, // preserve fields not editable here (e.g. AI-generated description, spaceBreakup)
         ...data,
         config: configString, // Backward compatibility
         floorplans: data.floorplans || [],
