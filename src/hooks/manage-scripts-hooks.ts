@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
-import { AxiosError } from "axios";
 import {
   getJob,
   getJobs,
@@ -8,12 +7,8 @@ import {
   runScript,
   stopJob,
 } from "../libs/api/manage-scripts";
+import { errorMessage } from "../libs/api-error";
 import { queryKeys } from "../libs/constants";
-
-const errorMessage = (error: unknown, fallback: string) => {
-  const err = error as AxiosError<{ error?: string; message?: string }>;
-  return err.response?.data?.error || err.response?.data?.message || fallback;
-};
 
 export function useScriptManifest() {
   return useQuery({

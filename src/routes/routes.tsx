@@ -8,20 +8,20 @@ import { DashboardLayout } from "../layouts/dashboard-layout";
 import { AuthCallback } from "../components/auth/auth-callback";
 import { Unauthorized } from "../components/auth/unauthorized";
 import AskPage from "../pages/ask-page";
+import { Brick360Data } from "../pages/brick360-projects/brick360-data";
 import { Brick360ListPage } from "../pages/brick360-projects/brick360-list";
 import { Brick360Full } from "../pages/brick360-projects/brick360-project";
 import { BrickfiConfig } from "../pages/brickfi-config";
 import ChromaDocsPage from "../pages/chroma-docs";
 import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
+import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
-import { BackendScriptsTab } from "../pages/manage-scripts/backend-scripts-tab";
 import { TracesPage } from "../pages/traces-page";
 import { UsersPage } from "../pages/users-page";
-import { Brick360Data } from "../pages/brick360-projects/brick360-data";
 
 export const Router = () => {
   return (
@@ -58,7 +58,7 @@ export const Router = () => {
         <Route path="/traces" element={<TracesPage />} />
 
         <Route path="/marketing" element={<MarketingPage />} />
-        <Route path="/manage-scripts" element={<BackendScriptsTab />} />
+        <Route path="/manage-scripts" element={<ManageScriptsPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />
