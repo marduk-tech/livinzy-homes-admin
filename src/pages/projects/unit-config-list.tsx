@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
+import { CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
 import {
   AutoComplete,
   Button,
@@ -185,6 +185,13 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
     onChange?.(newValue);
   };
 
+  const handleDuplicate = (index: number) => {
+    const { description, spaceBreakup, ...clonedConfig } = value[index];
+    const newValue = [...value];
+    newValue.splice(index + 1, 0, clonedConfig);
+    onChange?.(newValue);
+  };
+
   const handleModalOk = async () => {
     try {
       const data = await form.validateFields();
@@ -357,15 +364,30 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             {/* Actions */}
             <div
               style={{
-                flex: "0 0 100px",
+                flex: "0 0 140px",
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: "8px",
               }}
             >
+              <Tooltip
+                title={
+                  item.description
+                    ? "Please clone this unit plan instead to make changes and delete the original one"
+                    : ""
+                }
+              >
+                <span>
+                  <Button
+                    icon={<EditOutlined />}
+                    onClick={() => handleEdit(index)}
+                    disabled={!!item.description}
+                  />
+                </span>
+              </Tooltip>
               <Button
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(index)}
+                icon={<CopyOutlined />}
+                onClick={() => handleDuplicate(index)}
               />
               <Button
                 icon={<DeleteOutlined />}
