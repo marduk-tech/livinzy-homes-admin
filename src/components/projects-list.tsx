@@ -11,6 +11,7 @@ import {
   Button,
   Checkbox,
   Col,
+  Divider,
   Dropdown,
   Flex,
   Form,
@@ -18,8 +19,6 @@ import {
   List,
   MenuProps,
   Modal,
-  Radio,
-  RadioChangeEvent,
   Row,
   Select,
   Switch,
@@ -66,17 +65,55 @@ const RESOLVABLE_ISSUE_FIELDS = [
   "Sqft Pricing",
 ];
 
+const STATUS_OPTIONS = [
+  { label: "Basic Details Ready", value: "basic-details-ready" },
+  { label: "Data Populated", value: "data-populated" },
+  { label: "Data Verified", value: "data-verified" },
+  { label: "Report Ready", value: "report-ready" },
+  { label: "Report Verified", value: "report-verified" },
+  { label: "Disabled", value: "disabled" },
+  { label: "New", value: "new" },
+];
+
+const ISSUE_TYPE_OPTIONS = [
+  { label: "RERA Number", value: "RERA Number" },
+  { label: "RERA Mapping", value: "RERA Mapping" },
+  { label: "Developer Mapping", value: "Developer Mapping" },
+  { label: "Location", value: "Location" },
+  { label: "Locality", value: "Locality" },
+  { label: "Amenities", value: "Amenities" },
+  { label: "Project Density", value: "Project Density" },
+  { label: "Media", value: "Media" },
+  { label: "Open Area", value: "Open Area" },
+  { label: "Unit Config/Pricing", value: "Unit Config/Pricing" },
+  { label: "Sqft Pricing", value: "Sqft Pricing" },
+  { label: "Home Types", value: "Home Types" },
+  { label: "Error", value: "Error" },
+];
+
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
   const { data: corridors, isLoading: isCorridorsDataLoading } =
     useFetchCorridors();
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
-  const [projectStatusFilter, setProjectStatusFilter] = useState<string>("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState<string[]>(
+    [],
+  );
 
   const [issueSeverity, setIssueSeverity] = useState<string>("");
-  const [issueType, setIssueType] = useState<string>("");
+  const [issueType, setIssueType] = useState<string[]>([]);
+  const [pendingIssueType, setPendingIssueType] = useState<string[]>([]);
+  const [issueTypeDropdownOpen, setIssueTypeDropdownOpen] =
+    useState<boolean>(false);
+  const [pendingStatusFilter, setPendingStatusFilter] = useState<string[]>(
+    [],
+  );
+  const [statusFilterDropdownOpen, setStatusFilterDropdownOpen] =
+    useState<boolean>(false);
   const [hasStatusComments, setHasStatusComments] = useState<boolean>(false);
+  const [developerPartnerFilter, setDeveloperPartnerFilter] =
+    useState<boolean>(false);
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
     projectName: string;
@@ -139,11 +176,12 @@ export const ProjectsList: React.FC = () => {
   } = useGetAllProjects({
     searchKeyword,
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
-    statusFilter: projectStatusFilter == "all" ? "" : projectStatusFilter,
-    issueType: issueType == "all" ? "" : issueType,
+    statusFilter: projectStatusFilter.join(","),
+    issueType: issueType.join(","),
     limit: 100,
     sortBy: "updatedAt:desc",
     hasStatusComments,
+    developerPartner: developerPartnerFilter,
   });
 
   const { data: statusCounts, isLoading: isStatusCountsLoading } =
@@ -895,11 +933,76 @@ export const ProjectsList: React.FC = () => {
                 }}
                 onSearch={(value: string) => {
                   setSearchKeyword(value);
+                  setProjectStatusFilter("");
+                  setIssueSeverity("");
+                  setIssueType([]);
+                  setPendingIssueType([]);
+                  setHasStatusComments(false);
+                  setDeveloperPartnerFilter(false);
                 }}
                 enterButton="Search"
                 style={{ width: 300 }}
               />
+               <Select
+              mode="multiple"
+              allowClear
+              value={pendingStatusFilter}
+              onChange={(value) => setPendingStatusFilter(value)}
+              open={statusFilterDropdownOpen}
+              onDropdownVisibleChange={(open) => {
+                if (open) {
+                  setPendingStatusFilter(projectStatusFilter);
+                }
+                setStatusFilterDropdownOpen(open);
+              }}
+              placeholder={getStatusLabel("all", "All Statuses")}
+              style={{ width: 260 }}
+              maxTagCount="responsive"
+              options={STATUS_OPTIONS.map((s) => ({
+                label: getStatusLabel(s.value, s.label),
+                value: s.value,
+              }))}
+              dropdownRender={(menu) => (
+                <div>
+                  {menu}
+                  <Divider style={{ margin: "4px 0" }} />
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    style={{ padding: "4px 8px" }}
+                  >
+                    <Button
+                      type="link"
+                      size="small"
+                      style={{ padding: 0 }}
+                      onClick={() => {
+                        setPendingStatusFilter(
+                          pendingStatusFilter.length === STATUS_OPTIONS.length
+                            ? []
+                            : STATUS_OPTIONS.map((o) => o.value),
+                        );
+                      }}
+                    >
+                      {pendingStatusFilter.length === STATUS_OPTIONS.length
+                        ? "Clear All"
+                        : "Select All"}
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        setProjectStatusFilter(pendingStatusFilter);
+                        setStatusFilterDropdownOpen(false);
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </Flex>
+                </div>
+              )}
+            />
               <Select
+                value={issueSeverity || "all"}
                 onChange={(value) => {
                   setSearchKeyword("");
                   setIssueSeverity(value);
@@ -916,7 +1019,7 @@ export const ProjectsList: React.FC = () => {
                               : COLORS.textColorDark,
                         }}
                       >
-                        All
+                        All Severity
                       </Typography.Text>
                     ),
                     value: "all",
@@ -968,33 +1071,74 @@ export const ProjectsList: React.FC = () => {
                   },
                 ]}
               />
+              <Flex gap={8} align="center">
+                <Typography.Text style={{ whiteSpace: "nowrap" }}>
+                  Developer Partner
+                </Typography.Text>
+                <Switch
+                  checked={developerPartnerFilter}
+                  onChange={(checked) => setDeveloperPartnerFilter(checked)}
+                />
+              </Flex>
               <Select
+                mode="multiple"
+                allowClear
+                value={pendingIssueType}
                 onChange={(value) => {
-                  setIssueType(value);
+                  setPendingIssueType(value);
+                }}
+                open={issueTypeDropdownOpen}
+                onDropdownVisibleChange={(open) => {
+                  if (open) {
+                    setPendingIssueType(issueType);
+                  }
+                  setIssueTypeDropdownOpen(open);
                 }}
                 placeholder="Filter by issue type"
                 style={{ width: 200 }}
-                options={[
-                  { label: "All", value: "all" },
-                  { label: "RERA Number", value: "RERA Number" },
-                  { label: "RERA Mapping", value: "RERA Mapping" },
-                  { label: "Developer Mapping", value: "Developer Mapping" },
-                  { label: "Location", value: "Location" },
-                  { label: "Locality", value: "Locality" },
-                  { label: "Amenities", value: "Amenities" },
-                  { label: "Project Density", value: "Project Density" },
-                  { label: "Media", value: "Media" },
-                  { label: "Open Area", value: "Open Area" },
-                  {
-                    label: "Unit Config/Pricing",
-                    value: "Unit Config/Pricing",
-                  },
-                  { label: "Sqft Pricing", value: "Sqft Pricing" },
-                  { label: "Home Types", value: "Home Types" },
-                  { label: "Error", value: "Error" },
-                ]}
+                maxTagCount="responsive"
+                options={ISSUE_TYPE_OPTIONS}
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    <Divider style={{ margin: "4px 0" }} />
+                    <Flex
+                      justify="space-between"
+                      align="center"
+                      style={{ padding: "4px 8px" }}
+                    >
+                      <Button
+                        type="link"
+                        size="small"
+                        style={{ padding: 0 }}
+                        onClick={() => {
+                          setPendingIssueType(
+                            pendingIssueType.length ===
+                              ISSUE_TYPE_OPTIONS.length
+                              ? []
+                              : ISSUE_TYPE_OPTIONS.map((o) => o.value),
+                          );
+                        }}
+                      >
+                        {pendingIssueType.length === ISSUE_TYPE_OPTIONS.length
+                          ? "Clear All"
+                          : "Select All"}
+                      </Button>
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => {
+                          setIssueType(pendingIssueType);
+                          setIssueTypeDropdownOpen(false);
+                        }}
+                      >
+                        Apply
+                      </Button>
+                    </Flex>
+                  </div>
+                )}
               />
-              <Flex gap={8} align="center">
+              {/* <Flex gap={8} align="center">
                 <Typography.Text style={{ whiteSpace: "nowrap" }}>
                   Additional Review
                 </Typography.Text>
@@ -1002,39 +1146,11 @@ export const ProjectsList: React.FC = () => {
                   checked={hasStatusComments}
                   onChange={(checked) => setHasStatusComments(checked)}
                 />
-              </Flex>
+              </Flex> */}
+              
             </Flex>
 
-            <Radio.Group
-              value={projectStatusFilter || "all"}
-              onChange={(e) => setProjectStatusFilter(e.target.value)}
-              buttonStyle="solid"
-            >
-              <Radio.Button value="all">
-                {getStatusLabel("all", "All")}
-              </Radio.Button>
-              <Radio.Button value="basic-details-ready">
-                {getStatusLabel("basic-details-ready", "Basic Details Ready")}
-              </Radio.Button>
-              <Radio.Button value="data-populated">
-                {getStatusLabel("data-populated", "Data Populated")}
-              </Radio.Button>
-              <Radio.Button value="data-verified">
-                {getStatusLabel("data-verified", "Data Verified")}
-              </Radio.Button>
-              <Radio.Button value="report-ready">
-                {getStatusLabel("report-ready", "Report Ready")}
-              </Radio.Button>
-              <Radio.Button value="report-verified">
-                {getStatusLabel("report-verified", "Report Verified")}
-              </Radio.Button>
-              <Radio.Button value="disabled">
-                {getStatusLabel("disabled", "Disabled")}
-              </Radio.Button>
-              <Radio.Button value="new">
-                {getStatusLabel("new", "New")}
-              </Radio.Button>
-            </Radio.Group>
+           
           </Flex>
         </Col>
 
