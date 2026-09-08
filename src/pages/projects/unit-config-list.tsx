@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
+import { CopyOutlined, DeleteOutlined, EditOutlined, PlusOutlined, RetweetOutlined, UploadOutlined } from "@ant-design/icons";
 import {
   AutoComplete,
   Button,
@@ -26,6 +26,8 @@ interface UnitConfig {
   type?: string;
   price: number;
   floorplans?: string[];
+  description?: string;
+  spaceBreakup?: { roomType: string; roomSize: number }[];
 }
 
 interface UnitConfigListProps {
@@ -89,6 +91,9 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
     };
   }, []);
 
+  const isOtherFieldsLocked =
+    editingIndex !== null && !!value[editingIndex]?.description;
+
   const validConfigs = value.filter((c) => c.price > 0 && (c.sizeBuiltup ?? 0) > 0);
   const avgSqFtPrice =
     validConfigs.length > 0
@@ -128,6 +133,8 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
 
   // Helper function to check if a floorplan should be disabled
   const isFloorplanDisabled = (floorplanUrl: string) => {
+    if (isOtherFieldsLocked) return true;
+
     const usage = getFloorplanUsage();
     const usedBy = usage[floorplanUrl];
 
@@ -140,6 +147,9 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   };
 
   const getDisabledTooltipText = (floorplanUrl: string) => {
+    if (isOtherFieldsLocked) {
+      return "The unit has already been AI analysed. To make other changes, clone it instead and delete the original one.";
+    }
     const usage = getFloorplanUsage();
     const usedBy = usage[floorplanUrl];
     return usedBy ? `Already assigned to "${usedBy.config}"` : "";
@@ -183,6 +193,13 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
     onChange?.(newValue);
   };
 
+  const handleDuplicate = (index: number) => {
+    const { description, spaceBreakup, ...clonedConfig } = value[index];
+    const newValue = [...value];
+    newValue.splice(index + 1, 0, clonedConfig);
+    onChange?.(newValue);
+  };
+
   const handleModalOk = async () => {
     try {
       const data = await form.validateFields();
@@ -190,7 +207,10 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
       // Generate backward-compatible config string
       const configString = `${data.type} - ${data.sizeBuiltup} sq ft`;
 
+      const existingUnitConfig = editingIndex !== null ? value[editingIndex] : {};
+
       const unitConfig = {
+        ...existingUnitConfig, // preserve fields not editable here (e.g. AI-generated description, spaceBreakup)
         ...data,
         config: configString, // Backward compatibility
         floorplans: data.floorplans || [],
@@ -352,7 +372,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
             {/* Actions */}
             <div
               style={{
-                flex: "0 0 100px",
+                flex: "0 0 140px",
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: "8px",
@@ -361,6 +381,10 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               <Button
                 icon={<EditOutlined />}
                 onClick={() => handleEdit(index)}
+              />
+              <Button
+                icon={<CopyOutlined />}
+                onClick={() => handleDuplicate(index)}
               />
               <Button
                 icon={<DeleteOutlined />}
@@ -413,6 +437,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               style={{ width: "100%" }}
               placeholder="e.g., 1200"
               min={0}
+              disabled={isOtherFieldsLocked}
               onChange={(sizeBuiltup) => {
                 if (sizeBuiltupTimeoutRef.current) {
                   clearTimeout(sizeBuiltupTimeoutRef.current);
@@ -450,6 +475,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               style={{ width: "100%" }}
               placeholder="e.g., 900"
               min={0}
+              disabled={isOtherFieldsLocked}
             />
           </Form.Item>
            <Form.Item
@@ -460,6 +486,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               style={{ width: "100%" }}
               placeholder="e.g., 900"
               min={0}
+              disabled={isOtherFieldsLocked}
             />
           </Form.Item>
 
@@ -479,8 +506,20 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                   .includes(inputValue.toLowerCase())
               }
               placeholder="e.g., 2 BHK, 3 BHK"
+              disabled={isOtherFieldsLocked}
             />
           </Form.Item>
+
+          {isOtherFieldsLocked && (
+            <Typography.Text
+              type="warning"
+              style={{ display: "block", marginBottom: 8 }}
+            >
+              This unit plan already has a description, so only its price can
+              be edited here. Clone this unit plan instead to change other
+              details, then delete the original one.
+            </Typography.Text>
+          )}
 
           <Form.Item
             name="price"
@@ -499,20 +538,26 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
 
           <Form.Item label="Upload New Floor Plans">
             <div style={{ marginBottom: 16 }}>
-              <FileUpload
-                onUploadComplete={(urls: string[], originalNames: string[]) => {
-                  if (onFloorplanUpload) {
-                    onFloorplanUpload(urls, originalNames);
-                    setNewlyUploadedImageIds(prev => new Set([...prev, ...urls]));
-                  }
-                }}
-                fileType="image"
-                isMultiple={true}
-                button={{
-                  label: "Upload Floor Plans",
-                  type: "default",
-                }}
-              />
+              {isOtherFieldsLocked ? (
+                <Button icon={<UploadOutlined />} disabled>
+                  Upload Floor Plans
+                </Button>
+              ) : (
+                <FileUpload
+                  onUploadComplete={(urls: string[], originalNames: string[]) => {
+                    if (onFloorplanUpload) {
+                      onFloorplanUpload(urls, originalNames);
+                      setNewlyUploadedImageIds(prev => new Set([...prev, ...urls]));
+                    }
+                  }}
+                  fileType="image"
+                  isMultiple={true}
+                  button={{
+                    label: "Upload Floor Plans",
+                    type: "default",
+                  }}
+                />
+              )}
               <Typography.Text
                 type="secondary"
                 style={{ fontSize: 12, display: 'block', marginTop: 8 }}

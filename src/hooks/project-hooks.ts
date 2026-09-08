@@ -20,6 +20,7 @@ export function useGetAllProjects(params: {
   limit?: number;
   sortBy?: string;
   hasStatusComments?: boolean;
+  developerPartner?: boolean;
 }) {
   return useQuery({
     queryKey: [queryKeys.projects, params],
