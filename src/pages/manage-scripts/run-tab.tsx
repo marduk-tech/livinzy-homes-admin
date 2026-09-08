@@ -1,31 +1,16 @@
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Flex,
-  Form,
-  Row,
-  Segmented,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, Button, Card, Col, Flex, Row, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { Loader } from "../../components/common/loader";
 import {
   useRunScript,
   useScriptManifest,
 } from "../../hooks/manage-scripts-hooks";
-import { ScriptParam } from "../../libs/api/manage-scripts";
+import { buildArgs, missingRequired } from "../../libs/build-script-args";
 import {
-  activeParams,
-  buildArgs,
-  missingRequired,
-  ParamValues,
-} from "../../libs/build-script-args";
-import { ScriptParamField } from "./script-param-field";
+  ArgsPreview,
+  ScriptConfigForm,
+  ScriptConfigValue,
+} from "./script-config-form";
 
 interface RunTabProps {
   onStarted: (jobId: string) => void;
@@ -35,53 +20,21 @@ export function RunTab({ onStarted }: RunTabProps) {
   const { data: manifest, isLoading, error } = useScriptManifest();
   const runScript = useRunScript();
 
-  const [scriptName, setScriptName] = useState<string>();
-  const [modeKey, setModeKey] = useState<string>();
-  const [values, setValues] = useState<ParamValues>({});
+  const [config, setConfig] = useState<ScriptConfigValue>({ values: {} });
 
   const spec = useMemo(
-    () => manifest?.find((s) => s.name === scriptName),
-    [manifest, scriptName],
+    () => manifest?.find((s) => s.name === config.scriptName),
+    [manifest, config.scriptName],
   );
-
-  const pickScript = (name: string) => {
-    const next = manifest?.find((s) => s.name === name);
-    setScriptName(name);
-    // A leftover RERA number must not survive into a developer field.
-    setModeKey(next?.modes?.[0]?.key);
-    setValues({});
-  };
-
-  const pickMode = (key: string) => {
-    setModeKey(key);
-    setValues({});
-  };
-
-  const setValue = (param: string, value: unknown) =>
-    setValues((prev) => {
-      const next = { ...prev, [param]: value };
-      // Dependent lists are scoped to their parent, so a stale child is wrong.
-      (spec ? activeParams(spec, modeKey) : []).forEach((p) => {
-        if (p.source?.kind === "remote" && p.source.dependsOn === param) {
-          delete next[p.name];
-        }
-      });
-      return next;
-    });
 
   const browserScripts = (manifest ?? [])
     .filter((s) => s.usesBrowser)
     .map((s) => s.name);
 
-  const fields = spec ? activeParams(spec, modeKey) : [];
-  const args = spec ? buildArgs(spec, modeKey, values) : [];
-  const missing = spec ? missingRequired(spec, modeKey, values) : [];
-  const mode = spec?.modes?.find((m) => m.key === modeKey);
-
-  const dependsOnValue = (param: ScriptParam) =>
-    param.source?.kind === "remote" && param.source.dependsOn
-      ? values[param.source.dependsOn]
-      : undefined;
+  const args = spec ? buildArgs(spec, config.modeKey, config.values) : [];
+  const missing = spec
+    ? missingRequired(spec, config.modeKey, config.values)
+    : [];
 
   const handleRun = () => {
     if (!spec) return;
@@ -108,67 +61,11 @@ export function RunTab({ onStarted }: RunTabProps) {
     <Row gutter={[24, 24]}>
       <Col xs={24} lg={14} xl={15}>
         <Card size="small" title="Configure">
-          <Form layout="vertical">
-            <Form.Item
-              label="Script"
-              help={spec?.description}
-              style={{ marginBottom: 16 }}
-            >
-              <Select
-                showSearch
-                value={scriptName}
-                placeholder="Select a script"
-                onChange={pickScript}
-                options={(manifest ?? []).map((s) => ({
-                  value: s.name,
-                  label: s.name,
-                }))}
-              />
-            </Form.Item>
-
-            {spec?.modes && spec.modes.length > 0 && (
-              <Form.Item style={{ marginTop: 8, marginBottom: 16 }}>
-                <Segmented
-                  value={modeKey}
-                  onChange={(v) => pickMode(v as string)}
-                  options={spec.modes.map((m) => ({
-                    value: m.key,
-                    label: m.label,
-                  }))}
-                />
-                {mode?.hint && (
-                  <div style={{ marginTop: 6 }}>
-                    <Typography.Text type="secondary">
-                      {mode.hint}
-                    </Typography.Text>
-                  </div>
-                )}
-              </Form.Item>
-            )}
-
-            <Row gutter={16}>
-              {fields.map((param) => (
-                <Col
-                  key={param.name}
-                  xs={24}
-                  md={param.control === "select" || param.control === "text" ? 12 : 24}
-                >
-                  <ScriptParamField
-                    param={param}
-                    value={values[param.name]}
-                    onChange={(v) => setValue(param.name, v)}
-                    dependsOnValue={dependsOnValue(param)}
-                  />
-                </Col>
-              ))}
-            </Row>
-
-            {spec && fields.length === 0 && (
-              <Typography.Text type="secondary">
-                This script takes no arguments.
-              </Typography.Text>
-            )}
-          </Form>
+          <ScriptConfigForm
+            manifest={manifest ?? []}
+            value={config}
+            onChange={setConfig}
+          />
         </Card>
       </Col>
 
@@ -199,7 +96,7 @@ export function RunTab({ onStarted }: RunTabProps) {
               )}
 
               {spec?.name === "extract-developer-rera-projects" &&
-                values.dryRun !== true && (
+                config.values.dryRun !== true && (
                   <Alert
                     type="warning"
                     showIcon
@@ -214,26 +111,7 @@ export function RunTab({ onStarted }: RunTabProps) {
                       Arguments sent
                     </Typography.Text>
                     <div style={{ marginTop: 8 }}>
-                      {args.length ? (
-                        <Space size={[4, 4]} wrap>
-                          {args.map((arg, i) => (
-                            <Tag
-                              key={`${arg}-${i}`}
-                              style={{
-                                fontFamily: "monospace",
-                                whiteSpace: "normal",
-                                wordBreak: "break-all",
-                              }}
-                            >
-                              {arg}
-                            </Tag>
-                          ))}
-                        </Space>
-                      ) : (
-                        <Typography.Text type="secondary">
-                          (no arguments)
-                        </Typography.Text>
-                      )}
+                      <ArgsPreview args={args} />
                     </div>
                   </div>
 

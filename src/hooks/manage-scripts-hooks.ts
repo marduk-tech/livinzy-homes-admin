@@ -4,6 +4,7 @@ import {
   getJob,
   getJobs,
   getScriptManifest,
+  JobFilters,
   runScript,
   stopJob,
 } from "../libs/api/manage-scripts";
@@ -18,11 +19,13 @@ export function useScriptManifest() {
   });
 }
 
-export function useScriptJobs() {
+export function useScriptJobs(filters: JobFilters = {}) {
   return useQuery({
-    queryKey: [queryKeys.getScriptJobs],
-    queryFn: getJobs,
-    refetchInterval: 3000,
+    queryKey: [queryKeys.getScriptJobs, filters],
+    queryFn: () => getJobs(filters),
+    // History is durable now, so only poll hard while something is moving.
+    refetchInterval: (query) =>
+      query.state.data?.some((job) => job.status === "running") ? 3000 : 15000,
   });
 }
 

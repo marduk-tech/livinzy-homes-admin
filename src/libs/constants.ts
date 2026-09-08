@@ -36,6 +36,7 @@ export const queryKeys = {
   getScriptManifest: "getScriptManifest",
   getScriptJobs: "getScriptJobs",
   getScriptJob: "getScriptJob",
+  getCronSchedules: "getCronSchedules",
   getReraProjectNames: "getReraProjectNames",
 };
 export const LivIndexDrivers = [

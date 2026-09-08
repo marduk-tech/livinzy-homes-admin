@@ -1,3 +1,4 @@
+import { scriptServerApiUrl } from "../constants";
 import { scriptServerApiInstance } from "../script-server-axios-instance";
 
 export type OptionSource =
@@ -43,7 +44,13 @@ export type ScriptSpec = {
 };
 
 // Mirrors stagehand/src/jobs.ts
-export type JobStatus = "running" | "done" | "error" | "stopped";
+export type JobStatus =
+  | "running"
+  | "done"
+  | "error"
+  | "stopped"
+  | "interrupted"
+  | "skipped";
 
 export type JobSummary = {
   id: string;
@@ -55,10 +62,23 @@ export type JobSummary = {
   meta: Record<string, unknown>;
   pid?: number;
   usesBrowser?: boolean;
+  scheduleId?: string;
   stopping?: boolean;
 };
 
-export type Job = JobSummary & { logs: string[] };
+export type JobFilters = {
+  limit?: number;
+  kind?: string;
+  status?: string;
+};
+
+export type Job = JobSummary & {
+  logs: string[];
+  logLines?: number;
+  logsExpired?: boolean;
+
+  logsTruncated?: boolean;
+};
 
 export async function getScriptManifest(): Promise<ScriptSpec[]> {
   const { data } = await scriptServerApiInstance.get<{ scripts: ScriptSpec[] }>(
@@ -75,9 +95,10 @@ export async function runScript(payload: {
   return data;
 }
 
-export async function getJobs(): Promise<JobSummary[]> {
+export async function getJobs(filters: JobFilters = {}): Promise<JobSummary[]> {
   const { data } = await scriptServerApiInstance.get<{ jobs: JobSummary[] }>(
     "/jobs",
+    { params: filters },
   );
   return data.jobs;
 }
@@ -85,6 +106,10 @@ export async function getJobs(): Promise<JobSummary[]> {
 export async function getJob(jobId: string): Promise<Job> {
   const { data } = await scriptServerApiInstance.get<Job>(`/jobs/${jobId}`);
   return data;
+}
+
+export function jobLogsUrl(jobId: string): string {
+  return `${(scriptServerApiUrl || "").replace(/\/$/, "")}/jobs/${jobId}/logs`;
 }
 
 export async function stopJob(jobId: string): Promise<{ ok: boolean }> {

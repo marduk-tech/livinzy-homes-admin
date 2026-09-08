@@ -54,6 +54,8 @@ const JOB_STATUS_COLOR: Record<string, string> = {
   done: "success",
   error: "error",
   stopped: "default",
+  interrupted: "warning",
+  skipped: "default",
 };
 
 export function DevelopersList() {

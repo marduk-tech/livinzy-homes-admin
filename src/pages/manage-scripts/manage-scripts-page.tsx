@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BackendScriptsTab } from "./backend-scripts-tab";
 import { RunTab } from "./run-tab";
 import { RunsTab } from "./runs-tab";
+import { SchedulesTab } from "./schedules-tab";
 
 export function ManageScriptsPage() {
   const [activeTab, setActiveTab] = useState("backend");
@@ -23,6 +24,11 @@ export function ManageScriptsPage() {
       key: "run",
       label: "Scripts Repo",
       children: <RunTab onStarted={handleStarted} />,
+    },
+    {
+      key: "schedules",
+      label: "Schedules",
+      children: <SchedulesTab onStarted={handleStarted} />,
     },
     {
       key: "runs",

@@ -5,17 +5,20 @@ import {
   Drawer,
   Flex,
   Popconfirm,
+  Segmented,
   Table,
   TableColumnType,
   Tag,
   Typography,
 } from "antd";
+import { useState } from "react";
+import { useCronSchedules } from "../../hooks/cron-schedules-hooks";
 import {
   useScriptJob,
   useScriptJobs,
   useStopJob,
 } from "../../hooks/manage-scripts-hooks";
-import { JobSummary } from "../../libs/api/manage-scripts";
+import { Job, JobSummary, jobLogsUrl } from "../../libs/api/manage-scripts";
 import { JobLogViewer } from "./job-log-viewer";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -23,7 +26,24 @@ const STATUS_COLOR: Record<string, string> = {
   done: "success",
   error: "error",
   stopped: "default",
+  interrupted: "warning",
+  skipped: "default",
 };
+
+const STATUSES = [
+  "running",
+  "done",
+  "error",
+  "stopped",
+  "interrupted",
+  "skipped",
+];
+
+const KINDS = ["run", "cron", "developer-gen"];
+
+const PAGE = 200;
+
+const RETENTION_DAYS = 30;
 
 function summarize(job: JobSummary): string {
   const meta = job.meta ?? {};
@@ -43,21 +63,66 @@ function duration(job: JobSummary): string {
   return `${(seconds / 3600).toFixed(1)}h`;
 }
 
+function LogNotice({ job }: { job: Job }) {
+  if (job.logsExpired) {
+    return (
+      <Alert
+        type="info"
+        showIcon
+        message={`Logs were cleared after ${RETENTION_DAYS} days`}
+        description={
+          job.logLines
+            ? `The run kept its result; its ${job.logLines.toLocaleString()} log lines are gone.`
+            : undefined
+        }
+      />
+    );
+  }
+
+  if (!job.logsTruncated) return null;
+
+  return (
+    <Flex justify="space-between" align="center" gap={12} wrap>
+      <Typography.Text type="secondary">
+        Showing the last {(job.logs?.length ?? 0).toLocaleString()} of{" "}
+        {(job.logLines ?? 0).toLocaleString()} lines.
+      </Typography.Text>
+      <Typography.Link href={jobLogsUrl(job.id)} target="_blank">
+        Open the full log
+      </Typography.Link>
+    </Flex>
+  );
+}
+
 interface RunsTabProps {
   selectedJobId?: string;
   onSelectJob: (jobId?: string) => void;
 }
 
 export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
-  const { data: jobs, isLoading, error } = useScriptJobs();
+  const [kind, setKind] = useState<string>("all");
+  const [limit, setLimit] = useState(PAGE);
+
+  const {
+    data: jobs,
+    isLoading,
+    error,
+  } = useScriptJobs({ limit, kind: kind === "all" ? undefined : kind });
   const { data: job } = useScriptJob(selectedJobId);
+  const { data: schedules } = useCronSchedules();
   const stopJob = useStopJob();
+
+  const scheduleName = (id?: string) => {
+    if (!id) return undefined;
+    const match = schedules?.find((s) => s.id === id);
+    return match?.label || match?.cron;
+  };
 
   const columns: TableColumnType<JobSummary>[] = [
     {
       title: "Status",
       dataIndex: "status",
-      width: 120,
+      width: 130,
       render: (status: string) => (
         <Tag
           color={STATUS_COLOR[status] ?? "default"}
@@ -66,10 +131,7 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
           {status}
         </Tag>
       ),
-      filters: ["running", "done", "error", "stopped"].map((s) => ({
-        text: s,
-        value: s,
-      })),
+      filters: STATUSES.map((s) => ({ text: s, value: s })),
       onFilter: (value, record) => record.status === value,
     },
     { title: "Kind", dataIndex: "kind", width: 130 },
@@ -77,9 +139,16 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
       title: "Run",
       key: "summary",
       render: (_, record) => (
-        <Typography.Text style={{ fontFamily: "monospace", fontSize: 12 }}>
-          {summarize(record)}
-        </Typography.Text>
+        <Flex vertical>
+          <Typography.Text style={{ fontFamily: "monospace", fontSize: 12 }}>
+            {summarize(record)}
+          </Typography.Text>
+          {record.scheduleId && (
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              via {scheduleName(record.scheduleId) ?? "a deleted schedule"}
+            </Typography.Text>
+          )}
+        </Flex>
       ),
     },
     {
@@ -132,10 +201,24 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
 
   return (
     <Flex vertical gap={12}>
-      <Typography.Text type="secondary">
-        Run history lives in the script server's memory — it resets on every
-        redeploy, keeps the last 200 runs, and logs keep the last 500 lines.
-      </Typography.Text>
+      <Flex justify="space-between" align="center" gap={16} wrap>
+        <Typography.Text type="secondary">
+          Every run is kept on the script server's disk with its full output, so
+          scheduled runs are still here after a redeploy. Logs are cleared after{" "}
+          {RETENTION_DAYS} days; the runs themselves stay.
+        </Typography.Text>
+        <Segmented
+          value={kind}
+          onChange={(value) => {
+            setKind(value as string);
+            setLimit(PAGE);
+          }}
+          options={[
+            { value: "all", label: "All" },
+            ...KINDS.map((k) => ({ value: k, label: k })),
+          ]}
+        />
+      </Flex>
 
       <Table
         rowKey="id"
@@ -149,6 +232,12 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
           style: { cursor: "pointer" },
         })}
       />
+
+      {jobs && jobs.length >= limit && (
+        <Flex justify="center">
+          <Button onClick={() => setLimit((n) => n + PAGE)}>Load more</Button>
+        </Flex>
+      )}
 
       <Drawer
         open={!!selectedJobId}
@@ -186,6 +275,8 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
             </Typography.Text>
 
             {job.error && <Alert type="error" showIcon message={job.error} />}
+
+            <LogNotice job={job} />
 
             <JobLogViewer logs={job.logs ?? []} height={520} />
           </Flex>
