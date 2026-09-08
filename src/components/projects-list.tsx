@@ -57,6 +57,7 @@ import { ColumnSearch } from "./common/column-search";
 import { DeletePopconfirm } from "./common/delete-popconfirm";
 import DynamicReactIcon from "./common/dynamic-react-icon";
 import { JsonProjectImport } from "./json-project-import";
+import { Loader } from "./common/loader";
 const { Search } = Input;
 
 const RESOLVABLE_ISSUE_FIELDS = [
@@ -178,7 +179,7 @@ export const ProjectsList: React.FC = () => {
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
     statusFilter: projectStatusFilter.join(","),
     issueType: issueType.join(","),
-    limit: 100,
+    limit: 200,
     sortBy: "updatedAt:desc",
     hasStatusComments,
     developerPartner: developerPartnerFilter,
@@ -1165,6 +1166,13 @@ export const ProjectsList: React.FC = () => {
           </Button>
         </Col>
       </Row>
+
+      {projectsLoading ? "..":   <Typography.Text
+        style={{ display: "block", padding: "0 10px", marginBottom: 8 }}
+      >
+        Total <span style={{fontWeight: 800}}>{projects?.length || 0}</span> projects shown
+      </Typography.Text>}
+    
 
       <Table
         dataSource={projects}
