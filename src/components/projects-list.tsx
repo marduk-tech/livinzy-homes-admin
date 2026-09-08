@@ -933,7 +933,7 @@ export const ProjectsList: React.FC = () => {
                 }}
                 onSearch={(value: string) => {
                   setSearchKeyword(value);
-                  setProjectStatusFilter("");
+                  setProjectStatusFilter([]);
                   setIssueSeverity("");
                   setIssueType([]);
                   setPendingIssueType([]);
