@@ -386,14 +386,41 @@ export function useDeleteStatusCommentMutation({
   });
 }
 
-export function useGenerateScoreCardMutation({
+// Runs data pre-processing on its own - now a separate icon button/action
+// from score generation below, so this no longer chains into generateScore.
+export function useProcessProjectDataMutation({
   enableToasts = true,
 }: {
   enableToasts?: boolean;
 }) {
   return useMutation({
     mutationFn: ({ projectId }: { projectId: string }) => {
-      return api.generateScoreCard(projectId);
+      return api.processProjectData(projectId);
+    },
+    onSuccess: () => {
+      if (enableToasts) {
+        notification.success({ message: `Data processing initiated!` });
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({ message: error.response?.data?.message || `Failed to process project data.` });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+    },
+  });
+}
+
+export function useGenerateScoreCardMutation({
+  enableToasts = true,
+}: {
+  enableToasts?: boolean;
+}) {
+  return useMutation({
+    // Data processing has its own button/mutation above - project data must
+    // already be processed (the backend rejects otherwise) before this runs.
+    mutationFn: ({ projectId }: { projectId: string }) => {
+      return api.generateScore(projectId);
     },
     onSuccess: () => {
       if (enableToasts) {

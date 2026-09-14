@@ -15,6 +15,7 @@ export const queryKeys = {
   getAllGlobalKnowledge: "getAllGlobalKnowledge",
   getAllChromaDocs: "getAllChromaDocs",
   getAllCorridors: "getAllCorridors",
+  getAllMicroPockets: "getAllMicroPockets",
 
   getAllDevelopers: "getAllDevelopers",
   getDeveloperById: "getDeveloperById",

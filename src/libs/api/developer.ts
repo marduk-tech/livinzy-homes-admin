@@ -75,3 +75,23 @@ export const generateDeveloperInfo = async (
     );
   return data;
 };
+
+export interface ExtractDeveloperReraProjectsResponse {
+  jobId: string;
+  developerId?: string;
+  reraNumbers?: string;
+  dryRun?: boolean;
+  status: JobStatus;
+}
+
+export const extractDeveloperReraProjects = async (params: {
+  developerId?: string;
+  reraNumbers?: string;
+}): Promise<ExtractDeveloperReraProjectsResponse> => {
+  const { data } =
+    await scriptServerApiInstance.post<ExtractDeveloperReraProjectsResponse>(
+      "/developer-rera-projects",
+      params
+    );
+  return data;
+};

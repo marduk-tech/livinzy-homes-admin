@@ -43,6 +43,7 @@ import {
   useGenerateScoreCardMutation,
   useGetAllProjects,
   useGetProjectStatusCounts,
+  useProcessProjectDataMutation,
   useResolveProjectIssueMutation,
   useRunProjectChecksMutation,
   useToggleStatusCommentResolvedMutation,
@@ -145,6 +146,9 @@ export const ProjectsList: React.FC = () => {
   });
   const deleteCommentMutation = useDeleteStatusCommentMutation({
     enableToasts: true,
+  });
+  const processProjectDataMutation = useProcessProjectDataMutation({
+    enableToasts: false,
   });
   const generateScoreCardMutation = useGenerateScoreCardMutation({
     enableToasts: false,
@@ -736,6 +740,25 @@ export const ProjectsList: React.FC = () => {
           });
         };
 
+        const getProcessDataTooltip = () => {
+          if (reportStatus === "pre-processing") return `Status: ${reportStatus}`;
+          if (reportStatus === "pre-processing-error")
+            return `Error: ${record.info.reportStatus?.comments || reportStatus}`;
+          return "Process Project Data";
+        };
+
+        const handleProcessProjectData = () => {
+          Modal.confirm({
+            title: "Process Project Data",
+            content: `Are you sure you want to process data for "${record.info.name}"? This process may take a few minutes.`,
+            okText: "Process",
+            cancelText: "Cancel",
+            onOk: () => {
+              processProjectDataMutation.mutate({ projectId: id });
+            },
+          });
+        };
+
         const handleRunProjectChecks = () => {
           Modal.confirm({
             title: "Run Project Checks",
@@ -772,6 +795,24 @@ export const ProjectsList: React.FC = () => {
             )}
 
             {canShowScoreCard && (
+              <Tooltip title={getProcessDataTooltip()}>
+                <Button
+                  type="link"
+                  shape="default"
+                  disabled={reportStatus === "pre-processing"}
+                  icon={
+                    <DynamicReactIcon
+                      color={getScoreCardColor()}
+                      iconName="MdOutlineDataset"
+                      iconSet="md"
+                    />
+                  }
+                  onClick={handleProcessProjectData}
+                />
+              </Tooltip>
+            )}
+
+            {canShowScoreCard && (
               <Tooltip title={getScoreCardTooltip()}>
                 <Button
                   type="link"
@@ -789,7 +830,7 @@ export const ProjectsList: React.FC = () => {
               </Tooltip>
             )}
 
-            <Tooltip title="Manage Status Comments">
+            {/* <Tooltip title="Manage Status Comments">
               <Button
                 type="link"
                 shape="default"
@@ -820,7 +861,7 @@ export const ProjectsList: React.FC = () => {
                   })
                 }
               />
-            </Tooltip>
+            </Tooltip> */}
 
             <Tooltip title="Edit Project">
               <Button

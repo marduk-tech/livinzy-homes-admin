@@ -169,8 +169,19 @@ export const getProjectStatusCounts = async () => {
   });
 };
 
-export const generateScoreCard = async (projectId: string) => {
-  const endpoint = `/projects/generate-scorecard`;
+// Pre-processes project data (drivers, developer history, investment comps
+// etc). Must complete before generateScore below.
+export const processProjectData = async (projectId: string) => {
+  const endpoint = `/projects/process-data`;
+  return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
+    return response.data;
+  });
+};
+
+// Generates the score card off already pre-processed data - separate from
+// processProjectData above so it can be retried on its own.
+export const generateScore = async (projectId: string) => {
+  const endpoint = `/projects/generate-score`;
   return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
     return response.data;
   });

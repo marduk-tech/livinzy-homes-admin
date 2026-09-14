@@ -2,6 +2,7 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  FileSearchOutlined,
   FileTextOutlined,
   LinkOutlined,
   LoadingOutlined,
@@ -27,6 +28,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   useDeleteDeveloperMutation,
+  useExtractDeveloperReraProjectsMutation,
   useGenerateDeveloperInfoMutation,
   useGetAllDevelopers,
   useUpdateDeveloperMutation,
@@ -46,6 +48,7 @@ import { DeveloperDetailsDrawer } from "./developer-details-drawer";
 import { DeveloperForm } from "./developer-form";
 import { DeveloperScoreModal } from "./developer-score-modal";
 import ProjectForm from "./project-form";
+import DynamicReactIcon from "../common/dynamic-react-icon";
 
 const { Search } = Input;
 
@@ -92,7 +95,11 @@ export function DevelopersList() {
   const [forceRegenerate, setForceRegenerate] = useState(false);
   const [genJobId, setGenJobId] = useState<string | undefined>();
 
+  const [reraTarget, setReraTarget] = useState<Developer | undefined>();
+  const [reraJobId, setReraJobId] = useState<string | undefined>();
+
   const { data: genJob } = useScriptJob(genJobId);
+  const { data: reraJob } = useScriptJob(reraJobId);
   const stopJobMutation = useStopJob();
 
   useEffect(() => {
@@ -101,9 +108,16 @@ export function DevelopersList() {
     }
   }, [genJob?.status]);
 
+  useEffect(() => {
+    if (reraJob?.status === "done") {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.getAllDevelopers] });
+    }
+  }, [reraJob?.status]);
+
   const deleteDeveloperMutation = useDeleteDeveloperMutation();
   const updateDeveloperMutation = useUpdateDeveloperMutation();
   const generateInfoMutation = useGenerateDeveloperInfoMutation();
+  const extractReraProjectsMutation = useExtractDeveloperReraProjectsMutation();
   const assignDeveloperToProjectMutation =
     useAssignDeveloperToProjectMutation();
 
@@ -320,16 +334,26 @@ export function DevelopersList() {
               }}
             />
           </Tooltip>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setSelectedDeveloper(record);
-              setSelectedProjectIndex(undefined);
-            }}
-          >
-            Add Project
-          </Button>
+          <Tooltip title="Extract Developer RERA Projects">
+            <Button
+              type="default"
+              shape="default"
+              icon={<FileSearchOutlined />}
+              loading={
+                extractReraProjectsMutation.isPending &&
+                extractReraProjectsMutation.variables?.developerId ===
+                  record._id
+              }
+              disabled={
+                extractReraProjectsMutation.isPending &&
+                extractReraProjectsMutation.variables?.developerId !==
+                  record._id
+              }
+              onClick={() => setReraTarget(record)}
+            />
+          </Tooltip>
+
+<Tooltip title="Assign to an existing project">
           <Button
             type="default"
             icon={<LinkOutlined />}
@@ -337,9 +361,8 @@ export function DevelopersList() {
               setAssignProjectDeveloper(record);
               setAssignProjectId("");
             }}
-          >
-            Assign to Project
-          </Button>
+          ></Button>
+          </Tooltip>
           <Button
             type="default"
             shape="default"
@@ -353,8 +376,32 @@ export function DevelopersList() {
             title="Delete Developer"
             description="Are you sure you want to delete this developer and all their projects?"
           >
-            <Button type="default" shape="default" icon={<DeleteOutlined />} />
+            <Tooltip title="Delete this developer">
+              <Button
+                type="default"
+                shape="default"
+                icon={
+                  <DynamicReactIcon
+                    iconName="MdDelete"
+                    iconSet="md"
+                    color={COLORS.redIdentifier}
+                    size={20}
+                  />
+                }
+              />
+            </Tooltip>
           </DeletePopconfirm>
+
+          <Tooltip title="Add a project">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setSelectedDeveloper(record);
+                setSelectedProjectIndex(undefined);
+              }}
+            ></Button>
+          </Tooltip>
         </Flex>
       ),
     },
@@ -541,6 +588,72 @@ export function DevelopersList() {
             <Alert type="error" showIcon message={genJob.error} />
           )}
           <JobLogViewer logs={genJob?.logs ?? []} height={520} />
+        </Flex>
+      </Drawer>
+
+      <Modal
+        title="Extract Developer RERA Projects"
+        open={!!reraTarget}
+        onCancel={() => setReraTarget(undefined)}
+        okText="Extract"
+        okButtonProps={{ loading: extractReraProjectsMutation.isPending }}
+        onOk={async () => {
+          if (!reraTarget) return;
+          const job = await extractReraProjectsMutation.mutateAsync({
+            developerId: reraTarget._id,
+          });
+          setReraTarget(undefined);
+          setReraJobId(job.jobId);
+        }}
+      >
+        <Typography.Text>
+          Extract RERA projects for "{reraTarget?.name}"? This takes a few
+          minutes.
+        </Typography.Text>
+      </Modal>
+
+      <Drawer
+        open={!!reraJobId}
+        onClose={() => setReraJobId(undefined)}
+        width={820}
+        title={
+          <Flex align="center" gap={12}>
+            <Tag
+              color={JOB_STATUS_COLOR[reraJob?.status ?? "running"]}
+              icon={
+                reraJob?.status === "running" ? (
+                  <LoadingOutlined spin />
+                ) : undefined
+              }
+            >
+              {reraJob?.status ?? "starting"}
+            </Tag>
+            <Typography.Text>Developer RERA projects extract</Typography.Text>
+          </Flex>
+        }
+        extra={
+          reraJob?.status === "running" && (
+            <Button
+              danger
+              size="small"
+              onClick={() => stopJobMutation.mutate(reraJob.id)}
+            >
+              Stop
+            </Button>
+          )
+        }
+      >
+        <Flex vertical gap={12}>
+          {reraJob?.status === "running" && (
+            <Typography.Text type="secondary">
+              Closing this drawer won't stop the job — it also shows up under
+              Manage Scripts → Runs.
+            </Typography.Text>
+          )}
+          {reraJob?.error && (
+            <Alert type="error" showIcon message={reraJob.error} />
+          )}
+          <JobLogViewer logs={reraJob?.logs ?? []} height={520} />
         </Flex>
       </Drawer>
 

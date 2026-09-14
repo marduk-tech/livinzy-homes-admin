@@ -5,6 +5,7 @@ import { errorMessage } from "../libs/api-error";
 import {
   createDeveloper,
   deleteDeveloper,
+  extractDeveloperReraProjects,
   generateDeveloperInfo,
   getAllDevelopers,
   getDeveloperById,
@@ -138,6 +139,27 @@ export function useGenerateDeveloperInfoMutation() {
       notification.error({
         message: "Could not start generation",
         description: errorMessage(error, "Failed to generate developer info."),
+      });
+    },
+  });
+}
+
+export function useExtractDeveloperReraProjectsMutation() {
+  return useMutation({
+    mutationFn: (params: { developerId?: string; reraNumbers?: string }) =>
+      extractDeveloperReraProjects(params),
+
+    onSuccess: () => {
+      notification.success({ message: `Extraction started` });
+    },
+
+    onError: (error) => {
+      notification.error({
+        message: "Could not start extraction",
+        description: errorMessage(
+          error,
+          "Failed to extract developer RERA projects."
+        ),
       });
     },
   });

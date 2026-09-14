@@ -4,7 +4,7 @@ export const getAllLvnzyProjects = async (onlyVerifiedReports?: boolean) => {
   const endpoint = `/lvnzy-projects`;
   return axiosApiInstance
     .get(endpoint, {
-      params: onlyVerifiedReports ? { onlyVerifiedReports: "true" } : undefined,
+      params: onlyVerifiedReports ? { onlyVerifiedReports: "true", basic: "true" } : undefined,
     })
     .then((response) => {
       return response.data;

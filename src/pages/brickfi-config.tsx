@@ -3,6 +3,7 @@ import { CorridorsList } from "../components/corridors/corridors-list";
 import { DevelopersList } from "../components/developers/developers-list";
 import { LivindexDriversList } from "../components/livindex-drivers/livindex-drivers-list";
 import { LivindexList } from "../components/livindex-places/livindex-list";
+import { MicroPocketsList } from "../components/micro-pockets/micro-pockets-list";
 import { NewProjects } from "../components/rera-projects/new-projects";
 import { ReraProjectsList } from "../components/rera-projects/rera-projects-list";
 
@@ -26,6 +27,9 @@ export function BrickfiConfig() {
       </Tabs.TabPane>
        <Tabs.TabPane tab="Corridors" key="3">
         <CorridorsList />
+      </Tabs.TabPane>
+      <Tabs.TabPane tab="Micro Pockets" key="7">
+        <MicroPocketsList />
       </Tabs.TabPane>
     </Tabs>
   );
