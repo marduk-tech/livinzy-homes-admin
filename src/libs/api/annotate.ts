@@ -6,14 +6,22 @@ export interface AnnotateImageResponse {
   message: string;
 }
 
+export interface CropRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export const annotateImage = async (
   imageUrl: string,
-  overlayImage: string,
+  overlayImage?: string,
+  cropRect?: CropRect,
 ): Promise<AnnotateImageResponse> => {
   const endpoint = `/image-process/annotate`;
   const response = await axiosApiInstance.post<AnnotateImageResponse>(
     endpoint,
-    { imageUrl, overlayImage },
+    { imageUrl, overlayImage, cropRect },
   );
   return response.data;
 };

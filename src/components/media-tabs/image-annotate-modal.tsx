@@ -13,6 +13,7 @@ import {
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
+  ScissorOutlined,
   UndoOutlined,
 } from "@ant-design/icons";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,7 +21,9 @@ import { useAnnotateImage } from "../../hooks/annotate-hooks";
 
 const { Text } = Typography;
 
-type Tool = "rect" | "ellipse" | "arrow" | "pen" | "text";
+type Tool = "rect" | "ellipse" | "arrow" | "pen" | "text" | "crop";
+
+type Rect = { x: number; y: number; w: number; h: number };
 
 type Shape =
   | { id: number; type: "rect"; x: number; y: number; w: number; h: number; color: string; strokeWidth: number }
@@ -87,6 +90,39 @@ const drawShape = (ctx: CanvasRenderingContext2D, shape: Shape) => {
   }
 };
 
+const normalizeRect = (r: Rect): Rect => ({
+  x: Math.min(r.x, r.x + r.w),
+  y: Math.min(r.y, r.y + r.h),
+  w: Math.abs(r.w),
+  h: Math.abs(r.h),
+});
+
+// Dims everything outside the crop rect and outlines it, without touching
+// the pixels inside (which may include annotation shapes already drawn).
+const drawCropMask = (
+  ctx: CanvasRenderingContext2D,
+  rect: Rect,
+  canvasW: number,
+  canvasH: number,
+) => {
+  const { x, y, w, h } = rect;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.fillRect(0, 0, canvasW, y);
+  ctx.fillRect(0, y + h, canvasW, canvasH - (y + h));
+  ctx.fillRect(0, y, x, h);
+  ctx.fillRect(x + w, y, canvasW - (x + w), h);
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = "#1677ff";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+};
+
 interface ImageAnnotateModalProps {
   visible: boolean;
   imageUrl: string;
@@ -102,8 +138,10 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cropCanvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const drawingRef = useRef<Shape | null>(null);
+  const cropDraftRef = useRef<Rect | null>(null);
   const nextId = useRef(0);
   const suppressBlurCommit = useRef(false);
 
@@ -114,6 +152,7 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
   const [color, setColor] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(4);
   const [textDraft, setTextDraft] = useState<{ x: number; y: number; value: string } | null>(null);
+  const [cropRect, setCropRect] = useState<Rect | null>(null);
   const [, forceRedraw] = useState(0);
 
   const annotateMutation = useAnnotateImage();
@@ -124,6 +163,7 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
     setNaturalSize(null);
     setDisplaySize(null);
     setTextDraft(null);
+    setCropRect(null);
     setTool("rect");
   }, [visible, imageUrl]);
 
@@ -139,7 +179,9 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !naturalSize) return;
+    const cropCanvas = cropCanvasRef.current;
+    if (!canvas || !cropCanvas || !naturalSize) return;
+
     canvas.width = naturalSize.w;
     canvas.height = naturalSize.h;
     const ctx = canvas.getContext("2d");
@@ -147,6 +189,20 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     shapes.forEach((s) => drawShape(ctx, s));
     if (drawingRef.current) drawShape(ctx, drawingRef.current);
+
+    // Kept on its own canvas, layered above the shapes canvas, so the crop
+    // guide never ends up baked into the exported annotation overlay.
+    cropCanvas.width = naturalSize.w;
+    cropCanvas.height = naturalSize.h;
+    const cropCtx = cropCanvas.getContext("2d");
+    if (!cropCtx) return;
+    cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+    const activeCrop = cropDraftRef.current
+      ? normalizeRect(cropDraftRef.current)
+      : cropRect;
+    if (activeCrop) {
+      drawCropMask(cropCtx, activeCrop, cropCanvas.width, cropCanvas.height);
+    }
   });
 
   const scaleFactor = naturalSize && displaySize ? naturalSize.w / displaySize.w : 1;
@@ -178,6 +234,13 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
       return;
     }
 
+    if (tool === "crop") {
+      isDrawingRef.current = true;
+      cropDraftRef.current = { x, y, w: 0, h: 0 };
+      forceRedraw((n) => n + 1);
+      return;
+    }
+
     isDrawingRef.current = true;
     const id = nextId.current++;
     if (tool === "rect") {
@@ -193,6 +256,15 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (tool === "crop") {
+      if (!isDrawingRef.current || !cropDraftRef.current) return;
+      const { x, y } = getPos(e);
+      cropDraftRef.current.w = x - cropDraftRef.current.x;
+      cropDraftRef.current.h = y - cropDraftRef.current.y;
+      forceRedraw((n) => n + 1);
+      return;
+    }
+
     if (!isDrawingRef.current || !drawingRef.current) return;
     const { x, y } = getPos(e);
     const shape = drawingRef.current;
@@ -213,6 +285,24 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
   };
 
   const handleMouseUp = () => {
+    if (tool === "crop") {
+      if (!isDrawingRef.current || !cropDraftRef.current) return;
+      isDrawingRef.current = false;
+      const draft = normalizeRect(cropDraftRef.current);
+      cropDraftRef.current = null;
+
+      if (draft.w >= 4 && draft.h >= 4 && naturalSize) {
+        setCropRect({
+          x: Math.max(0, draft.x),
+          y: Math.max(0, draft.y),
+          w: Math.min(draft.w, naturalSize.w - Math.max(0, draft.x)),
+          h: Math.min(draft.h, naturalSize.h - Math.max(0, draft.y)),
+        });
+      }
+      forceRedraw((n) => n + 1);
+      return;
+    }
+
     if (!isDrawingRef.current || !drawingRef.current) return;
     isDrawingRef.current = false;
     const shape = drawingRef.current;
@@ -248,24 +338,30 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
 
   const handleUndo = () => setShapes((prev) => prev.slice(0, -1));
   const handleClear = () => setShapes([]);
+  const handleClearCrop = () => setCropRect(null);
 
   const handleSave = async () => {
     const canvas = canvasRef.current;
     if (!naturalSize || !canvas) return;
-    if (shapes.length === 0) {
-      message.info("Draw at least one annotation before saving");
+    if (shapes.length === 0 && !cropRect) {
+      message.info("Draw an annotation or select a crop area before saving");
       return;
     }
 
     // Rasterize the annotation layer in the browser (which reliably has
     // fonts) rather than shipping SVG <text> for the server to render —
     // server-side SVG text rendering depends on fonts being installed on
-    // that host, which isn't guaranteed.
-    const overlayImage = canvas.toDataURL("image/png");
+    // that host, which isn't guaranteed. The crop mask itself is UI-only
+    // and isn't part of this overlay.
+    const overlayImage = shapes.length > 0 ? canvas.toDataURL("image/png") : undefined;
 
     try {
-      const result = await annotateMutation.mutateAsync({ imageUrl, overlayImage });
-      message.success("Annotated image saved");
+      const result = await annotateMutation.mutateAsync({
+        imageUrl,
+        overlayImage,
+        cropRect: cropRect ?? undefined,
+      });
+      message.success(cropRect ? "Image saved" : "Annotated image saved");
       onSave(result.annotatedImageUrl);
     } catch {
       // handled by hook's onError
@@ -316,8 +412,14 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
               { label: "Arrow", value: "arrow" },
               { label: "Pen", value: "pen" },
               { label: "Text", value: "text" },
+              { label: "Crop", value: "crop", icon: <ScissorOutlined /> },
             ]}
           />
+          {cropRect && (
+            <Button size="small" icon={<UndoOutlined />} onClick={handleClearCrop}>
+              Reset Crop
+            </Button>
+          )}
           <Space>
             {COLORS.map((c) => (
               <div
@@ -378,6 +480,17 @@ export const ImageAnnotateModal: React.FC<ImageAnnotateModalProps> = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+          />
+          <canvas
+            ref={cropCanvasRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+            }}
           />
           {textDraft && displaySize && naturalSize && (() => {
             const INPUT_WIDTH = 160;
