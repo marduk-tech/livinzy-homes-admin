@@ -5,6 +5,7 @@ import {
   createMicroPocket,
   deleteMicroPocket,
   getAllMicroPockets,
+  getMicroPocketById,
   updateMicroPocket,
 } from "../libs/api/micro-pockets";
 import { queryKeys } from "../libs/constants";
@@ -15,6 +16,14 @@ export function useFetchMicroPockets() {
   return useQuery({
     queryKey: [queryKeys.getAllMicroPockets],
     queryFn: () => getAllMicroPockets(),
+  });
+}
+
+export function useFetchMicroPocketById(id: string) {
+  return useQuery<IMicroPocket, Error>({
+    queryKey: [queryKeys.getMicroPocketById, id],
+    queryFn: () => getMicroPocketById(id),
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -53,6 +62,9 @@ export function useUpdateMicroPocketMutation({
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.getAllMicroPockets],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getMicroPocketById, microPocketId],
       });
     },
   });

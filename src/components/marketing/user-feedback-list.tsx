@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button, Card, Flex, Modal, Spin, Statistic, Table, TableColumnType, Tag, Tooltip, Typography } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import { useFetchFeedbacks } from "../../hooks/marketing-hooks";
 import { useAiQuery } from "../../hooks/ai.hooks";
 import { IFeedback } from "../../types";
+import { convertToCSV, downloadCSV, formatDateForCSV } from "../../libs/utils";
 
 const COL_WIDTH = 200;
 
@@ -115,6 +117,20 @@ export function UserFeedbackList() {
     )
   );
 
+  const handleExportCsv = () => {
+    if (!data || data.length === 0) return;
+    const headers = ["Name", ...allQuestions, "Submitted"];
+    const rows = data.map((r) => [
+      r.content.contact?.name ?? "-",
+      ...allQuestions.map(
+        (q) => r.content.feedback.find((f) => f.question === q)?.answer ?? "-"
+      ),
+      formatDateForCSV(r.createdAt),
+    ]);
+    const today = new Date().toISOString().split("T")[0];
+    downloadCSV(convertToCSV(headers, rows), `user-feedback-export-${today}.csv`);
+  };
+
   const questionColumns: TableColumnType<IFeedback>[] = allQuestions.map(
     (question) => {
       const isRating = /scale|1\s*to\s*10|rate/i.test(question);
@@ -207,7 +223,14 @@ export function UserFeedbackList() {
   return (
     <>
       {data && <FeedbackSummary data={data} />}
-      <Flex justify="flex-end" style={{ marginBottom: 12 }}>
+      <Flex justify="flex-end" gap={8} style={{ marginBottom: 12 }}>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={handleExportCsv}
+          disabled={!data || data.length === 0}
+        >
+          Export CSV
+        </Button>
         <Button
           type="primary"
           onClick={handleSummarize}

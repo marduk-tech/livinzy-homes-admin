@@ -15,7 +15,8 @@ export function useGetAllLvnzyProjects(onlyVerifiedReports?: boolean) {
     queryKey: [queryKeys.lvnzyProjects, onlyVerifiedReports],
     queryFn: () => getAllLvnzyProjects(onlyVerifiedReports),
     refetchOnMount: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    gcTime: 15 * 60 * 1000,
   });
 }
 

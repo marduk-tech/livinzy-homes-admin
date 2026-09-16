@@ -1,5 +1,6 @@
-import { DeleteOutlined } from "@ant-design/icons";
+import { BarChartOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Row, Table, TableColumnType } from "antd";
+import { Link } from "react-router-dom";
 import {
   useDeleteMicroPocketMutation,
   useFetchMicroPockets,
@@ -52,6 +53,14 @@ export function MicroPocketsList() {
       render: (id: string, record) => {
         return (
           <Flex gap={isMobile ? 5 : 15} justify="end">
+            <Link to={`/micro-pockets/${id}`} target="_blank">
+              <Button
+                type="default"
+                shape="default"
+                icon={<BarChartOutlined />}
+              />
+            </Link>
+
             <EditMicroPocket selectedMicroPocket={record} />
 
             <DeletePopconfirm

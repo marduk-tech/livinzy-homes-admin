@@ -11,7 +11,12 @@ import {
 } from "antd";
 import React, { ReactNode, useRef, useState } from "react";
 import { axiosApiInstance } from "../../libs/axios-api-Instance";
-import { PdfPageImage, renderPdfToImages } from "../../libs/pdf-to-images";
+import {
+  PdfDocument,
+  loadPdfDocument,
+  renderPdfPage,
+  renderPdfPreviews,
+} from "../../libs/pdf-to-images";
 
 const MAX_FILE_SIZE_MB = 25;
 
@@ -19,7 +24,14 @@ interface UploadItem {
   blob: Blob;
   name: string;
   caption: string;
-  dataUrl: string;
+}
+
+interface PdfPageItem {
+  pdf: PdfDocument;
+  pageNumber: number;
+  name: string;
+  caption: string;
+  previewDataUrl: string;
   checked: boolean;
 }
 
@@ -52,12 +64,18 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
   onUploadComplete,
   button = { label: "Upload Images", type: "primary" },
 }) => {
-  const [pdfPages, setPdfPages] = useState<UploadItem[]>([]);
+  const [pdfPages, setPdfPages] = useState<PdfPageItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState("");
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pdfDocsRef = useRef<PdfDocument[]>([]);
+
+  const cleanupPdfDocs = () => {
+    pdfDocsRef.current.forEach((pdf) => pdf.loadingTask.destroy());
+    pdfDocsRef.current = [];
+  };
 
   const doUpload = async (items: UploadItem[]) => {
     if (!items.length) return;
@@ -96,28 +114,32 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
           blob: f,
           name: f.name,
           caption: "",
-          dataUrl: "",
-          checked: true,
         })),
       );
     }
 
     if (pdfs.length) {
       setRendering(true);
-      const items: UploadItem[] = [];
+      const items: PdfPageItem[] = [];
       try {
-        for (const pdf of pdfs) {
-          const baseName = pdf.name.replace(/\.pdf$/i, "");
-          const pages: PdfPageImage[] = await renderPdfToImages(pdf, {
+        for (const pdfFile of pdfs) {
+          const baseName = pdfFile.name.replace(/\.pdf$/i, "");
+          const pdf = await loadPdfDocument(pdfFile);
+          pdfDocsRef.current.push(pdf);
+
+          // low-res thumbnails only — full rasterization happens on confirm, for
+          // selected pages only, so unpicked pages never pay the full-scale cost
+          const previews = await renderPdfPreviews(pdf, {
             onProgress: (done, total) =>
-              setRenderProgress(`${pdf.name}: page ${done}/${total}`),
+              setRenderProgress(`${pdfFile.name}: page ${done}/${total}`),
           });
-          pages.forEach((pg) =>
+          previews.forEach((pv) =>
             items.push({
-              blob: pg.blob,
-              name: `${baseName}-p${pg.pageNumber}.jpg`,
-              caption: `${pdf.name} - p${pg.pageNumber}`,
-              dataUrl: pg.dataUrl,
+              pdf,
+              pageNumber: pv.pageNumber,
+              name: `${baseName}-p${pv.pageNumber}.jpg`,
+              caption: `${pdfFile.name} - p${pv.pageNumber}`,
+              previewDataUrl: pv.dataUrl,
               checked: true,
             }),
           );
@@ -127,6 +149,7 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
       } catch (e) {
         message.error("Failed to read PDF");
         console.error(e);
+        cleanupPdfDocs();
       } finally {
         setRendering(false);
         setRenderProgress("");
@@ -144,10 +167,33 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
 
   const selectedCount = pdfPages.filter((p) => p.checked).length;
 
-  const confirmSelection = async () => {
-    await doUpload(pdfPages.filter((p) => p.checked));
+  const closeModal = () => {
+    cleanupPdfDocs();
     setModalOpen(false);
     setPdfPages([]);
+  };
+
+  const confirmSelection = async () => {
+    const selected = pdfPages.filter((p) => p.checked);
+    setUploading(true);
+    try {
+      const rendered = await Promise.all(
+        selected.map((item) => renderPdfPage(item.pdf, item.pageNumber)),
+      );
+      await doUpload(
+        rendered.map((r, i) => ({
+          blob: r.blob,
+          name: selected[i].name,
+          caption: selected[i].caption,
+        })),
+      );
+    } catch (e) {
+      message.error("Failed to render PDF pages");
+      console.error(e);
+    } finally {
+      setUploading(false);
+      closeModal();
+    }
   };
 
   return (
@@ -177,10 +223,7 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
       <Modal
         title="Select pages to upload"
         open={modalOpen}
-        onCancel={() => {
-          setModalOpen(false);
-          setPdfPages([]);
-        }}
+        onCancel={closeModal}
         onOk={confirmSelection}
         okText={`Upload ${selectedCount} page${selectedCount === 1 ? "" : "s"}`}
         okButtonProps={{ disabled: selectedCount === 0, loading: uploading }}
@@ -205,42 +248,45 @@ export const ImagePdfUpload: React.FC<ImagePdfUploadProps> = ({
           wrap="wrap"
           style={{ maxHeight: 500, overflowY: "auto" }}
         >
-          {pdfPages.map((page, idx) => (
-            <Flex
-              key={page.name}
-              vertical
-              align="center"
-              gap={4}
-              style={{
-                border: page.checked
-                  ? "2px solid #1677ff"
-                  : "2px solid transparent",
-                borderRadius: 6,
-                padding: 4,
-                cursor: "pointer",
-              }}
-              onClick={() => toggle(idx)}
-            >
-              <Image
-                src={page.dataUrl}
-                width={140}
-                preview={false}
-                style={{ objectFit: "contain" }}
-              />
-              <Checkbox
-                checked={page.checked}
-                onClick={(e) => e.stopPropagation()}
-                onChange={() => toggle(idx)}
+          <Image.PreviewGroup>
+            {pdfPages.map((page, idx) => (
+              <Flex
+                key={page.name}
+                vertical
+                align="center"
+                gap={4}
+                style={{
+                  border: page.checked
+                    ? "2px solid #1677ff"
+                    : "2px solid transparent",
+                  borderRadius: 6,
+                  padding: 4,
+                  cursor: "pointer",
+                }}
+                onClick={() => toggle(idx)}
               >
-                <Typography.Text
-                  style={{ maxWidth: 130, fontSize: 12 }}
-                  ellipsis={{ tooltip: page.caption }}
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Image
+                    src={page.previewDataUrl}
+                    width={140}
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
+                <Checkbox
+                  checked={page.checked}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggle(idx)}
                 >
-                  {page.caption}
-                </Typography.Text>
-              </Checkbox>
-            </Flex>
-          ))}
+                  <Typography.Text
+                    style={{ maxWidth: 130, fontSize: 12 }}
+                    ellipsis={{ tooltip: page.caption }}
+                  >
+                    {page.caption}
+                  </Typography.Text>
+                </Checkbox>
+              </Flex>
+            ))}
+          </Image.PreviewGroup>
         </Flex>
       </Modal>
     </>

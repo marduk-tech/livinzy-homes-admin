@@ -1,65 +1,18 @@
 import { Button, Flex } from "antd";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EditScoreDialog } from "../../components/brick360/edit-score-dialog";
 import { Loader } from "../../components/common/loader";
+import {
+  containerStyle,
+  HtmlList,
+  sectionTitleStyle,
+} from "../../components/common/score-html-list";
 import {
   useFetchLvnzyProjectById,
   useUpdateLvnzyProject,
 } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
-
-const containerStyle: React.CSSProperties = {
-  backgroundColor: "#f8f9fa",
-  padding: "1.5rem",
-  borderRadius: "8px",
-  marginBottom: "2rem",
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  fontSize: "1.5rem",
-  fontWeight: "bold",
-  marginBottom: "1rem",
-  textTransform: "capitalize",
-};
-
-const subsectionStyle: React.CSSProperties = {
-  marginBottom: "1.25rem",
-};
-
-const ratingStyle: React.CSSProperties = {
-  fontStyle: "italic",
-  color: "#555",
-};
-
-const HtmlList = ({
-  title,
-  rating,
-  items,
-}: {
-  title: string;
-  rating?: number;
-  items: string[];
-}) => (
-  <div style={subsectionStyle}>
-    <h4 style={{ marginBottom: 8 }}>{title}</h4>
-    <Flex
-      vertical
-      style={{ backgroundColor: "#eee", padding: 4, borderRadius: 8 }}
-    >
-      {rating && <p style={ratingStyle}>Rating: {rating}/100</p>}
-      <Flex vertical className="reasoning">
-        {items?.map((html, idx) => (
-          <div
-            key={idx}
-            dangerouslySetInnerHTML={{ __html: html }}
-            style={{ marginBottom: "0.75rem" }}
-          />
-        ))}
-      </Flex>
-    </Flex>
-  </div>
-);
 
 export function Brick360Full() {
   const { brick360ProjectId } = useParams();

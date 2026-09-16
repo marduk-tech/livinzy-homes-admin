@@ -17,6 +17,8 @@ import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
+import { MicroPocketScore } from "../pages/micro-pockets/micro-pocket-score";
+import { MicroPocketsListPage } from "../pages/micro-pockets/micro-pockets-list-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -51,6 +53,11 @@ export const Router = () => {
         <Route
           path="/brick360Data/:brick360ProjectId?"
           element={<Brick360Data />}
+        ></Route>
+        <Route path="/micro-pockets" element={<MicroPocketsListPage />}></Route>
+        <Route
+          path="/micro-pockets/:microPocketId"
+          element={<MicroPocketScore />}
         ></Route>
         <Route path="/ask" element={<AskPage />} />
 

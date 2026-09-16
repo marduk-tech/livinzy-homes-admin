@@ -7,6 +7,8 @@ export interface IMicroPocket {
     lng: number;
   };
   description: string;
+  score?: any;
+  scoredAt?: string;
   createdAt: string;
   updatedAt: string;
 }
