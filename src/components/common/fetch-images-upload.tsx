@@ -208,7 +208,7 @@ export const FetchImagesUpload: React.FC<FetchImagesUploadProps> = ({
                         width={130}
                         height={100}
                         style={{ objectFit: "cover" }}
-t                      />
+                      />
                     </div>
                     <Checkbox
                       checked={img.checked}
