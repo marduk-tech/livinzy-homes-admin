@@ -78,6 +78,7 @@ import {
 import DynamicReactIcon from "../../components/common/dynamic-react-icon";
 import { FileUpload } from "../../components/common/img-upload";
 import { ImagePdfUpload } from "../../components/common/image-pdf-upload";
+import { FetchImagesUpload } from "../../components/common/fetch-images-upload";
 import { Loader } from "../../components/common/loader";
 import { DocumentsList } from "../../components/media-tabs/documents-list";
 import { ReraDocumentsModal } from "../../components/rera-projects/rera-documents-modal";
@@ -93,8 +94,18 @@ const { useBreakpoint } = Grid;
 const isNonFloorplanImage = (item?: IMedia) =>
   item?.type === "image" && !item.image?.tags?.includes("floorplan");
 
-const DraggableRow = ({ children, ...props }: React.HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: string }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+const DraggableRow = ({
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: string }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: props["data-row-key"] ?? "",
   });
   return (
@@ -105,7 +116,9 @@ const DraggableRow = ({ children, ...props }: React.HTMLAttributes<HTMLTableRowE
         ...props.style,
         transform: CSS.Transform.toString(transform),
         transition,
-        ...(isDragging ? { position: "relative", zIndex: 9999, background: "#fafafa" } : {}),
+        ...(isDragging
+          ? { position: "relative", zIndex: 9999, background: "#fafafa" }
+          : {}),
       }}
       {...attributes}
     >
@@ -119,7 +132,7 @@ const DraggableRow = ({ children, ...props }: React.HTMLAttributes<HTMLTableRowE
                 />
               ),
             })
-          : child
+          : child,
       )}
     </tr>
   );
@@ -140,8 +153,22 @@ const RenderFields: React.FC<{
   onFloorplanUpload?: (urls: string[], originalNames: string[]) => void;
   disabledFields?: Record<string, boolean>;
   hiddenFields?: Record<string, boolean>;
-  onAutoSave?: (category: string, dbField: string | string[], newValue: any) => void;
-}> = ({ fields, category, isMobile, fieldRules, form, onFloorplanUpload, disabledFields, hiddenFields, onAutoSave }) => (
+  onAutoSave?: (
+    category: string,
+    dbField: string | string[],
+    newValue: any,
+  ) => void;
+}> = ({
+  fields,
+  category,
+  isMobile,
+  fieldRules,
+  form,
+  onFloorplanUpload,
+  disabledFields,
+  hiddenFields,
+  onAutoSave,
+}) => (
   <Row gutter={16}>
     {fields.map(
       ({
@@ -302,9 +329,7 @@ const RenderFields: React.FC<{
                 ) : type === "date_month_year" ? (
                   <DatePicker
                     style={{ width: "100%" }}
-                    disabled={
-                      !!(disabledFields?.[fieldKey])
-                    }
+                    disabled={!!disabledFields?.[fieldKey]}
                   />
                 ) : type === "external_websites" ? (
                   <Typography.Text type="secondary">
@@ -470,8 +495,13 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     reraProjectId?: string;
     projectName?: string;
   } | null>(null);
-  const [imageViewMode, setImageViewMode] = useState<"default" | "table">("default");
-  const [floorplanViewMode, setFloorplanViewMode] = useState<"default" | "table">("default");
+  const [imageViewMode, setImageViewMode] = useState<"default" | "table">(
+    "default",
+  );
+  const [floorplanViewMode, setFloorplanViewMode] = useState<
+    "default" | "table"
+  >("default");
+  const [showNaTaggedImages, setShowNaTaggedImages] = useState(false);
 
   const [selectedFloorplanUrls, setSelectedFloorplanUrls] = useState<
     Set<string>
@@ -487,14 +517,16 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
   const removeWatermarkMutation = useRemoveWatermark();
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 1 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 1 } }),
+  );
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!active || !over || active.id === over.id) return;
     const currentMedia: IMedia[] = form.getFieldValue("media") || [];
     const imageIndices = currentMedia
       .map((item, i) => ({ item, i }))
-      .filter(({ item }) => isNonFloorplanImage(item))
+      .filter(({ item }) => matchesImageTagFilters(item))
       .map(({ i }) => i);
     const imageItems = imageIndices.map((i) => currentMedia[i]);
     const oldIdx = imageIndices.indexOf(Number(active.id));
@@ -527,7 +559,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     if (val && typeof val === "object") {
       const { _id, __v, ...rest } = val;
       return Object.fromEntries(
-        Object.keys(rest).sort().map((k) => [k, stripIds(rest[k])])
+        Object.keys(rest)
+          .sort()
+          .map((k) => [k, stripIds(rest[k])]),
       );
     }
     return val;
@@ -549,7 +583,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
             const newVal = values.info?.[parent]?.[child];
             const oldVal = existingInfo?.[parent]?.[child];
             if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-              changedInfo[parent] = { ...(changedInfo[parent] || {}), [child]: newVal };
+              changedInfo[parent] = {
+                ...(changedInfo[parent] || {}),
+                [child]: newVal,
+              };
             }
           } else {
             const newVal = values.info?.[dbField];
@@ -569,12 +606,17 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
         // Only include media if it changed
         if (values.media) {
-          const updatedMedia = values.media.map((item: IMedia, index: number) => ({
-            ...item,
-            isPreview: index === previewImageIndex,
-          }));
+          const updatedMedia = values.media.map(
+            (item: IMedia, index: number) => ({
+              ...item,
+              isPreview: index === previewImageIndex,
+            }),
+          );
           const existingMedia = stripIds(projectData?.media || []);
-          if (JSON.stringify(stripIds(updatedMedia)) !== JSON.stringify(existingMedia)) {
+          if (
+            JSON.stringify(stripIds(updatedMedia)) !==
+            JSON.stringify(existingMedia)
+          ) {
             payload.media = updatedMedia;
           }
         }
@@ -592,11 +634,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           values.info.homeType = [values.info.homeType];
         }
 
-        await createProject
-          .mutateAsync({ ...values, media })
-          .then((data) => {
-            navigate(`/projects/${data._id}/edit`);
-          });
+        await createProject.mutateAsync({ ...values, media }).then((data) => {
+          navigate(`/projects/${data._id}/edit`);
+        });
       }
     } catch (error) {
       notification.error({
@@ -713,6 +753,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     }
   };
 
+  const matchesImageTagFilters = (item?: IMedia) =>
+    isNonFloorplanImage(item) &&
+    (showNaTaggedImages || !(item?.image?.tags || []).includes("na"));
+
   const handleToggleSelect = (index: number) => {
     setSelectedMediaIndices((prev) => {
       const next = new Set(prev);
@@ -739,7 +783,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     setBulkWatermarkConfirmVisible(false);
     const currentMedia = form.getFieldValue("media") || [];
     const targets = Array.from(selectedMediaIndices)
-      .map((i) => ({ index: i, url: currentMedia[i]?.image?.url as string | undefined }))
+      .map((i) => ({
+        index: i,
+        url: currentMedia[i]?.image?.url as string | undefined,
+      }))
       .filter((t): t is { index: number; url: string } => !!t.url);
 
     if (targets.length === 0) return;
@@ -861,8 +908,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     if (skippedCount > 0) {
       notification.info({
         message: `Skipped ${skippedCount} image${skippedCount > 1 ? "s" : ""}`,
-        description:
-          "Images used in a unit configuration cannot be deleted.",
+        description: "Images used in a unit configuration cannot be deleted.",
       });
     }
   };
@@ -1230,7 +1276,11 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     // longer) tagged "floorplan".
     const mediaIndexByUrl = new Map<string, number>();
     (project?.media || []).forEach((item: IMedia, idx: number) => {
-      if (item?.type === "image" && item.image?.url && !mediaIndexByUrl.has(item.image.url)) {
+      if (
+        item?.type === "image" &&
+        item.image?.url &&
+        !mediaIndexByUrl.has(item.image.url)
+      ) {
         mediaIndexByUrl.set(item.image.url, idx);
       }
     });
@@ -1330,7 +1380,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       (acc: any, key: string) => ({ [key]: acc }),
                       newValue,
                     );
-                    updateProject.mutate({ projectData: { [category]: infoUpdate } });
+                    updateProject.mutate({
+                      projectData: { [category]: infoUpdate },
+                    });
                   }}
                 />
               </TabPane>
@@ -1346,15 +1398,31 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
           >
             <Tabs defaultActiveKey="images">
               <TabPane tab={"Images"} key={"images"}>
-                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-                  <Space align="center">
-                    <AppstoreOutlined />
-                    <Switch
-                      checked={imageViewMode === "table"}
-                      onChange={(checked) => setImageViewMode(checked ? "table" : "default")}
-                    />
-                    <TableOutlined />
-                  </Space>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{ marginBottom: 8 }}
+                >
+                  <Flex align="center" gap={16}>
+                     <Flex gap={8} style={{ padding: 4, backgroundColor:COLORS.bgColor, borderRadius: 8}}>
+                      <AppstoreOutlined />
+                      <Switch
+                        checked={imageViewMode === "table"}
+                        onChange={(checked) =>
+                          setImageViewMode(checked ? "table" : "default")
+                        }
+                      />
+                      <TableOutlined />
+                    </Flex>
+                    <Flex align="center" gap={8} style={{ padding: 4, backgroundColor:COLORS.bgColor, borderRadius: 8}}>
+                      <Switch
+                        checked={showNaTaggedImages}
+                        onChange={setShowNaTaggedImages}
+                      />
+                      <Typography.Text>Show "NA" tags</Typography.Text>
+                    </Flex>
+                   
+                  </Flex>
                   <Space>
                     {selectedMediaIndices.size > 0 && (
                       <>
@@ -1393,17 +1461,37 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                         type: "primary",
                       }}
                     />
+                    <FetchImagesUpload
+                      onUploadComplete={(
+                        urls: string[],
+                        originalNames: string[],
+                        captions: string[],
+                      ) =>
+                        onUploadComplete(
+                          urls,
+                          originalNames,
+                          undefined,
+                          "image",
+                          captions,
+                        )
+                      }
+                      button={{ label: "Fetch Images" }}
+                    />
                   </Space>
                 </Flex>
 
                 {imageViewMode === "default" ? (
                   <Flex
                     gap={48}
-                    style={{ width: "100%", maxHeight: 550, overflowY: "scroll" }}
+                    style={{
+                      width: "100%",
+                      maxHeight: 550,
+                      overflowY: "scroll",
+                    }}
                     wrap="wrap"
                   >
                     {project?.media?.map((item: IMedia, index) => {
-                      if (isNonFloorplanImage(item)) {
+                      if (matchesImageTagFilters(item)) {
                         return (
                           <Flex
                             key={item._id || index}
@@ -1570,189 +1658,261 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     modifiers={[restrictToVerticalAxis]}
                     onDragEnd={handleDragEnd}
                   >
-                  <SortableContext
-                    items={(project?.media || [])
-                      .map((item: IMedia, i: number) => ({ item, i }))
-                      .filter(({ item }: { item: IMedia; i: number }) => isNonFloorplanImage(item))
-                      .map(({ i }: { item: IMedia; i: number }) => String(i))}
-                    strategy={verticalListSortingStrategy}
-                  >
-                  <Table
-                    size="small"
-                    pagination={false}
-                    scroll={{ y: 500 }}
-                    dataSource={project?.media
-                      ?.map((item: IMedia, index: number) => ({ item, index }))
-                      .filter(({ item }) => isNonFloorplanImage(item))}
-                    rowKey={({ index }) => String(index)}
-                    components={{ body: { row: DraggableRow } }}
-                    columns={[
-                      {
-                        key: "sort",
-                        width: 40,
-                        render: () => null,
-                      },
-                      {
-                        title: () => {
-                          const imageIndices = (project?.media || [])
-                            .map((item: IMedia, i: number) => ({ item, i }))
-                            .filter(({ item }: { item: IMedia; i: number }) => isNonFloorplanImage(item))
-                            .map(({ i }: { item: IMedia; i: number }) => i);
-                          const allSelected =
-                            imageIndices.length > 0 &&
-                            imageIndices.every((i: number) => selectedMediaIndices.has(i));
-                          const someSelected =
-                            !allSelected && imageIndices.some((i: number) => selectedMediaIndices.has(i));
-                          return (
-                            <Checkbox
-                              checked={allSelected}
-                              indeterminate={someSelected}
-                              onChange={() => {
-                                if (allSelected) {
-                                  setSelectedMediaIndices(new Set());
-                                } else {
-                                  setSelectedMediaIndices(new Set(imageIndices));
+                    <SortableContext
+                      items={(project?.media || [])
+                        .map((item: IMedia, i: number) => ({ item, i }))
+                        .filter(({ item }: { item: IMedia; i: number }) =>
+                          matchesImageTagFilters(item),
+                        )
+                        .map(({ i }: { item: IMedia; i: number }) => String(i))}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <Table
+                        size="small"
+                        pagination={false}
+                        scroll={{ y: 500 }}
+                        dataSource={project?.media
+                          ?.map((item: IMedia, index: number) => ({
+                            item,
+                            index,
+                          }))
+                          .filter(({ item }) => matchesImageTagFilters(item))}
+                        rowKey={({ index }) => String(index)}
+                        components={{ body: { row: DraggableRow } }}
+                        columns={[
+                          {
+                            key: "sort",
+                            width: 40,
+                            render: () => null,
+                          },
+                          {
+                            title: () => {
+                              const imageIndices = (project?.media || [])
+                                .map((item: IMedia, i: number) => ({ item, i }))
+                                .filter(
+                                  ({ item }: { item: IMedia; i: number }) =>
+                                    matchesImageTagFilters(item),
+                                )
+                                .map(({ i }: { item: IMedia; i: number }) => i);
+                              const allSelected =
+                                imageIndices.length > 0 &&
+                                imageIndices.every((i: number) =>
+                                  selectedMediaIndices.has(i),
+                                );
+                              const someSelected =
+                                !allSelected &&
+                                imageIndices.some((i: number) =>
+                                  selectedMediaIndices.has(i),
+                                );
+                              return (
+                                <Checkbox
+                                  checked={allSelected}
+                                  indeterminate={someSelected}
+                                  onChange={() => {
+                                    if (allSelected) {
+                                      setSelectedMediaIndices(new Set());
+                                    } else {
+                                      setSelectedMediaIndices(
+                                        new Set(imageIndices),
+                                      );
+                                    }
+                                  }}
+                                />
+                              );
+                            },
+                            width: 40,
+                            render: ({
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <Checkbox
+                                checked={selectedMediaIndices.has(index)}
+                                onChange={() => handleToggleSelect(index)}
+                              />
+                            ),
+                          },
+                          {
+                            title: "Image",
+                            width: 100,
+                            render: ({
+                              item,
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <>
+                                <Form.Item
+                                  name={["media", index, "type"]}
+                                  hidden
+                                ></Form.Item>
+                                <Form.Item
+                                  name={["media", index, "hasWatermark"]}
+                                  hidden
+                                ></Form.Item>
+                                <Form.Item
+                                  name={["media", index, "image", "url"]}
+                                  hidden
+                                ></Form.Item>
+                                <Image
+                                  width={80}
+                                  src={item.image?.url}
+                                  alt={item._id}
+                                  style={{
+                                    borderRadius: 6,
+                                    objectFit: "cover",
+                                    aspectRatio: "1 / 1",
+                                    outline: item.hasWatermark
+                                      ? `2px solid ${COLORS.redIdentifier}`
+                                      : undefined,
+                                  }}
+                                />
+                              </>
+                            ),
+                          },
+                          {
+                            title: "Tags",
+                            render: ({
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <Form.Item
+                                name={["media", index, "image", "tags"]}
+                                style={{ margin: 0 }}
+                              >
+                                <Select
+                                  style={{ width: 180 }}
+                                  placeholder="Enter tags"
+                                  options={MediaTags.map((tag) => ({
+                                    value: tag,
+                                    label: tag,
+                                  }))}
+                                />
+                              </Form.Item>
+                            ),
+                          },
+                          {
+                            title: "Caption",
+                            render: ({
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <Form.Item
+                                name={["media", index, "image", "caption"]}
+                                style={{ margin: 0 }}
+                              >
+                                <Input
+                                  placeholder="Enter caption"
+                                  style={{ width: 180 }}
+                                />
+                              </Form.Item>
+                            ),
+                          },
+                          {
+                            title: "Preview",
+                            width: 90,
+                            render: ({
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <Form.Item
+                                name={["media", index, "isPreview"]}
+                                style={{ margin: 0 }}
+                              >
+                                <Checkbox
+                                  checked={index === previewImageIndex}
+                                  onChange={(e) =>
+                                    handlePreviewImageChange(
+                                      index,
+                                      e.target.checked,
+                                    )
+                                  }
+                                >
+                                  Preview
+                                </Checkbox>
+                              </Form.Item>
+                            ),
+                          },
+                          {
+                            title: "Watermark",
+                            width: 110,
+                            render: ({
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <FileUpload
+                                onUploadComplete={(
+                                  urls: string[],
+                                  originalNames: string[],
+                                ) =>
+                                  onUploadComplete(
+                                    urls,
+                                    originalNames,
+                                    index,
+                                    "image",
+                                  )
                                 }
-                              }}
-                            />
-                          );
-                        },
-                        width: 40,
-                        render: ({ index }: { item: IMedia; index: number }) => (
-                          <Checkbox
-                            checked={selectedMediaIndices.has(index)}
-                            onChange={() => handleToggleSelect(index)}
-                          />
-                        ),
-                      },
-                      {
-                        title: "Image",
-                        width: 100,
-                        render: ({ item, index }: { item: IMedia; index: number }) => (
-                          <>
-                            <Form.Item
-                              name={["media", index, "type"]}
-                              hidden
-                            ></Form.Item>
-                            <Form.Item
-                              name={["media", index, "hasWatermark"]}
-                              hidden
-                            ></Form.Item>
-                            <Form.Item
-                              name={["media", index, "image", "url"]}
-                              hidden
-                            ></Form.Item>
-                            <Image
-                              width={80}
-                              src={item.image?.url}
-                              alt={item._id}
-                              style={{
-                                borderRadius: 6,
-                                objectFit: "cover",
-                                aspectRatio: "1 / 1",
-                                outline: item.hasWatermark
-                                  ? `2px solid ${COLORS.redIdentifier}`
-                                  : undefined,
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                      {
-                        title: "Tags",
-                        render: ({ index }: { item: IMedia; index: number }) => (
-                          <Form.Item
-                            name={["media", index, "image", "tags"]}
-                            style={{ margin: 0 }}
-                          >
-                            <Select
-                              style={{ width: 180 }}
-                              placeholder="Enter tags"
-                              options={MediaTags.map((tag) => ({
-                                value: tag,
-                                label: tag,
-                              }))}
-                            />
-                          </Form.Item>
-                        ),
-                      },
-                      {
-                        title: "Caption",
-                        render: ({ index }: { item: IMedia; index: number }) => (
-                          <Form.Item
-                            name={["media", index, "image", "caption"]}
-                            style={{ margin: 0 }}
-                          >
-                            <Input placeholder="Enter caption" style={{ width: 180 }} />
-                          </Form.Item>
-                        ),
-                      },
-                      {
-                        title: "Preview",
-                        width: 90,
-                        render: ({ index }: { item: IMedia; index: number }) => (
-                          <Form.Item
-                            name={["media", index, "isPreview"]}
-                            style={{ margin: 0 }}
-                          >
-                            <Checkbox
-                              checked={index === previewImageIndex}
-                              onChange={(e) =>
-                                handlePreviewImageChange(index, e.target.checked)
-                              }
-                            >
-                              Preview
-                            </Checkbox>
-                          </Form.Item>
-                        ),
-                      },
-                      {
-                        title: "Watermark",
-                        width: 110,
-                        render: ({ index }: { item: IMedia; index: number }) => (
-                          <FileUpload
-                            onUploadComplete={(urls: string[], originalNames: string[]) =>
-                              onUploadComplete(urls, originalNames, index, "image")
-                            }
-                            fileType="image"
-                            isMultiple={false}
-                            button={{ label: "" }}
-                          />
-                        ),
-                      },
-                      {
-                        title: "Actions",
-                        width: 100,
-                        render: ({ item, index }: { item: IMedia; index: number }) => (
-                          <Space>
-                            <Button
-                              icon={<ScissorOutlined />}
-                              onClick={() =>
-                                handleRemoveWatermark(item.image?.url || "", index)
-                              }
-                              loading={
-                                removeWatermarkMutation.isPending &&
-                                watermarkModal.mediaIndex === index
-                              }
-                              title="Remove Watermark"
-                            />
-                            <Button
-                              icon={<EditOutlined />}
-                              onClick={() =>
-                                handleOpenAnnotate(item.image?.url || "", index)
-                              }
-                              title="Annotate"
-                            />
-                            <Button
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDeleteMedia(index)}
-                            />
-                          </Space>
-                        ),
-                      },
-                    ]}
-                  />
-                  </SortableContext>
+                                fileType="image"
+                                isMultiple={false}
+                                button={{ label: "" }}
+                              />
+                            ),
+                          },
+                          {
+                            title: "Actions",
+                            width: 100,
+                            render: ({
+                              item,
+                              index,
+                            }: {
+                              item: IMedia;
+                              index: number;
+                            }) => (
+                              <Space>
+                                <Button
+                                  icon={<ScissorOutlined />}
+                                  onClick={() =>
+                                    handleRemoveWatermark(
+                                      item.image?.url || "",
+                                      index,
+                                    )
+                                  }
+                                  loading={
+                                    removeWatermarkMutation.isPending &&
+                                    watermarkModal.mediaIndex === index
+                                  }
+                                  title="Remove Watermark"
+                                />
+                                <Button
+                                  icon={<EditOutlined />}
+                                  onClick={() =>
+                                    handleOpenAnnotate(
+                                      item.image?.url || "",
+                                      index,
+                                    )
+                                  }
+                                  title="Annotate"
+                                />
+                                <Button
+                                  icon={<DeleteOutlined />}
+                                  onClick={() => handleDeleteMedia(index)}
+                                />
+                              </Space>
+                            ),
+                          },
+                        ]}
+                      />
+                    </SortableContext>
                   </DndContext>
                 )}
 
@@ -1835,12 +1995,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
               </TabPane>
 
               <TabPane tab={"Floorplans"} key={"floorplans"}>
-                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{ marginBottom: 16 }}
+                >
                   <Space align="center">
                     <AppstoreOutlined />
                     <Switch
                       checked={floorplanViewMode === "table"}
-                      onChange={(checked) => setFloorplanViewMode(checked ? "table" : "default")}
+                      onChange={(checked) =>
+                        setFloorplanViewMode(checked ? "table" : "default")
+                      }
                     />
                     <TableOutlined />
                   </Space>
@@ -1849,7 +2015,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                       <Button
                         icon={<ScissorOutlined />}
                         loading={floorplanBulkWatermarkLoading}
-                        onClick={() => setFloorplanBulkWatermarkConfirmVisible(true)}
+                        onClick={() =>
+                          setFloorplanBulkWatermarkConfirmVisible(true)
+                        }
                       >
                         Remove Watermark ({selectedFloorplanUrls.size})
                       </Button>
@@ -1866,8 +2034,8 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
 
                 {floorplanItems.length === 0 ? (
                   <Typography.Text type="secondary">
-                    No floorplan images found. Tag images as "floorplan" in
-                    the Images tab or add them via unit configurations.
+                    No floorplan images found. Tag images as "floorplan" in the
+                    Images tab or add them via unit configurations.
                   </Typography.Text>
                 ) : floorplanViewMode === "default" ? (
                   <Image.PreviewGroup>
@@ -1935,7 +2103,12 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                             </div>
                             {item.mediaIndex !== undefined && (
                               <Form.Item
-                                name={["media", item.mediaIndex, "image", "tags"]}
+                                name={[
+                                  "media",
+                                  item.mediaIndex,
+                                  "image",
+                                  "tags",
+                                ]}
                                 style={{ width: "100%", margin: 0 }}
                               >
                                 <Select
@@ -2058,8 +2231,7 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                           ) : (
                             "—"
                           ),
-                      }
-                      
+                      },
                     ]}
                   />
                 )}
@@ -2119,7 +2291,9 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                 <Modal
                   title={`Remove watermark from ${selectedFloorplanUrls.size} image(s)?`}
                   open={floorplanBulkWatermarkConfirmVisible}
-                  onCancel={() => setFloorplanBulkWatermarkConfirmVisible(false)}
+                  onCancel={() =>
+                    setFloorplanBulkWatermarkConfirmVisible(false)
+                  }
                   onOk={handleFloorplanBulkRemoveWatermark}
                   okText="Remove"
                   confirmLoading={floorplanBulkWatermarkLoading}
@@ -2196,7 +2370,10 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
                     reraNumber?: string;
                     reraProjectId?: string;
                     projectName?: string;
-                    extensions?: { startDate: string; completionDate: string }[];
+                    extensions?: {
+                      startDate: string;
+                      completionDate: string;
+                    }[];
                   }[] = [
                     {
                       key: `r-${reraNumber}`,
