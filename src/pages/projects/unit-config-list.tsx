@@ -506,7 +506,6 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                   .includes(inputValue.toLowerCase())
               }
               placeholder="e.g., 2 BHK, 3 BHK"
-              disabled={isOtherFieldsLocked}
             />
           </Form.Item>
 
