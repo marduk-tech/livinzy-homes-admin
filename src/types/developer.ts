@@ -6,6 +6,11 @@ interface DeveloperProject {
   _id?: string;
 }
 
+export interface DeveloperFile {
+  name: string;
+  url: string;
+}
+
 export interface DeveloperScoreCriterion {
   rating?: number;
   reasoning?: string[];
@@ -74,6 +79,7 @@ export interface Developer {
   info?: DeveloperInfo;
   developerProjects: DeveloperProject[];
   externalWebsites?: string[];
+  files?: DeveloperFile[];
   brkfiScore?: DeveloperBrkfiScore;
   brkfiStatus?: DeveloperBrkfiStatus;
   createdAt: string;
