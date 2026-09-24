@@ -1,4 +1,5 @@
-import { Button, Flex, Popconfirm } from "antd";
+import { CheckCircleFilled } from "@ant-design/icons";
+import { Button, Flex, Popconfirm, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EditScoreDialog } from "../../components/brick360/edit-score-dialog";
@@ -45,11 +46,35 @@ export function Brick360Full() {
     }
   };
 
+  const isVerified =
+    brick360ProjectData?.originalProjectId?.info?.status ===
+    "report-verified";
+
   const handleVerify = () => {
     if (brick360ProjectData?.originalProjectId?._id) {
-      updateOriginalProjectMutation.mutate({
-        projectData: { info: { status: "report-verified" } } as any,
-      });
+      updateOriginalProjectMutation.mutate(
+        {
+          projectData: { info: { status: "report-verified" } } as any,
+        },
+        {
+          onSuccess: () => {
+            setBrick360ProjectData((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    originalProjectId: {
+                      ...prev.originalProjectId,
+                      info: {
+                        ...prev.originalProjectId?.info,
+                        status: "report-verified",
+                      },
+                    },
+                  }
+                : prev,
+            );
+          },
+        },
+      );
     }
   };
 
@@ -104,17 +129,25 @@ export function Brick360Full() {
         <div style={{ width: "75%" }}>
           <Flex justify="space-between" align="center">
             <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
-            <Flex gap={8}>
-              <Popconfirm
-                title="Mark report as verified"
-                description="Are you sure you want to mark this project's report as verified?"
-                onConfirm={handleVerify}
-                okButtonProps={{ loading: updateOriginalProjectMutation.isPending }}
-              >
-                <Button disabled={!brick360ProjectData?.originalProjectId?._id}>
-                  Verified
-                </Button>
-              </Popconfirm>
+            <Flex gap={8} align="center">
+              {isVerified ? (
+                <Typography.Text type="success">
+                  <CheckCircleFilled /> Verified
+                </Typography.Text>
+              ) : (
+                <Popconfirm
+                  title="Mark report as verified"
+                  description="Are you sure you want to mark this project's report as verified?"
+                  onConfirm={handleVerify}
+                  okButtonProps={{
+                    loading: updateOriginalProjectMutation.isPending,
+                  }}
+                >
+                  <Button disabled={!brick360ProjectData?.originalProjectId?._id}>
+                    Verified
+                  </Button>
+                </Popconfirm>
+              )}
               <Button
                 type="primary"
                 onClick={handleSave}
