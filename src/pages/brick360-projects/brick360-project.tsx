@@ -1,4 +1,4 @@
-import { Button, Flex } from "antd";
+import { Button, Flex, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EditScoreDialog } from "../../components/brick360/edit-score-dialog";
@@ -12,6 +12,7 @@ import {
   useFetchLvnzyProjectById,
   useUpdateLvnzyProject,
 } from "../../hooks/lvnzyprojects-hooks";
+import { useUpdateProjectMutation } from "../../hooks/project-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 
 export function Brick360Full() {
@@ -25,6 +26,10 @@ export function Brick360Full() {
 
   const updateProjectMutation = useUpdateLvnzyProject();
 
+  const updateOriginalProjectMutation = useUpdateProjectMutation({
+    projectId: brick360ProjectData?.originalProjectId?._id || "",
+  });
+
   useEffect(() => {
     if (brick360Project) {
       setBrick360ProjectData(brick360Project);
@@ -36,6 +41,14 @@ export function Brick360Full() {
       updateProjectMutation.mutate({
         id: brick360ProjectId!,
         payload: brick360ProjectData,
+      });
+    }
+  };
+
+  const handleVerify = () => {
+    if (brick360ProjectData?.originalProjectId?._id) {
+      updateOriginalProjectMutation.mutate({
+        projectData: { info: { status: "report-verified" } },
       });
     }
   };
@@ -91,13 +104,25 @@ export function Brick360Full() {
         <div style={{ width: "75%" }}>
           <Flex justify="space-between" align="center">
             <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
-            <Button
-              type="primary"
-              onClick={handleSave}
-              loading={updateProjectMutation.isPending}
-            >
-              Save
-            </Button>
+            <Flex gap={8}>
+              <Popconfirm
+                title="Mark report as verified"
+                description="Are you sure you want to mark this project's report as verified?"
+                onConfirm={handleVerify}
+                okButtonProps={{ loading: updateOriginalProjectMutation.isPending }}
+              >
+                <Button disabled={!brick360ProjectData?.originalProjectId?._id}>
+                  Verified
+                </Button>
+              </Popconfirm>
+              <Button
+                type="primary"
+                onClick={handleSave}
+                loading={updateProjectMutation.isPending}
+              >
+                Save
+              </Button>
+            </Flex>
           </Flex>
           <h3 style={{ margin: 0, marginBottom: 24 }}>
             {brick360Project.meta.oneLiner}
