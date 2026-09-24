@@ -48,7 +48,7 @@ export function Brick360Full() {
   const handleVerify = () => {
     if (brick360ProjectData?.originalProjectId?._id) {
       updateOriginalProjectMutation.mutate({
-        projectData: { info: { status: "report-verified" } },
+        projectData: { info: { status: "report-verified" } } as any,
       });
     }
   };
