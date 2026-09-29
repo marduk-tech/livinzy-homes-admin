@@ -475,7 +475,6 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
               style={{ width: "100%" }}
               placeholder="e.g., 900"
               min={0}
-              disabled={isOtherFieldsLocked}
             />
           </Form.Item>
            <Form.Item
