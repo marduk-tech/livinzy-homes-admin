@@ -47,6 +47,7 @@ export function UserDropDown() {
     { to: "/users", label: "Users", icon: undefined },
     { to: "/traces", label: "Traces", icon: undefined },
     { to: "/manage-scripts", label: "Manage Scripts", icon: undefined },
+    { to: "/portal-gateway", label: "Portal Gateway", icon: undefined },
   ];
 
   return (

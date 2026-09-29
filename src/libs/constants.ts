@@ -40,6 +40,12 @@ export const queryKeys = {
   getScriptJob: "getScriptJob",
   getCronSchedules: "getCronSchedules",
   getReraProjectNames: "getReraProjectNames",
+
+  portalStatus: "portalStatus",
+  portalProxies: "portalProxies",
+  portalProfiles: "portalProfiles",
+  portalScrapes: "portalScrapes",
+  portalConfig: "portalConfig",
 };
 export const LivIndexDrivers = [
   "road",

@@ -4,6 +4,7 @@ import {
   Button,
   Drawer,
   Flex,
+  message,
   Popconfirm,
   Segmented,
   Table,
@@ -18,7 +19,7 @@ import {
   useScriptJobs,
   useStopJob,
 } from "../../hooks/manage-scripts-hooks";
-import { Job, JobSummary, jobLogsUrl } from "../../libs/api/manage-scripts";
+import { fetchJobLogs, Job, JobSummary } from "../../libs/api/manage-scripts";
 import { JobLogViewer } from "./job-log-viewer";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -64,6 +65,31 @@ function duration(job: JobSummary): string {
 }
 
 function LogNotice({ job }: { job: Job }) {
+  const [downloading, setDownloading] = useState(false);
+
+  // A plain link can't send x-api-key, so pull the log and hand it to the
+  // browser as a file instead.
+  const download = async () => {
+    setDownloading(true);
+    try {
+      const text = await fetchJobLogs(job.id);
+      const url = URL.createObjectURL(
+        new Blob([text], { type: "text/plain" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${job.id}.log`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      message.error(
+        error.response?.data?.error || "Could not fetch the full log",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (job.logsExpired) {
     return (
       <Alert
@@ -87,8 +113,11 @@ function LogNotice({ job }: { job: Job }) {
         Showing the last {(job.logs?.length ?? 0).toLocaleString()} of{" "}
         {(job.logLines ?? 0).toLocaleString()} lines.
       </Typography.Text>
-      <Typography.Link href={jobLogsUrl(job.id)} target="_blank">
-        Open the full log
+      <Typography.Link
+        disabled={downloading}
+        onClick={() => void download()}
+      >
+        {downloading ? "Fetching…" : "Download the full log"}
       </Typography.Link>
     </Flex>
   );

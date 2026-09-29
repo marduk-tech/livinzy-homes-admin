@@ -1,4 +1,3 @@
-import { scriptServerApiUrl } from "../constants";
 import { scriptServerApiInstance } from "../script-server-axios-instance";
 
 export type OptionSource =
@@ -108,8 +107,12 @@ export async function getJob(jobId: string): Promise<Job> {
   return data;
 }
 
-export function jobLogsUrl(jobId: string): string {
-  return `${(scriptServerApiUrl || "").replace(/\/$/, "")}/jobs/${jobId}/logs`;
+export async function fetchJobLogs(jobId: string): Promise<string> {
+  const { data } = await scriptServerApiInstance.get<string>(
+    `/jobs/${jobId}/logs`,
+    { responseType: "text", transformResponse: (raw) => raw },
+  );
+  return data;
 }
 
 export async function stopJob(jobId: string): Promise<{ ok: boolean }> {

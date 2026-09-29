@@ -16,6 +16,7 @@ import ChromaDocsPage from "../pages/chroma-docs";
 import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
+import { PortalGatewayPage } from "../pages/portal-gateway/portal-gateway-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
 import { MicroPocketScore } from "../pages/micro-pockets/micro-pocket-score";
 import { MicroPocketsListPage } from "../pages/micro-pockets/micro-pockets-list-page";
@@ -66,6 +67,7 @@ export const Router = () => {
 
         <Route path="/marketing" element={<MarketingPage />} />
         <Route path="/manage-scripts" element={<ManageScriptsPage />} />
+        <Route path="/portal-gateway" element={<PortalGatewayPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />
