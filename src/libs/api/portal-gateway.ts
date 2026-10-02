@@ -26,6 +26,7 @@ export type PortalProxy = {
   label: string | null;
   tag: string | null;
   exitIp: string | null;
+  exitCountry?: string | null;
   portals: string[];
   source: "config" | "ui";
   disabled: boolean;
@@ -93,8 +94,15 @@ export type PortalStatus = {
   breakerOpenForMs: number;
   warmer: { failures: number; nextTryInMs: number; lastError: string | null };
   // missing on script servers from before per-portal health
-  proxies?: Record<"tagged" | "eligible" | "fresh" | "active" | "cooldown" | "retired", number>;
-  last24h: { total: number; cacheHitRate: number; byStatus: Record<string, number> };
+  proxies?: Record<
+    "tagged" | "eligible" | "fresh" | "active" | "cooldown" | "retired",
+    number
+  >;
+  last24h: {
+    total: number;
+    cacheHitRate: number;
+    byStatus: Record<string, number>;
+  };
 };
 
 export type GatewayStatus = {
@@ -134,7 +142,10 @@ export type ScrapeResult = {
 
 export type ConfigSource = "default" | "file" | "env" | "override";
 
-export type FieldHint = { type: "number" | "boolean" | "string" | "number[]" | "list"; nullable: boolean };
+export type FieldHint = {
+  type: "number" | "boolean" | "string" | "number[]" | "list";
+  nullable: boolean;
+};
 
 export type GatewayConfig = {
   config: Record<string, unknown>;
@@ -159,13 +170,19 @@ export async function getGatewayStatus(): Promise<GatewayStatus> {
   return data;
 }
 
-export async function getProxies(): Promise<{ proxies: PortalProxy[]; tags: string[]; eligible: number }> {
+export async function getProxies(): Promise<{
+  proxies: PortalProxy[];
+  tags: string[];
+  eligible: number;
+}> {
   const { data } = await api.get("/portal/proxies");
   return data;
 }
 
 export async function getProxyProfiles(id: string): Promise<PortalProfile[]> {
-  const { data } = await api.get<{ profiles: PortalProfile[] }>(`/portal/proxies/${id}/profiles`);
+  const { data } = await api.get<{ profiles: PortalProfile[] }>(
+    `/portal/proxies/${id}/profiles`,
+  );
   return data.profiles;
 }
 
@@ -189,27 +206,52 @@ export async function proxyAction({
   action: "disable" | "enable" | "reset" | "test";
   portal?: string;
 }): Promise<{ ok: boolean }> {
-  const { data } = await api.post(`/portal/proxies/${id}/${action}`, undefined, { params: portal ? { portal } : undefined });
+  const { data } = await api.post(
+    `/portal/proxies/${id}/${action}`,
+    undefined,
+    { params: portal ? { portal } : undefined },
+  );
   return data;
 }
 
-export async function setProxyPortals({ id, portals }: { id: string; portals: string[] }) {
+export async function setProxyPortals({
+  id,
+  portals,
+}: {
+  id: string;
+  portals: string[];
+}) {
   const { data } = await api.post(`/portal/proxies/${id}/portals`, { portals });
   return data;
 }
 
-export async function deleteProxies(ids: string[]): Promise<{ deleted: number }> {
+export async function deleteProxies(
+  ids: string[],
+): Promise<{ deleted: number }> {
   const { data } = await api.post("/portal/proxies/delete", { ids });
   return data;
 }
 
-export async function bulkProxyAction({ ids, action }: { ids: string[]; action: "disable" | "enable" }) {
+export async function bulkProxyAction({
+  ids,
+  action,
+}: {
+  ids: string[];
+  action: "disable" | "enable";
+}) {
   const { data } = await api.post(`/portal/proxies/bulk/${action}`, { ids });
   return data;
 }
 
-export async function getScrapes(filters: { limit?: number; portal?: string; status?: string }): Promise<ScrapeLogRow[]> {
-  const { data } = await api.get<{ scrapes: ScrapeLogRow[] }>("/portal/scrapes", { params: filters });
+export async function getScrapes(filters: {
+  limit?: number;
+  portal?: string;
+  status?: string;
+}): Promise<ScrapeLogRow[]> {
+  const { data } = await api.get<{ scrapes: ScrapeLogRow[] }>(
+    "/portal/scrapes",
+    { params: filters },
+  );
   return data.scrapes;
 }
 
@@ -219,7 +261,9 @@ export async function scrapeUrl(payload: {
   noCache?: boolean;
 }): Promise<ScrapeResult> {
   // Minting isn't on this path, but a cold identity pool can still make it wait
-  const { data } = await api.post<ScrapeResult>("/portal/scrape", payload, { timeout: 120_000 });
+  const { data } = await api.post<ScrapeResult>("/portal/scrape", payload, {
+    timeout: 120_000,
+  });
   return data;
 }
 
@@ -228,35 +272,64 @@ export async function getGatewayConfig(): Promise<GatewayConfig> {
   return data;
 }
 
-export async function patchGatewayConfig(patch: Record<string, unknown>): Promise<GatewayConfig> {
+export async function patchGatewayConfig(
+  patch: Record<string, unknown>,
+): Promise<GatewayConfig> {
   const { data } = await api.patch<GatewayConfig>("/portal/config", patch);
   return data;
 }
 
-export async function clearConfigOverride(path: string): Promise<{ ok: boolean }> {
-  const { data } = await api.delete("/portal/config/override", { params: { path } });
+export async function clearConfigOverride(
+  path: string,
+): Promise<{ ok: boolean }> {
+  const { data } = await api.delete("/portal/config/override", {
+    params: { path },
+  });
   return data;
 }
 
-export async function clearScrapeCache(url?: string): Promise<{ cleared: number }> {
+export async function clearScrapeCache(
+  url?: string,
+): Promise<{ cleared: number }> {
   const { data } = await api.post("/portal/cache/clear", url ? { url } : {});
   return data;
 }
 
 // Starts a mint in the background (takes 30-120s); watch "minting" in the status.
-export async function mintBroker({ portal, proxyId }: { portal: string; proxyId?: string }) {
-  const { data } = await api.post<{ proxyId: string; label: string }>(`/portal/brokers/${portal}/mint`, { proxyId });
+export async function mintBroker({
+  portal,
+  proxyId,
+}: {
+  portal: string;
+  proxyId?: string;
+}) {
+  const { data } = await api.post<{ proxyId: string; label: string }>(
+    `/portal/brokers/${portal}/mint`,
+    { proxyId },
+  );
   return data;
 }
 
-export async function retireIdentity({ portal, proxyId }: { portal: string; proxyId: string }) {
-  const { data } = await api.post(`/portal/brokers/${portal}/identities/${proxyId}/retire`);
+export async function retireIdentity({
+  portal,
+  proxyId,
+}: {
+  portal: string;
+  proxyId: string;
+}) {
+  const { data } = await api.post(
+    `/portal/brokers/${portal}/identities/${proxyId}/retire`,
+  );
   return data;
 }
 
 export async function runHealthCheck({ portal }: { portal: string }) {
-  const { data } = await api.post<{ checked: number; failed: number }>(`/portal/brokers/${portal}/health-check`, undefined, {
-    timeout: 120_000,
-  });
+  const { data } = await api.post<{ checked: number; failed: number }>(
+    `/portal/brokers/${portal}/health-check`,
+    undefined,
+    {
+      timeout: 120_000,
+    },
+  );
   return data;
 }

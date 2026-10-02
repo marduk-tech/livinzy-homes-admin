@@ -38,6 +38,12 @@ const STATUS_COLOR: Record<HealthStatus, string> = {
   retired: "red",
 };
 
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryName = (code: string) => regionNames.of(code) ?? code;
+// regional indicator letters render as the flag emoji
+const flag = (code: string) =>
+  /^[A-Z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map((c) => 0x1f1a5 + c.charCodeAt(0))) : "";
+
 // An expired cooldown is back in rotation, so show it as such
 const liveStatus = (h: ProxyHealth): HealthStatus =>
   h.status === "cooldown" && h.eligible ? (h.goodFetches ? "active" : "fresh") : h.status;
@@ -222,12 +228,36 @@ export function ProxiesTab() {
     [data, tag],
   );
 
+  const countryFilters = useMemo(
+    () =>
+      [...new Set((data?.proxies ?? []).map((p) => p.exitCountry).filter((c): c is string => !!c))]
+        .sort()
+        .map((c) => ({ text: `${flag(c)} ${countryName(c)}`, value: c })),
+    [data],
+  );
+
   const columns: TableColumnType<PortalProxy>[] = [
     {
       title: "Exit IP",
       dataIndex: "exitIp",
       width: 140,
       render: (ip: string | null) => (ip ? <Typography.Text code>{ip}</Typography.Text> : <Typography.Text type="secondary">unknown</Typography.Text>),
+    },
+    {
+      title: "Country",
+      dataIndex: "exitCountry",
+      width: 110,
+      filters: countryFilters,
+      onFilter: (v, r) => r.exitCountry === v,
+      sorter: (a, b) => (a.exitCountry ?? "").localeCompare(b.exitCountry ?? ""),
+      render: (code?: string | null) =>
+        code ? (
+          <Tooltip title={countryName(code)}>
+            {flag(code)} {code}
+          </Tooltip>
+        ) : (
+          <Typography.Text type="secondary">—</Typography.Text>
+        ),
     },
     {
       title: "Proxy",
@@ -390,7 +420,7 @@ export function ProxiesTab() {
         columns={columns}
         rowSelection={{ selectedRowKeys: selected, onChange: (keys) => setSelected(keys as string[]) }}
         pagination={{ pageSize: 50, hideOnSinglePage: true }}
-        scroll={{ x: 1300 }}
+        scroll={{ x: 1410 }}
       />
 
       <AddProxiesModal open={adding} onClose={() => setAdding(false)} />
