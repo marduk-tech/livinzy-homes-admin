@@ -33,6 +33,8 @@ export const queryKeys = {
   getAllFeedbacks: "getAllFeedbacks",
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
+  getBrickchatLog: "getBrickchatLog",
+  getRecentBrickchatLogs: "getRecentBrickchatLogs",
   getScripts: "getScripts",
 
   getScriptManifest: "getScriptManifest",
