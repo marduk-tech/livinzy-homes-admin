@@ -586,8 +586,30 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                 }}
               >
                 <Row gutter={[16, 16]}>
-                  {media
-                    .filter((item) => item.image?.tags.includes("floorplan"))
+                  {(() => {
+                    const floorplanMediaItems = media.filter((item) =>
+                      item.image?.tags.includes("floorplan"),
+                    );
+                    const mediaUrls = new Set(
+                      floorplanMediaItems
+                        .map((item) => item.image?.url)
+                        .filter((u): u is string => !!u),
+                    );
+                    const selectedFloorplans: string[] =
+                      form.getFieldValue("floorplans") || [];
+                    // selected on this unit config but no longer present in
+                    // the project's media (e.g. removed from the media tab
+                    // after being picked here) - surface it anyway instead
+                    // of letting it silently vanish while staying selected.
+                    const orphanedItems = selectedFloorplans
+                      .filter((url) => !!url && !mediaUrls.has(url))
+                      .map((url) => ({
+                        _id: url,
+                        image: { url, tags: ["floorplan"] },
+                        isOrphaned: true as const,
+                      }));
+
+                    return [...orphanedItems, ...floorplanMediaItems]
                     .sort((a, b) => {
                       const aIsNew = newlyUploadedImageIds.has(a.image?.url || '');
                       const bIsNew = newlyUploadedImageIds.has(b.image?.url || '');
@@ -597,6 +619,7 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                     })
                     .map((item) => {
                       const url = item.image?.url;
+                      const isOrphaned = "isOrphaned" in item;
                       const currentFloorplans =
                         form.getFieldValue("floorplans") || [];
                       const isSelected = url
@@ -688,6 +711,19 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                               New
                             </Tag>
                           )}
+                          {isOrphaned && (
+                            <Tag
+                              color="warning"
+                              style={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                zIndex: 1,
+                              }}
+                            >
+                              Missing from media
+                            </Tag>
+                          )}
                           <div
                             style={{
                               flex: 1,
@@ -702,7 +738,9 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                               }}
                             >
                               {item.image?.caption ||
-                                `Floorplan ${media.indexOf(item) + 1}`}
+                                (isOrphaned
+                                  ? "Floorplan (missing from media)"
+                                  : `Floorplan ${media.indexOf(item) + 1}`)}
                             </div>
                           </div>
                           <Checkbox
@@ -724,7 +762,8 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                           )}
                         </Col>
                       );
-                    })}
+                    });
+                  })()}
                 </Row>
               </div>
             </Checkbox.Group>
