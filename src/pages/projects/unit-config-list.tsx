@@ -605,7 +605,11 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
                       .filter((url) => !!url && !mediaUrls.has(url))
                       .map((url) => ({
                         _id: url,
-                        image: { url, tags: ["floorplan"] },
+                        image: {
+                          url,
+                          tags: ["floorplan"],
+                          caption: undefined as string | undefined,
+                        },
                         isOrphaned: true as const,
                       }));
 
