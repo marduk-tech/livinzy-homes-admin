@@ -44,6 +44,7 @@ export const queryKeys = {
   portalStatus: "portalStatus",
   portalProxies: "portalProxies",
   portalProfiles: "portalProfiles",
+  portalAbandonedProfiles: "portalAbandonedProfiles",
   portalScrapes: "portalScrapes",
   portalConfig: "portalConfig",
 };

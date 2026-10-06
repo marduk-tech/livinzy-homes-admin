@@ -54,6 +54,21 @@ export type PortalProfile = {
   retiredAt: string | null;
 };
 
+// orphan: no store row · retired: store row retired · proxy-*: its proxy is disabled / retired for that portal
+export type AbandonedReason = "orphan" | "retired" | "proxy-disabled" | "proxy-retired";
+
+export type AbandonedProfile = {
+  id: string;
+  name: string;
+  portal: string | null;
+  status: string;
+  reason: AbandonedReason;
+  proxyId: string | null;
+  proxy: string | null;
+  createdAt: string | null;
+  retiredAt: string | null;
+};
+
 export type PoolIdentity = {
   label: string;
   proxy: string;
@@ -331,5 +346,19 @@ export async function runHealthCheck({ portal }: { portal: string }) {
       timeout: 120_000,
     },
   );
+  return data;
+}
+
+// Gateway-owned profiles on the browser manager that nothing uses any more.
+export async function getAbandonedProfiles(): Promise<{ profiles: AbandonedProfile[]; total: number }> {
+  const { data } = await api.get("/portal/profiles/abandoned", { timeout: 60_000 });
+  return data;
+}
+
+// Irreversible: the manager removes each profile's user-data dir too.
+export async function deleteManagerProfiles(
+  ids: string[],
+): Promise<{ deleted: number; skipped: number; failed: { id: string; error: string }[] }> {
+  const { data } = await api.post("/portal/profiles/delete", { ids }, { timeout: 300_000 });
   return data;
 }

@@ -2,6 +2,7 @@ import { Tabs, Typography } from "antd";
 import { useState } from "react";
 import { ConfigTab } from "./config-tab";
 import { OverviewTab } from "./overview-tab";
+import { ProfilesTab } from "./profiles-tab";
 import { ProxiesTab } from "./proxies-tab";
 import { ScrapesTab } from "./scrapes-tab";
 import { TryUrlTab } from "./try-url-tab";
@@ -12,6 +13,7 @@ export function PortalGatewayPage() {
   const tabs = [
     { key: "overview", label: "Overview", children: <OverviewTab /> },
     { key: "proxies", label: "Proxies", children: <ProxiesTab /> },
+    { key: "profiles", label: "Profiles", children: <ProfilesTab /> },
     { key: "scrapes", label: "Recent scrapes", children: <ScrapesTab /> },
     { key: "config", label: "Config", children: <ConfigTab /> },
     { key: "try", label: "Try a URL", children: <TryUrlTab /> },

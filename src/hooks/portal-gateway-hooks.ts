@@ -6,7 +6,9 @@ import {
   bulkProxyAction,
   clearConfigOverride,
   clearScrapeCache,
+  deleteManagerProfiles,
   deleteProxies,
+  getAbandonedProfiles,
   getGatewayConfig,
   getGatewayStatus,
   getProxies,
@@ -53,6 +55,11 @@ export function useProxyProfiles(id?: string) {
   });
 }
 
+// Not polled: every call lists all profiles on the manager.
+export function useAbandonedProfiles() {
+  return useQuery({ queryKey: [queryKeys.portalAbandonedProfiles], queryFn: getAbandonedProfiles });
+}
+
 export function usePortalScrapes(filters: { limit?: number; portal?: string; status?: string }) {
   return useQuery({
     queryKey: [queryKeys.portalScrapes, filters],
@@ -80,7 +87,7 @@ function useGatewayMutation<TArgs, TResult>(
       notification.error({ message: messages.error, description: errorMessage(error, messages.error) });
     },
     onSettled: () => {
-      for (const key of [queryKeys.portalProxies, queryKeys.portalStatus, queryKeys.portalConfig, queryKeys.portalScrapes]) {
+      for (const key of [queryKeys.portalProxies, queryKeys.portalStatus, queryKeys.portalConfig, queryKeys.portalScrapes, queryKeys.portalAbandonedProfiles]) {
         queryClient.invalidateQueries({ queryKey: [key] });
       }
     },
@@ -116,3 +123,6 @@ export const useRetireIdentity = () =>
   useGatewayMutation(retireIdentity, { success: "Session retired", error: "Could not retire session" });
 
 export const useHealthCheck = () => useGatewayMutation(runHealthCheck, { error: "Health check failed" });
+
+export const useDeleteManagerProfiles = () =>
+  useGatewayMutation(deleteManagerProfiles, { error: "Could not delete profiles" });
