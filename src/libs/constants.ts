@@ -42,6 +42,7 @@ export const queryKeys = {
   getScriptJob: "getScriptJob",
   getCronSchedules: "getCronSchedules",
   getReraProjectNames: "getReraProjectNames",
+  getProjectOptions: "getProjectOptions",
 
   portalStatus: "portalStatus",
   portalProxies: "portalProxies",

@@ -4,7 +4,7 @@ export type OptionSource =
   | { kind: "static"; options: { value: string; label: string }[] }
   | {
       kind: "remote";
-      name: "developers" | "reraProjects" | "places";
+      name: "developers" | "reraProjects" | "places" | "projects";
       dependsOn?: string;
     };
 

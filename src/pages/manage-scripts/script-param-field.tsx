@@ -32,6 +32,7 @@ export function ScriptParamField({
     param.source,
     search,
     dependsOnValue,
+    value,
   );
 
   const entries = (Array.isArray(value) ? value : [value])
@@ -164,8 +165,8 @@ export function ScriptParamField({
 
     if (checking || unknown.length === 0) return null;
 
-    const isDeveloper =
-      param.source?.kind === "remote" && param.source.name === "developers";
+    const sourceName =
+      param.source?.kind === "remote" ? param.source.name : undefined;
 
     return (
       <Alert
@@ -173,11 +174,17 @@ export function ScriptParamField({
         showIcon
         style={{ marginTop: 8 }}
         message={
-          isDeveloper
+          sourceName === "developers"
             ? `Not found: ${unknown.join(", ")}`
-            : `Not in reraprojects: ${unknown.join(", ")}`
+            : sourceName === "projects"
+              ? `No project with id: ${unknown.join(", ")}`
+              : `Not in reraprojects: ${unknown.join(", ")}`
         }
-        description="You can still run it — the script may find it, or fail with a list of near matches."
+        description={
+          sourceName === "projects"
+            ? "You can still run it, but the script will skip ids it can't find."
+            : "You can still run it — the script may find it, or fail with a list of near matches."
+        }
       />
     );
   };

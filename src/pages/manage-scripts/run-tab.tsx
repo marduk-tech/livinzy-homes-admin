@@ -134,7 +134,8 @@ export function RunTab({ onStarted }: RunTabProps) {
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     Runs go through the retry wrapper — RUN_COUNT passes
                     (default 2), up to RETRY_LIMIT attempts each. One click can
-                    mean two full runs.
+                    mean two full runs, except the search scripts
+                    (pricing-check, auto-driver-info), which run once.
                   </Typography.Text>
                 </>
               )}

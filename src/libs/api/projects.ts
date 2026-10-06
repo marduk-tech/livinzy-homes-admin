@@ -19,7 +19,8 @@ export const getAllProjects = async ({
   limit,
   sortBy,
   hasStatusComments,
-  developerPartner
+  developerPartner,
+  projectIds,
 }: {
   source?: string;
   searchKeyword?: string;
@@ -30,6 +31,7 @@ export const getAllProjects = async ({
   sortBy?: string;
   hasStatusComments?: boolean;
   developerPartner?: boolean;
+  projectIds?: string[];
 }) => {
   let endpoint = `/projects?source=${source}&keyword=${searchKeyword}&severity=${issueSeverity}&statusFilter=${statusFilter}&issueType=${issueType}&hasStatusComments=${hasStatusComments || false}&developerPartner=${developerPartner || false}`;
 
@@ -39,6 +41,10 @@ export const getAllProjects = async ({
 
   if (sortBy) {
     endpoint += `&sortBy=${sortBy}`;
+  }
+
+  if (projectIds?.length) {
+    endpoint += `&projectIds=${projectIds.join(",")}`;
   }
 
   return axiosApiInstance.get(endpoint).then((response) => {

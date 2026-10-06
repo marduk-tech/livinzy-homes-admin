@@ -4,6 +4,7 @@ import { getDeveloperNames } from "../libs/api/real-estate-developer";
 import { getReraProjectNames } from "../libs/api/rera-project";
 import { OBJECT_ID } from "../libs/build-script-args";
 import { queryKeys } from "../libs/constants";
+import { selectedProjectsQuery } from "./use-script-options";
 
 const asList = (value: unknown): string[] =>
   (Array.isArray(value) ? value : [value])
@@ -33,6 +34,12 @@ export function useUnknownValues(
     queryKey: [queryKeys.getReraProjectNames, "lookup", values.join(",")],
     queryFn: () => getReraProjectNames({ reraNumbers: values.join(",") }),
     enabled: remote?.name === "reraProjects" && values.length > 0,
+  });
+
+  const projectIds = values.filter((v) => OBJECT_ID.test(v));
+  const projectLookup = useQuery({
+    ...selectedProjectsQuery(projectIds),
+    enabled: remote?.name === "projects" && projectIds.length > 0,
   });
 
   if (!remote || values.length === 0) {
@@ -67,6 +74,17 @@ export function useUnknownValues(
     return {
       unknown: values.filter((v) => !found.has(v)),
       checking: reraLookup.isFetching,
+    };
+  }
+
+  if (remote.name === "projects") {
+    if (!projectLookup.data) {
+      return { unknown: [], checking: projectLookup.isFetching };
+    }
+    const found = new Set(projectLookup.data.map((p) => p._id));
+    return {
+      unknown: projectIds.filter((v) => !found.has(v)),
+      checking: projectLookup.isFetching,
     };
   }
 
