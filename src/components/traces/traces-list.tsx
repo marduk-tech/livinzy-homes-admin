@@ -6,6 +6,7 @@ import {
   Row,
   Table,
   TableColumnType,
+  Tabs,
   Typography,
 } from "antd";
 import { useState } from "react";
@@ -13,6 +14,7 @@ import { useSearchParams } from "react-router-dom";
 import { useGetAllTraces } from "../../hooks/traces-hooks";
 import { Trace } from "../../types/trace";
 import { ColumnSearch } from "../common/column-search";
+import { BrickchatTab } from "./brickchat-tab";
 
 export function TracesList() {
   const { data, isLoading, isError } = useGetAllTraces();
@@ -136,23 +138,31 @@ export function TracesList() {
 
   return (
     <>
-      <Row
-        justify="space-between"
-        align="middle"
-        style={{ marginBottom: 20, padding: "0 10px" }}
-      >
-        <Col>
-          <Typography.Title level={4}>All Traces</Typography.Title>
-        </Col>
-      </Row>
+      <Tabs defaultActiveKey="brickchat">
+        <Tabs.TabPane tab="Brickchat" key="brickchat">
+          <BrickchatTab />
+        </Tabs.TabPane>
 
-      <Table
-        dataSource={data}
-        columns={columns}
-        loading={isLoading}
-        rowKey="id"
-        scroll={{ x: 1400 }}
-      />
+        <Tabs.TabPane tab="Traces" key="traces">
+          <Row
+            justify="space-between"
+            align="middle"
+            style={{ marginBottom: 20, padding: "0 10px" }}
+          >
+            <Col>
+              <Typography.Title level={4}>All Traces</Typography.Title>
+            </Col>
+          </Row>
+
+          <Table
+            dataSource={data}
+            columns={columns}
+            loading={isLoading}
+            rowKey="id"
+            scroll={{ x: 1400 }}
+          />
+        </Tabs.TabPane>
+      </Tabs>
 
       <Modal
         title="Trace Details"
