@@ -12,6 +12,7 @@ import { Brick360Data } from "../pages/brick360-projects/brick360-data";
 import { Brick360ListPage } from "../pages/brick360-projects/brick360-list";
 import { Brick360Full } from "../pages/brick360-projects/brick360-project";
 import { BrickfiConfig } from "../pages/brickfi-config";
+import { BrickfiLoggerPage } from "../pages/brickfi-logger-page";
 import ChromaDocsPage from "../pages/chroma-docs";
 import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
@@ -23,7 +24,6 @@ import { MicroPocketsListPage } from "../pages/micro-pockets/micro-pockets-list-
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
-import { TracesPage } from "../pages/traces-page";
 import { UsersPage } from "../pages/users-page";
 
 export const Router = () => {
@@ -63,7 +63,8 @@ export const Router = () => {
         <Route path="/ask" element={<AskPage />} />
 
         <Route path="/users" element={<UsersPage />} />
-        <Route path="/traces" element={<TracesPage />} />
+        <Route path="/brickfi-logger" element={<BrickfiLoggerPage />} />
+        <Route path="/traces" element={<Navigate to="/brickfi-logger" replace />} />
 
         <Route path="/marketing" element={<MarketingPage />} />
         <Route path="/manage-scripts" element={<ManageScriptsPage />} />

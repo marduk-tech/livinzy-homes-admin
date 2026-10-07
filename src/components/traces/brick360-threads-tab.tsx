@@ -1,22 +1,12 @@
 import { EyeOutlined, LinkOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Col,
-  Modal,
-  Row,
-  Table,
-  TableColumnType,
-  Tabs,
-  Typography,
-} from "antd";
+import { Button, Col, Modal, Row, Table, TableColumnType, Typography } from "antd";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useGetAllTraces } from "../../hooks/traces-hooks";
 import { Trace } from "../../types/trace";
 import { ColumnSearch } from "../common/column-search";
-import { BrickchatTab } from "./brickchat-tab";
 
-export function TracesList() {
+export function Brick360ThreadsTab() {
   const { data, isLoading, isError } = useGetAllTraces();
   const [searchParams] = useSearchParams();
   const userIdParam = searchParams.get("userId");
@@ -138,31 +128,23 @@ export function TracesList() {
 
   return (
     <>
-      <Tabs defaultActiveKey="brickchat">
-        <Tabs.TabPane tab="Brickchat" key="brickchat">
-          <BrickchatTab />
-        </Tabs.TabPane>
+      <Row
+        justify="space-between"
+        align="middle"
+        style={{ marginBottom: 20, padding: "0 10px" }}
+      >
+        <Col>
+          <Typography.Title level={4}>All Brick360 Threads</Typography.Title>
+        </Col>
+      </Row>
 
-        <Tabs.TabPane tab="Traces" key="traces">
-          <Row
-            justify="space-between"
-            align="middle"
-            style={{ marginBottom: 20, padding: "0 10px" }}
-          >
-            <Col>
-              <Typography.Title level={4}>All Traces</Typography.Title>
-            </Col>
-          </Row>
-
-          <Table
-            dataSource={data}
-            columns={columns}
-            loading={isLoading}
-            rowKey="id"
-            scroll={{ x: 1400 }}
-          />
-        </Tabs.TabPane>
-      </Tabs>
+      <Table
+        dataSource={data}
+        columns={columns}
+        loading={isLoading}
+        rowKey="id"
+        scroll={{ x: 1400 }}
+      />
 
       <Modal
         title="Trace Details"

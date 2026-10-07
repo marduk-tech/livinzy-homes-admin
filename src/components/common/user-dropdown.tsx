@@ -45,7 +45,7 @@ export function UserDropDown() {
     // { to: "/ask", label: "Ask Liv", icon: <RobotOutlined /> },
     // { to: "/ask", label: "Ask Liv", icon: undefined },
     { to: "/users", label: "Users", icon: undefined },
-    { to: "/traces", label: "Traces", icon: undefined },
+    { to: "/brickfi-logger", label: "Brickfi Logger", icon: undefined },
     { to: "/manage-scripts", label: "Manage Scripts", icon: undefined },
     { to: "/portal-gateway", label: "Portal Gateway", icon: undefined },
   ];

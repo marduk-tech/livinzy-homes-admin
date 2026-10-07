@@ -35,6 +35,7 @@ export const queryKeys = {
   getUserConversations: "getUserConversations",
   getBrickchatLog: "getBrickchatLog",
   getRecentBrickchatLogs: "getRecentBrickchatLogs",
+  getBrickchatFeedback: "getBrickchatFeedback",
   getScripts: "getScripts",
 
   getScriptManifest: "getScriptManifest",

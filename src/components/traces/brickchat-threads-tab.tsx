@@ -1,4 +1,4 @@
-import { LinkOutlined, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Collapse,
@@ -25,6 +25,7 @@ import {
   BrickchatStepLog,
   BrickchatTurn,
 } from "../../types/brickchat-logger";
+import { LangsmithThreadButton } from "./thread-id-link";
 
 const formatTimestamp = (iso?: string) => {
   if (!iso) return "";
@@ -331,7 +332,7 @@ function TurnDetails({ turn }: { turn: BrickchatTurn }) {
   return <Collapse items={items} style={{ margin: "8px 0" }} />;
 }
 
-export function BrickchatTab() {
+export function BrickchatThreadsTab() {
   const [threadIdInput, setThreadIdInput] = useState("");
   const [searchedThreadId, setSearchedThreadId] = useState<string | null>(null);
 
@@ -489,6 +490,7 @@ export function BrickchatTab() {
           onChange={(e) => setThreadIdInput(e.target.value)}
           onPressEnter={handleSearch}
         />
+        <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
         <Button
           type="primary"
           icon={<SearchOutlined />}
@@ -497,19 +499,6 @@ export function BrickchatTab() {
           onClick={handleSearch}
         >
           Search
-        </Button>
-        <Button
-          icon={<LinkOutlined />}
-          disabled={!searchedThreadId}
-          style={{ marginLeft: "auto" }}
-          onClick={() => {
-            window.open(
-              `https://smith.langchain.com/o/f789969a-14ab-5073-b68e-2822efcebf90/projects/p/4e5569cf-0f16-4779-ac99-d4297e21b54f?runview=threads&peekedConversationId=${searchedThreadId}`,
-              "_blank",
-            );
-          }}
-        >
-          View in LangSmith
         </Button>
       </Flex>
 
