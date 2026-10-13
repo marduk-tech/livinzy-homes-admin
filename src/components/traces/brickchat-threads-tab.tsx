@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import {
   useGetBrickchatLog,
+  useGetLlmCallsForRun,
   useGetRecentBrickchatLogs,
 } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
@@ -26,7 +27,7 @@ import {
   BrickchatTurn,
 } from "../../types/brickchat-logger";
 import { LlmCallsView } from "./llm-calls-view";
-import { LangsmithThreadButton } from "./thread-id-link";
+import { LangsmithRunButton, LangsmithThreadButton } from "./thread-id-link";
 
 const formatTimestamp = (iso?: string) => {
   if (!iso) return "";
@@ -286,14 +287,17 @@ function PlanView({ plan }: { plan?: { steps: BrickchatPlanStep[] } }) {
 }
 
 function LlmCallsSection({ runId }: { runId?: string }) {
+  // same query LlmCallsView runs (shared cache, no extra request) - only
+  // read here for the run's traceId, which the LangSmith link needs
+  const { data: llmCalls } = useGetLlmCallsForRun(runId);
   return (
     <div style={{ marginTop: 12 }}>
-      <Typography.Text
-        type="secondary"
-        style={{ fontSize: FONT_SIZES.SUB_TEXT, display: "block", marginBottom: 4 }}
-      >
-        LLM calls
-      </Typography.Text>
+      <Flex align="center" gap={4} style={{ marginBottom: 4 }}>
+        <Typography.Text type="secondary" style={{ fontSize: FONT_SIZES.SUB_TEXT }}>
+          LLM calls
+        </Typography.Text>
+        <LangsmithRunButton runId={runId} traceId={llmCalls?.traceId} />
+      </Flex>
       <LlmCallsView runId={runId} />
     </div>
   );
@@ -507,16 +511,17 @@ export function BrickchatThreadsTab() {
             onChange={(e) => setThreadIdInput(e.target.value)}
             onPressEnter={handleSearch}
           />
-          <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
-          <Button
+             <Button
             type="primary"
             icon={<SearchOutlined />}
             disabled={!threadIdInput.trim()}
             loading={isLoading}
             onClick={handleSearch}
+            style={{width: 56}}
           >
-            Search
           </Button>
+          <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
+       
         </Flex>
         <Table
           dataSource={recentThreads}
