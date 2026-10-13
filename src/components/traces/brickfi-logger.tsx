@@ -10,9 +10,9 @@ export function BrickfiLogger() {
         <BrickchatThreadsTab />
       </Tabs.TabPane>
 
-      <Tabs.TabPane tab="Brick360 Threads" key="brick360-threads">
+      {/* <Tabs.TabPane tab="Brick360 Threads" key="brick360-threads">
         <Brick360ThreadsTab />
-      </Tabs.TabPane>
+      </Tabs.TabPane> */}
 
       <Tabs.TabPane tab="Feedback" key="feedback">
         <FeedbackTab />
