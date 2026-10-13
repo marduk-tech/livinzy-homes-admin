@@ -11,7 +11,8 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetBrickchatLog,
   useGetLlmCallsForRun,
@@ -26,8 +27,9 @@ import {
   BrickchatStepLog,
   BrickchatTurn,
 } from "../../types/brickchat-logger";
+import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 import { LlmCallsView } from "./llm-calls-view";
-import { LangsmithRunButton, LangsmithThreadButton } from "./thread-id-link";
+import { LangsmithRunButton, ThreadLinksButton } from "./thread-id-link";
 
 const formatTimestamp = (iso?: string) => {
   if (!iso) return "";
@@ -375,23 +377,36 @@ const SELECTED_ROW_BG = "#e6f4ff";
 const SELECTED_ROW_ACCENT = "#1677ff";
 
 export function BrickchatThreadsTab() {
-  const [threadIdInput, setThreadIdInput] = useState("");
-  const [searchedThreadId, setSearchedThreadId] = useState<string | null>(null);
+  // the loaded thread lives in the URL (/brickfi-logger/threads/:threadId -
+  // see BRICKFI_LOGGER_PATHS) so a thread view can be linked/shared and
+  // survives a reload; searching or picking a recent thread just navigates
+  const { threadId: urlThreadId } = useParams<{ threadId?: string }>();
+  const navigate = useNavigate();
+  const searchedThreadId = urlThreadId?.trim() || null;
+  const [threadIdInput, setThreadIdInput] = useState(searchedThreadId || "");
+
+  // keep the box in sync when the URL changes from outside (back/forward,
+  // a pasted link)
+  useEffect(() => {
+    setThreadIdInput(searchedThreadId || "");
+  }, [searchedThreadId]);
 
   const { data, isLoading, isError, error } = useGetBrickchatLog(searchedThreadId);
   const { data: recentThreads, isLoading: recentLoading } =
     useGetRecentBrickchatLogs(10);
 
+  const openThread = (threadId: string) =>
+    navigate(BRICKFI_LOGGER_PATHS.thread(threadId));
+
   const handleSearch = () => {
-    if (threadIdInput.trim()) setSearchedThreadId(threadIdInput.trim());
+    if (threadIdInput.trim()) openThread(threadIdInput.trim());
   };
 
   const handleSelectRecentThread = (threadId: string) => {
-    setThreadIdInput(threadId);
-    setSearchedThreadId(threadId);
+    openThread(threadId);
   };
 
-  // compact for the 40% left pane - start time sits under the query rather
+  // compact for the 25% right pane - start time sits under the query rather
   // than in its own column
   const recentColumns: TableColumnType<BrickchatRecentThread>[] = [
     {
@@ -502,8 +517,8 @@ export function BrickchatThreadsTab() {
   };
 
   return (
-    <Flex gap={16} align="flex-start" style={{ padding: "0 10px" }}>
-      <div style={{ flex: "0 0 40%", minWidth: 0 }}>
+    <Flex gap={32} align="flex-start" style={{ padding: "0 10px" }}>
+      <div style={{ flex: "1 1 75%", minWidth: 0 }}>
         <Flex gap={8} style={{ marginBottom: 12 }}>
           <Input
             placeholder="Enter thread_id"
@@ -511,18 +526,19 @@ export function BrickchatThreadsTab() {
             onChange={(e) => setThreadIdInput(e.target.value)}
             onPressEnter={handleSearch}
           />
-             <Button
+          <Button
             type="primary"
             icon={<SearchOutlined />}
             disabled={!threadIdInput.trim()}
             loading={isLoading}
             onClick={handleSearch}
-            style={{width: 56}}
-          >
-          </Button>
-          <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
-       
+            style={{ width: 56 }}
+          />
+          <ThreadLinksButton threadId={threadIdInput.trim()} size="middle" />
         </Flex>
+        {renderThread()}
+      </div>
+      <div style={{ flex: "0 0 25%", minWidth: 0 }}>
         <Table
           dataSource={recentThreads}
           columns={recentColumns}
@@ -536,7 +552,6 @@ export function BrickchatThreadsTab() {
           })}
         />
       </div>
-      <div style={{ flex: "1 1 60%", minWidth: 0 }}>{renderThread()}</div>
     </Flex>
   );
 }

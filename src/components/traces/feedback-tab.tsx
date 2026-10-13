@@ -29,7 +29,7 @@ import {
   BrickchatFeedbackStatus,
   RESOLVED_BRICKCHAT_FEEDBACK_STATUSES,
 } from "../../types/brickchat-feedback";
-import { LangsmithThreadButton } from "./thread-id-link";
+import { ThreadLinksButton } from "./thread-id-link";
 
 const STATUS_COLORS: Record<BrickchatFeedbackStatus, string> = {
   new: "blue",
@@ -131,7 +131,7 @@ const getColumns = (
             onClick={() => copyUserId(record.userId)}
           />
         </Tooltip>
-        <LangsmithThreadButton threadId={record.threadId} />
+        <ThreadLinksButton threadId={record.threadId} />
         <Button
           type="link"
           icon={<EditOutlined />}
