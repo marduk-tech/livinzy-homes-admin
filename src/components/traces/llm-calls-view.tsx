@@ -1,6 +1,6 @@
 import { Button, Collapse, Flex, Segmented, Spin, Tag, Typography } from "antd";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import { useGetLlmCallsForRun } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
 import { FONT_SIZES } from "../../theme/font-sizes";
@@ -58,6 +58,15 @@ const markdownBox: React.CSSProperties = {
   border: "1px solid #f0f0f0",
 };
 
+// Prompts often have unfenced JSON schemas or one-rule-per-line blocks that
+// plain markdown would fold into a single run-on paragraph - keep paragraphs'
+// own line breaks/indentation so they read the way they were written.
+const markdownComponents: Components = {
+  p: ({ node: _node, ...props }) => (
+    <p style={{ whiteSpace: "pre-wrap" }} {...props} />
+  ),
+};
+
 const isSystemRole = (role: string) => role === "SystemMessage" || role === "system";
 
 function MessageBlock({ message }: { message: LlmCallMessage }) {
@@ -87,7 +96,7 @@ function MessageBlock({ message }: { message: LlmCallMessage }) {
       </Flex>
       <div style={showMarkdown ? markdownBox : messageBox}>
         {showMarkdown ? (
-          <ReactMarkdown>{text}</ReactMarkdown>
+          <ReactMarkdown components={markdownComponents}>{text}</ReactMarkdown>
         ) : (
           text || <Typography.Text type="secondary">(empty)</Typography.Text>
         )}

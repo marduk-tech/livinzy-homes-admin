@@ -359,6 +359,17 @@ function TurnDetails({ turn }: { turn: BrickchatTurn }) {
   return <Collapse items={items} style={{ margin: "8px 0" }} />;
 }
 
+const clampTwoLines: React.CSSProperties = {
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const SELECTED_ROW_BG = "#e6f4ff";
+const SELECTED_ROW_ACCENT = "#1677ff";
+
 export function BrickchatThreadsTab() {
   const [threadIdInput, setThreadIdInput] = useState("");
   const [searchedThreadId, setSearchedThreadId] = useState<string | null>(null);
@@ -376,70 +387,65 @@ export function BrickchatThreadsTab() {
     setSearchedThreadId(threadId);
   };
 
+  // compact for the 40% left pane - start time sits under the query rather
+  // than in its own column
   const recentColumns: TableColumnType<BrickchatRecentThread>[] = [
     {
-      title: "Query",
+      title: "Recent threads",
       dataIndex: "query",
       key: "query",
-      render: (query: string) => (
-        <div
-          style={{
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {query || "(empty query)"}
-        </div>
+      // highlight set on the cell rather than the row, so antd's own
+      // cell hover background can't paint over it
+      onCell: (thread: BrickchatRecentThread) => ({
+        style:
+          thread.thread_id === searchedThreadId
+            ? {
+                backgroundColor: SELECTED_ROW_BG,
+                boxShadow: `inset 3px 0 0 ${SELECTED_ROW_ACCENT}`,
+              }
+            : undefined,
+      }),
+      render: (query: string, thread: BrickchatRecentThread) => (
+        <>
+          <div style={clampTwoLines}>{query || "(empty query)"}</div>
+          <Typography.Text type="secondary" style={{ fontSize: FONT_SIZES.SUB_TEXT }}>
+            {formatTimestamp(thread.startedAt)}
+          </Typography.Text>
+        </>
       ),
-    },
-    {
-      title: "Started",
-      dataIndex: "startedAt",
-      key: "startedAt",
-      width: 200,
-      render: (startedAt: string) => formatTimestamp(startedAt),
     },
   ];
 
   const columns: TableColumnType<BrickchatTurn>[] = [
     {
+      title: "#",
+      key: "index",
+      width: 40,
+      render: (_: unknown, __: BrickchatTurn, i: number) => i + 1,
+    },
+    {
       title: "Query",
       dataIndex: "query",
       key: "query",
-      render: (query: string) => (
-        <div
-          style={{
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {query || "(empty query)"}
-        </div>
-      ),
+      render: (query: string) => <div style={clampTwoLines}>{query || "(empty query)"}</div>,
     },
     {
       title: "Started",
       dataIndex: "startedAt",
       key: "startedAt",
-      width: 200,
+      width: 180,
       render: (startedAt: string) => formatTimestamp(startedAt),
     },
     {
-      title: "Time Taken",
+      title: "Time",
       key: "duration",
-      width: 120,
+      width: 80,
       render: (_: unknown, turn: BrickchatTurn) => formatDuration(turnDurationMs(turn)),
     },
     {
       title: "Status",
       key: "status",
-      width: 120,
+      width: 90,
       render: (_: unknown, turn: BrickchatTurn) =>
         isTurnError(turn) ? (
           <Tag color="red">Error</Tag>
@@ -449,10 +455,10 @@ export function BrickchatThreadsTab() {
     },
   ];
 
-  const renderBody = () => {
+  const renderThread = () => {
     if (!searchedThreadId) {
       return (
-        <Empty description="Enter a thread_id above to look up its brickchat log" />
+        <Empty description="Pick a recent thread or search a thread_id to view its brickchat log" />
       );
     }
     if (isLoading) {
@@ -473,63 +479,59 @@ export function BrickchatThreadsTab() {
       return <Empty description="No turns found for this thread_id" />;
     }
 
+    const lastTurnId = data.turns[data.turns.length - 1].turnId;
     return (
       <Table
+        // remount per thread so the latest-turn default expansion re-applies
+        key={searchedThreadId}
         dataSource={data.turns}
         columns={columns}
         rowKey="turnId"
+        size="small"
         pagination={false}
         expandable={{
           expandedRowRender: (turn) => <TurnDetails turn={turn} />,
+          defaultExpandedRowKeys: [lastTurnId],
         }}
       />
     );
   };
 
   return (
-    <div>
-      <Typography.Title level={5} style={{ padding: "0 10px" }}>
-        Recent brickchat threads
-      </Typography.Title>
-      <Table
-        dataSource={recentThreads}
-        columns={recentColumns}
-        loading={recentLoading}
-        rowKey="thread_id"
-        size="small"
-        pagination={false}
-        style={{ marginBottom: 20 }}
-        onRow={(record) => ({
-          onClick: () => handleSelectRecentThread(record.thread_id),
-          style: {
-            cursor: "pointer",
-            backgroundColor:
-              record.thread_id === searchedThreadId ? "#fafafa" : undefined,
-          },
-        })}
-      />
-
-      <Flex gap={8} style={{ marginBottom: 20, padding: "0 10px" }}>
-        <Input
-          style={{ maxWidth: 420 }}
-          placeholder="Enter thread_id"
-          value={threadIdInput}
-          onChange={(e) => setThreadIdInput(e.target.value)}
-          onPressEnter={handleSearch}
+    <Flex gap={16} align="flex-start" style={{ padding: "0 10px" }}>
+      <div style={{ flex: "0 0 40%", minWidth: 0 }}>
+        <Flex gap={8} style={{ marginBottom: 12 }}>
+          <Input
+            placeholder="Enter thread_id"
+            value={threadIdInput}
+            onChange={(e) => setThreadIdInput(e.target.value)}
+            onPressEnter={handleSearch}
+          />
+          <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
+          <Button
+            type="primary"
+            icon={<SearchOutlined />}
+            disabled={!threadIdInput.trim()}
+            loading={isLoading}
+            onClick={handleSearch}
+          >
+            Search
+          </Button>
+        </Flex>
+        <Table
+          dataSource={recentThreads}
+          columns={recentColumns}
+          loading={recentLoading}
+          rowKey="thread_id"
+          size="small"
+          pagination={false}
+          onRow={(record) => ({
+            onClick: () => handleSelectRecentThread(record.thread_id),
+            style: { cursor: "pointer" },
+          })}
         />
-        <LangsmithThreadButton threadId={threadIdInput.trim()} size="middle" />
-        <Button
-          type="primary"
-          icon={<SearchOutlined />}
-          disabled={!threadIdInput.trim()}
-          loading={isLoading}
-          onClick={handleSearch}
-        >
-          Search
-        </Button>
-      </Flex>
-
-      {renderBody()}
-    </div>
+      </div>
+      <div style={{ flex: "1 1 60%", minWidth: 0 }}>{renderThread()}</div>
+    </Flex>
   );
 }
