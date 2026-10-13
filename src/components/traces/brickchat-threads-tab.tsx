@@ -25,6 +25,7 @@ import {
   BrickchatStepLog,
   BrickchatTurn,
 } from "../../types/brickchat-logger";
+import { LlmCallsView } from "./llm-calls-view";
 import { LangsmithThreadButton } from "./thread-id-link";
 
 const formatTimestamp = (iso?: string) => {
@@ -89,14 +90,15 @@ function LogLines({ logs }: { logs: string[] }) {
       {logs.map((line, i) => {
         const { timestamp, message } = parseLogLine(line);
         return (
-          <div key={i} style={{ marginBottom: 4 }}>
-            {timestamp && (
-              <span style={{ color: COLORS.textColorLight, marginRight: 8 }}>
+          <Flex vertical key={i} style={{ marginBottom: 8 }}>
+           
+            <Typography.Text style={{fontSize: FONT_SIZES.SUB_TEXT}}>{message}</Typography.Text>
+             {timestamp && (
+              <span style={{fontSize: FONT_SIZES.NOTE, color: COLORS.textColorLight, marginRight: 8 }}>
                 {formatTimestamp(timestamp)}
               </span>
             )}
-            <span>{message}</span>
-          </div>
+          </Flex>
         );
       })}
     </div>
@@ -283,6 +285,20 @@ function PlanView({ plan }: { plan?: { steps: BrickchatPlanStep[] } }) {
   );
 }
 
+function LlmCallsSection({ runId }: { runId?: string }) {
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Typography.Text
+        type="secondary"
+        style={{ fontSize: FONT_SIZES.SUB_TEXT, display: "block", marginBottom: 4 }}
+      >
+        LLM calls
+      </Typography.Text>
+      <LlmCallsView runId={runId} />
+    </div>
+  );
+}
+
 function TurnDetails({ turn }: { turn: BrickchatTurn }) {
   const items = [
     {
@@ -305,6 +321,7 @@ function TurnDetails({ turn }: { turn: BrickchatTurn }) {
           </Typography.Text>
           <PlanView plan={turn.plan} />
           <LogLines logs={turn.plannerLogs} />
+          <LlmCallsSection runId={turn.plannerRunId} />
         </>
       ),
     },
@@ -319,13 +336,23 @@ function TurnDetails({ turn }: { turn: BrickchatTurn }) {
             </Typography.Text>
           )}
           <LogLines logs={step.logs} />
+          {/* the executor's own entry only orchestrates - its steps' LLM
+              calls are under each step's own run */}
+          {step.tool !== "executePlan" && (
+            <LlmCallsSection runId={step.langsmithRunId} />
+          )}
         </>
       ),
     })),
     {
       key: "synthesis",
       label: <Typography.Text strong>Synthesis</Typography.Text>,
-      children: <LogLines logs={turn.synthesisLogs} />,
+      children: (
+        <>
+          <LogLines logs={turn.synthesisLogs} />
+          <LlmCallsSection runId={turn.synthesisRunId} />
+        </>
+      ),
     },
   ];
 

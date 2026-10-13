@@ -1,4 +1,8 @@
-import { BrickchatLog, BrickchatRecentThread } from "../../types/brickchat-logger";
+import {
+  BrickchatLog,
+  BrickchatRecentThread,
+  LlmCallsForRun,
+} from "../../types/brickchat-logger";
 import { BrickchatFeedback } from "../../types/brickchat-feedback";
 import { axiosApiInstance } from "../axios-api-Instance";
 
@@ -17,6 +21,15 @@ export const getRecentBrickchatLogs = async (
   const { data } = await axiosApiInstance.get<BrickchatRecentThread[]>(
     `/brickchat-logger/recent`,
     { params: { limit } },
+  );
+  return data;
+};
+
+export const getLlmCallsForRun = async (
+  runId: string,
+): Promise<LlmCallsForRun> => {
+  const { data } = await axiosApiInstance.get<LlmCallsForRun>(
+    `/traces/runs/${runId}/llm-calls`,
   );
   return data;
 };

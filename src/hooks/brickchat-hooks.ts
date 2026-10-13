@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import {
   getBrickchatFeedback,
   getBrickchatLog,
+  getLlmCallsForRun,
   getRecentBrickchatLogs,
   updateBrickchatFeedback,
 } from "../libs/api/brickchat";
@@ -24,6 +25,17 @@ export function useGetRecentBrickchatLogs(limit = 10) {
   return useQuery({
     queryKey: [queryKeys.getRecentBrickchatLogs, limit],
     queryFn: () => getRecentBrickchatLogs(limit),
+  });
+}
+
+export function useGetLlmCallsForRun(runId: string | null | undefined) {
+  return useQuery({
+    queryKey: [queryKeys.getLlmCallsForRun, runId],
+    queryFn: () => getLlmCallsForRun(runId!),
+    enabled: !!runId,
+    retry: false,
+    // a finished run's LLM calls never change
+    staleTime: Infinity,
   });
 }
 

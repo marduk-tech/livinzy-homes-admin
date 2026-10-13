@@ -1,4 +1,5 @@
 export const FONT_SIZES = {
+  NOTE: 9,
   SUB_TEXT: 12,
   PARA: 14,
   HEADING_1: 32,

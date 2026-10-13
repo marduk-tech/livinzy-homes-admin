@@ -7,6 +7,9 @@ export interface BrickchatStepLog {
   resultSummary?: unknown;
   error?: string;
   logs: string[];
+  // LangSmith run this step's LLM calls are nested under (absent on turns
+  // logged before run ids were recorded)
+  langsmithRunId?: string;
   startedAt: string;
   finishedAt: string;
   durationMs: number;
@@ -25,10 +28,12 @@ export interface BrickchatTurn {
   intent?: unknown;
   plan?: { steps: BrickchatPlanStep[] };
   plannerLogs: string[];
+  plannerRunId?: string;
   steps: BrickchatStepLog[];
   outcome?: string;
   error?: string;
   synthesisLogs: string[];
+  synthesisRunId?: string;
   startedAt: string;
   finishedAt?: string;
 }
@@ -45,4 +50,34 @@ export interface BrickchatRecentThread {
   query: string;
   startedAt: string;
   createdAt: string;
+}
+
+export interface LlmCallMessage {
+  role: string;
+  content: unknown;
+  toolCalls?: unknown[];
+  toolCallId?: string;
+}
+
+export interface LlmCall {
+  runId: string;
+  name: string;
+  parentRunId?: string;
+  model?: string;
+  invocationParams?: Record<string, unknown>;
+  messages: LlmCallMessage[];
+  prompts?: string[];
+  output?: LlmCallMessage | string;
+  error?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  startTime: string;
+  endTime?: string;
+}
+
+export interface LlmCallsForRun {
+  runId: string;
+  runName: string;
+  traceId: string;
+  calls: LlmCall[];
 }

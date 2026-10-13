@@ -31,7 +31,7 @@ export function LangsmithThreadButton({
 export function ThreadIdLink({ threadId }: { threadId: string }) {
   return (
     <Flex align="center" gap={4}>
-      <span>{threadId}</span>
+      {/* <span>{threadId}</span> */}
       <LangsmithThreadButton threadId={threadId} />
     </Flex>
   );

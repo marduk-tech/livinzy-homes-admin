@@ -1,17 +1,21 @@
-import { EditOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import {
   Button,
   Empty,
   Flex,
   Form,
+  Image,
   Input,
+  message,
   Modal,
   Select,
   Table,
   TableColumnType,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
+import dayjs from "dayjs";
 import { useState } from "react";
 import {
   useGetBrickchatFeedback,
@@ -25,7 +29,7 @@ import {
   BrickchatFeedbackStatus,
   RESOLVED_BRICKCHAT_FEEDBACK_STATUSES,
 } from "../../types/brickchat-feedback";
-import { ThreadIdLink } from "./thread-id-link";
+import { LangsmithThreadButton } from "./thread-id-link";
 
 const STATUS_COLORS: Record<BrickchatFeedbackStatus, string> = {
   new: "blue",
@@ -39,24 +43,23 @@ const statusLabel = (status: BrickchatFeedbackStatus) =>
   BRICKCHAT_FEEDBACK_STATUS_OPTIONS.find((o) => o.value === status)?.label ??
   status;
 
+const copyUserId = async (userId: string) => {
+  try {
+    await navigator.clipboard.writeText(userId);
+    message.success("User ID copied");
+  } catch {
+    message.error("Failed to copy user ID");
+  }
+};
+
+const statusOrder = (status: BrickchatFeedbackStatus = "new") =>
+  BRICKCHAT_FEEDBACK_STATUS_OPTIONS.findIndex((o) => o.value === status);
+
 const getColumns = (
   onEdit: (record: BrickchatFeedback) => void,
 ): TableColumnType<BrickchatFeedback>[] => [
   {
-    title: "Thread ID",
-    dataIndex: "threadId",
-    key: "threadId",
-    width: 260,
-    render: (threadId: string) => <ThreadIdLink threadId={threadId} />,
-  },
-  {
-    title: "User ID",
-    dataIndex: "userId",
-    key: "userId",
-    width: 220,
-  },
-  {
-    title: "Text",
+    title: "Title",
     dataIndex: "text",
     key: "text",
   },
@@ -65,29 +68,49 @@ const getColumns = (
     dataIndex: "status",
     key: "status",
     width: 130,
+    filters: BRICKCHAT_FEEDBACK_STATUS_OPTIONS.map((o) => ({
+      text: o.label,
+      value: o.value,
+    })),
+    onFilter: (value, record) => (record.status ?? "new") === value,
+    // Sort by workflow order (New → Wont Fix) rather than alphabetically.
+    sorter: (a, b) => statusOrder(a.status) - statusOrder(b.status),
     render: (status: BrickchatFeedbackStatus = "new") => (
       <Tag color={STATUS_COLORS[status]}>{statusLabel(status)}</Tag>
     ),
   },
   {
-    title: "Image URLs",
+    title: "Created At",
+    dataIndex: "createdAt",
+    key: "createdAt",
+    width: 170,
+    defaultSortOrder: "descend",
+    sorter: (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf(),
+    sortDirections: ["descend", "ascend"],
+    // @ant-design/pro-chat sets dayjs's global locale to zh-cn, so pin English here.
+    render: (createdAt: string) =>
+      dayjs(createdAt).locale("en").format("DD MMM YYYY, hh:mm A"),
+  },
+  {
+    title: "Images",
     dataIndex: "imageUrls",
     key: "imageUrls",
     render: (imageUrls: string[] | undefined) =>
       imageUrls?.length ? (
-        <Flex vertical gap={2}>
-          {imageUrls.map((url) => (
-            <a
-              key={url}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: FONT_SIZES.SUB_TEXT }}
-            >
-              {url}
-            </a>
-          ))}
-        </Flex>
+        <Image.PreviewGroup>
+          <Flex wrap gap={4}>
+            {imageUrls.map((url) => (
+              <Image
+                key={url}
+                src={url}
+                width={48}
+                height={48}
+                style={{ objectFit: "cover" }}
+                preview={{ mask: <EyeOutlined /> }}
+              />
+            ))}
+          </Flex>
+        </Image.PreviewGroup>
       ) : (
         <Typography.Text type="secondary" style={{ fontSize: FONT_SIZES.SUB_TEXT }}>
           None
@@ -97,15 +120,26 @@ const getColumns = (
   {
     title: "Actions",
     key: "actions",
-    width: 90,
+    width: 160,
     render: (_, record) => (
-      <Button
-        type="link"
-        icon={<EditOutlined />}
-        onClick={() => onEdit(record)}
-      >
-        Edit
-      </Button>
+      <Flex align="center" gap={4}>
+        <Tooltip title="Copy user ID">
+          <Button
+            type="text"
+            size="small"
+            icon={<UserOutlined />}
+            onClick={() => copyUserId(record.userId)}
+          />
+        </Tooltip>
+        <LangsmithThreadButton threadId={record.threadId} />
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => onEdit(record)}
+        >
+          Edit
+        </Button>
+      </Flex>
     ),
   },
 ];
