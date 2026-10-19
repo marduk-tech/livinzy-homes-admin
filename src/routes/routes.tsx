@@ -20,10 +20,11 @@ import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
 import { PortalGatewayPage } from "../pages/portal-gateway/portal-gateway-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
 import { MicroPocketScore } from "../pages/micro-pockets/micro-pocket-score";
-import { MicroPocketsListPage } from "../pages/micro-pockets/micro-pockets-list-page";
+import { Page } from "../pages/micro-pockets/micro-pockets-list-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
+import { ThirdPartyPage } from "../pages/third-party/third-party-page";
 import { UsersPage } from "../pages/users-page";
 
 export const Router = () => {
@@ -55,7 +56,6 @@ export const Router = () => {
           path="/brick360Data/:brick360ProjectId?"
           element={<Brick360Data />}
         ></Route>
-        <Route path="/micro-pockets" element={<MicroPocketsListPage />}></Route>
         <Route
           path="/micro-pockets/:microPocketId"
           element={<MicroPocketScore />}
@@ -81,6 +81,7 @@ export const Router = () => {
         <Route path="/marketing" element={<MarketingPage />} />
         <Route path="/manage-scripts" element={<ManageScriptsPage />} />
         <Route path="/portal-gateway" element={<PortalGatewayPage />} />
+        <Route path="/third-party" element={<ThirdPartyPage />} />
       </Route>
 
       <Route path="/*" element={<div>404</div>} />

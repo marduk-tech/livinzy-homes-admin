@@ -52,6 +52,8 @@ export const queryKeys = {
   portalAbandonedProfiles: "portalAbandonedProfiles",
   portalScrapes: "portalScrapes",
   portalConfig: "portalConfig",
+
+  ivyListings: "ivyListings",
 };
 export const LivIndexDrivers = [
   "road",
