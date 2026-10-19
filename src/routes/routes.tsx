@@ -20,7 +20,6 @@ import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
 import { PortalGatewayPage } from "../pages/portal-gateway/portal-gateway-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
 import { MicroPocketScore } from "../pages/micro-pockets/micro-pocket-score";
-import { Page } from "../pages/micro-pockets/micro-pockets-list-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
