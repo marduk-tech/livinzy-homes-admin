@@ -31,10 +31,7 @@ export interface IGlobalKnowledge {
   _id: string;
   content: string;
   sources?: string;
-  corridors?: Array<{
-    _id: string;
-    name: string;
-  }>;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -1,4 +1,4 @@
-import { SearchOutlined } from "@ant-design/icons";
+import { MessageOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Collapse,
@@ -28,6 +28,7 @@ import {
   BrickchatTurn,
 } from "../../types/brickchat-logger";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
+import { ConversationModal } from "./conversation-modal";
 import { LlmCallsView } from "./llm-calls-view";
 import { LangsmithRunButton, ThreadLinksButton } from "./thread-id-link";
 
@@ -384,6 +385,7 @@ export function BrickchatThreadsTab() {
   const navigate = useNavigate();
   const searchedThreadId = urlThreadId?.trim() || null;
   const [threadIdInput, setThreadIdInput] = useState(searchedThreadId || "");
+  const [conversationOpen, setConversationOpen] = useState(false);
 
   // keep the box in sync when the URL changes from outside (back/forward,
   // a pasted link)
@@ -500,19 +502,31 @@ export function BrickchatThreadsTab() {
 
     const lastTurnId = data.turns[data.turns.length - 1].turnId;
     return (
-      <Table
-        // remount per thread so the latest-turn default expansion re-applies
-        key={searchedThreadId}
-        dataSource={data.turns}
-        columns={columns}
-        rowKey="turnId"
-        size="small"
-        pagination={false}
-        expandable={{
-          expandedRowRender: (turn) => <TurnDetails turn={turn} />,
-          defaultExpandedRowKeys: [lastTurnId],
-        }}
-      />
+      <>
+        <Flex justify="flex-end" style={{ marginBottom: 8 }}>
+          <Button icon={<MessageOutlined />} onClick={() => setConversationOpen(true)}>
+            See Conversation
+          </Button>
+        </Flex>
+        <ConversationModal
+          threadId={searchedThreadId}
+          open={conversationOpen}
+          onClose={() => setConversationOpen(false)}
+        />
+        <Table
+          // remount per thread so the latest-turn default expansion re-applies
+          key={searchedThreadId}
+          dataSource={data.turns}
+          columns={columns}
+          rowKey="turnId"
+          size="small"
+          pagination={false}
+          expandable={{
+            expandedRowRender: (turn) => <TurnDetails turn={turn} />,
+            defaultExpandedRowKeys: [lastTurnId],
+          }}
+        />
+      </>
     );
   };
 

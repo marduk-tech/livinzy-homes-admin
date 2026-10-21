@@ -8,6 +8,7 @@ import {
   BrickfiLoggerTab,
 } from "./brickfi-logger-paths";
 import { FeedbackTab } from "./feedback-tab";
+import { PromptsTab } from "./prompts-tab";
 
 // the active tab comes from the URL (see brickfi-logger-paths.ts), and
 // switching tabs navigates - so each tab has its own linkable path
@@ -30,6 +31,10 @@ export function BrickfiLogger({ tab }: { tab: BrickfiLoggerTab }) {
 
       <Tabs.TabPane tab="Feedback" key={BRICKFI_LOGGER_TABS.feedback}>
         <FeedbackTab />
+      </Tabs.TabPane>
+
+      <Tabs.TabPane tab="Prompts" key={BRICKFI_LOGGER_TABS.prompts}>
+        <PromptsTab />
       </Tabs.TabPane>
     </Tabs>
   );

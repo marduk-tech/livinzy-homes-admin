@@ -1,9 +1,9 @@
 import { Button, Flex, Form, Input, Select, Switch, Typography } from "antd";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { useFetchCorridors } from "../../hooks/corridors-hooks";
 import {
   useCreateGlobalKnowledgeMutation,
+  useGlobalKnowledgeTags,
   useUpdateGlobalKnowledgeMutation,
 } from "../../hooks/global-knowledge-hooks";
 import { IGlobalKnowledge } from "../../types";
@@ -25,15 +25,10 @@ export function CreateGlobalKnowladgeForm({
 
   useEffect(() => {
     if (initialData) {
-      // Transform corridor data to just array of IDs before setting form values
-      const formData = {
-        ...initialData,
-        corridors: initialData.corridors?.map((corridor) => corridor._id),
-      };
-      form.setFieldsValue(formData);
+      form.setFieldsValue(initialData);
     }
   }, [initialData, form]);
-  const { data: corridors = [] } = useFetchCorridors();
+  const tags = useGlobalKnowledgeTags();
 
   const handleSave = async () => {
     try {
@@ -87,15 +82,14 @@ export function CreateGlobalKnowladgeForm({
           />
         </div>
 
-        <Form.Item name="corridors" label="Corridors">
+        <Form.Item name="tags" label="Tags">
+          {/* "tags" mode lets the user type a custom tag on top of the list */}
           <Select
-            mode="multiple"
-            placeholder="Select corridors"
+            mode="tags"
+            placeholder="Select or add tags"
             style={{ width: "100%" }}
-            options={corridors.map((corridor) => ({
-              label: corridor.name,
-              value: corridor._id,
-            }))}
+            tokenSeparators={[","]}
+            options={tags.map((tag) => ({ label: tag, value: tag }))}
           />
         </Form.Item>
 

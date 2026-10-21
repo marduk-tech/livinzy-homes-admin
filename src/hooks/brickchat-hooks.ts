@@ -2,8 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
+  getBrickchatConversation,
   getBrickchatFeedback,
   getBrickchatLog,
+  getBrickchatPrompts,
   getLlmCallsForRun,
   getRecentBrickchatLogs,
   updateBrickchatFeedback,
@@ -17,6 +19,19 @@ export function useGetBrickchatLog(threadId: string | null | undefined) {
     queryKey: [queryKeys.getBrickchatLog, threadId],
     queryFn: () => getBrickchatLog(threadId!),
     enabled: !!threadId,
+    retry: false,
+  });
+}
+
+// only fetched once the "See Conversation" modal is opened
+export function useGetBrickchatConversation(
+  threadId: string | null | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [queryKeys.getBrickchatConversation, threadId],
+    queryFn: () => getBrickchatConversation(threadId!),
+    enabled: !!threadId && enabled,
     retry: false,
   });
 }
@@ -43,6 +58,13 @@ export function useGetBrickchatFeedback() {
   return useQuery({
     queryKey: [queryKeys.getBrickchatFeedback],
     queryFn: () => getBrickchatFeedback(),
+  });
+}
+
+export function useGetBrickchatPrompts() {
+  return useQuery({
+    queryKey: [queryKeys.getBrickchatPrompts],
+    queryFn: () => getBrickchatPrompts(),
   });
 }
 

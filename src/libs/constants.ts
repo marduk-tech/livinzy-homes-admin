@@ -34,9 +34,11 @@ export const queryKeys = {
   getAllTraces: "getAllTraces",
   getUserConversations: "getUserConversations",
   getBrickchatLog: "getBrickchatLog",
+  getBrickchatConversation: "getBrickchatConversation",
   getRecentBrickchatLogs: "getRecentBrickchatLogs",
   getLlmCallsForRun: "getLlmCallsForRun",
   getBrickchatFeedback: "getBrickchatFeedback",
+  getBrickchatPrompts: "getBrickchatPrompts",
   getScripts: "getScripts",
 
   getScriptManifest: "getScriptManifest",
@@ -54,6 +56,7 @@ export const queryKeys = {
   portalConfig: "portalConfig",
 
   ivyListings: "ivyListings",
+  ambakMasterdata: "ambakMasterdata",
 };
 export const LivIndexDrivers = [
   "road",

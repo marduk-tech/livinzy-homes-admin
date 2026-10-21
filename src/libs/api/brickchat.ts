@@ -1,9 +1,11 @@
 import {
+  BrickchatConversation,
   BrickchatLog,
   BrickchatRecentThread,
   LlmCallsForRun,
 } from "../../types/brickchat-logger";
 import { BrickchatFeedback } from "../../types/brickchat-feedback";
+import { BrickchatPrompt } from "../../types/brickchat-prompt";
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getBrickchatLog = async (
@@ -11,6 +13,15 @@ export const getBrickchatLog = async (
 ): Promise<BrickchatLog> => {
   const { data } = await axiosApiInstance.get<BrickchatLog>(
     `/brickchat-logger/${threadId}`,
+  );
+  return data;
+};
+
+export const getBrickchatConversation = async (
+  threadId: string,
+): Promise<BrickchatConversation> => {
+  const { data } = await axiosApiInstance.get<BrickchatConversation>(
+    `/brickchat-logger/${threadId}/conversation`,
   );
   return data;
 };
@@ -48,6 +59,13 @@ export const updateBrickchatFeedback = async (
   const { data } = await axiosApiInstance.patch<BrickchatFeedback>(
     `/brickchat-feedback/${id}`,
     updates,
+  );
+  return data;
+};
+
+export const getBrickchatPrompts = async (): Promise<BrickchatPrompt[]> => {
+  const { data } = await axiosApiInstance.get<BrickchatPrompt[]>(
+    `/brickchat-prompts`,
   );
   return data;
 };

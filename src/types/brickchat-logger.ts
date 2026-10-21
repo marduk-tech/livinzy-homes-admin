@@ -81,3 +81,22 @@ export interface LlmCallsForRun {
   traceId: string;
   calls: LlmCall[];
 }
+
+export interface BrickchatConversationOutput {
+  summary: string;
+  projectsList: unknown[];
+  images?: unknown[];
+  followupPrompt?: string;
+  directAnswer?: boolean;
+}
+
+export interface BrickchatConversationTurn {
+  input: string;
+  // null when the turn never got an answer (e.g. errored mid-run)
+  output: BrickchatConversationOutput | null;
+}
+
+export interface BrickchatConversation {
+  thread_id: string;
+  turns: BrickchatConversationTurn[];
+}

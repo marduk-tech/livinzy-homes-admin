@@ -19,6 +19,27 @@ export function useFetchGlobalKnowledge() {
   });
 }
 
+export const DEFAULT_GLOBAL_KNOWLEDGE_TAGS = [
+  "offering",
+  "expert-guide",
+  "location",
+  "builder",
+  "loan",
+  "documentation",
+  "legal",
+];
+
+// default tags + every tag already used on an entry, de-duplicated
+export function useGlobalKnowledgeTags() {
+  const { data = [] } = useFetchGlobalKnowledge();
+  return Array.from(
+    new Set([
+      ...DEFAULT_GLOBAL_KNOWLEDGE_TAGS,
+      ...data.flatMap((entry) => entry.tags ?? []),
+    ])
+  );
+}
+
 export function useCreateGlobalKnowledgeMutation() {
   return useMutation({
     mutationFn: (globalKnowledgeData: Partial<IGlobalKnowledge>) => {

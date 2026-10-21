@@ -1,10 +1,11 @@
 import { Button, Collapse, Flex, Segmented, Spin, Tag, Typography } from "antd";
 import { useState } from "react";
-import ReactMarkdown, { Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import { useGetLlmCallsForRun } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { LlmCall, LlmCallMessage } from "../../types/brickchat-logger";
+import { markdownBox, markdownComponents, messageBox } from "./prompt-text-styles";
 
 // Message content is usually a string, but can be an array of content parts
 // ({type: "text", text} etc) - show text parts as-is and anything else as JSON.
@@ -34,37 +35,6 @@ const ROLE_COLORS: Record<string, string> = {
   assistant: "green",
   ToolMessage: "orange",
   tool: "orange",
-};
-
-const messageBox: React.CSSProperties = {
-  padding: 10,
-  backgroundColor: "#f5f5f5",
-  borderRadius: 4,
-  maxHeight: 400,
-  overflowY: "auto",
-  fontFamily: "monospace",
-  fontSize: FONT_SIZES.SUB_TEXT,
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-  margin: "4px 0 10px",
-};
-
-const markdownBox: React.CSSProperties = {
-  ...messageBox,
-  fontFamily: "inherit",
-  fontSize: FONT_SIZES.PARA,
-  whiteSpace: "normal",
-  backgroundColor: "#fafafa",
-  border: "1px solid #f0f0f0",
-};
-
-// Prompts often have unfenced JSON schemas or one-rule-per-line blocks that
-// plain markdown would fold into a single run-on paragraph - keep paragraphs'
-// own line breaks/indentation so they read the way they were written.
-const markdownComponents: Components = {
-  p: ({ node: _node, ...props }) => (
-    <p style={{ whiteSpace: "pre-wrap" }} {...props} />
-  ),
 };
 
 const isSystemRole = (role: string) => role === "SystemMessage" || role === "system";

@@ -7,6 +7,7 @@ import {
   Space,
   Table,
   TableColumnType,
+  Tag,
   Typography,
 } from "antd";
 import { useState } from "react";
@@ -28,11 +29,11 @@ export function GlobalKnowladgeList() {
   );
   const [infoModalData, setInfoModalData] = useState<{
     content: string;
-    corridors: Array<{ _id: string; name: string }>;
+    tags: string[];
     createdAt: string;
   }>({
     content: "",
-    corridors: [],
+    tags: [],
     createdAt: "",
   });
 
@@ -41,7 +42,7 @@ export function GlobalKnowladgeList() {
 
     setInfoModalData({
       content: record.content,
-      corridors: record.corridors || [],
+      tags: record.tags || [],
       createdAt,
     });
   };
@@ -50,7 +51,7 @@ export function GlobalKnowladgeList() {
     setIsInfoModalOpen(false);
     setInfoModalData({
       content: "",
-      corridors: [],
+      tags: [],
       createdAt: "",
     });
   };
@@ -106,11 +107,19 @@ export function GlobalKnowladgeList() {
       width: 400,
     },
     {
-      title: "Corridors",
-      dataIndex: "corridors",
-      key: "corridors",
-      render: (corridors: Array<{ _id: string; name: string }>) =>
-        corridors?.length ? corridors.map((c) => c.name).join(", ") : "-",
+      title: "Tags",
+      dataIndex: "tags",
+      key: "tags",
+      render: (tags: string[]) =>
+        tags?.length ? (
+          <Flex gap={4} wrap="wrap">
+            {tags.map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
+          </Flex>
+        ) : (
+          "-"
+        ),
       width: 200,
     },
     {
@@ -184,11 +193,9 @@ export function GlobalKnowladgeList() {
           <Typography.Title level={5}>Content</Typography.Title>
           <Typography.Paragraph>{infoModalData.content}</Typography.Paragraph>
 
-          <Typography.Title level={5}>Corridors</Typography.Title>
+          <Typography.Title level={5}>Tags</Typography.Title>
           <Typography.Paragraph>
-            {infoModalData.corridors?.length
-              ? infoModalData.corridors.map((c) => c.name).join(", ")
-              : "-"}
+            {infoModalData.tags?.length ? infoModalData.tags.join(", ") : "-"}
           </Typography.Paragraph>
         </div>
       </Modal>
