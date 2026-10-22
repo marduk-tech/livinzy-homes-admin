@@ -4,6 +4,8 @@ export const baseApiUrl = import.meta.env.VITE_API_URL;
 export const apiKey = import.meta.env.VITE_ADMIN_API_KEY;
 export const scriptServerApiUrl = import.meta.env.VITE_SCRIPT_SERVER_API_URL;
 export const scriptServerApiKey = import.meta.env.VITE_SCRIPT_SERVER_API_KEY;
+export const brickfiAppUrl =
+  import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
 
 export const queryKeys = {
   projects: "projects",
@@ -39,6 +41,8 @@ export const queryKeys = {
   getLlmCallsForRun: "getLlmCallsForRun",
   getBrickchatFeedback: "getBrickchatFeedback",
   getBrickchatPrompts: "getBrickchatPrompts",
+  getRevisionGroups: "getRevisionGroups",
+  getRevisions: "getRevisions",
   getScripts: "getScripts",
 
   getScriptManifest: "getScriptManifest",

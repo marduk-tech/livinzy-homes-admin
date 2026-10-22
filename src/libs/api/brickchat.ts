@@ -4,8 +4,16 @@ import {
   BrickchatRecentThread,
   LlmCallsForRun,
 } from "../../types/brickchat-logger";
-import { BrickchatFeedback } from "../../types/brickchat-feedback";
+import {
+  BrickchatFeedback,
+  BrickchatFeedbackAssessment,
+} from "../../types/brickchat-feedback";
 import { BrickchatPrompt } from "../../types/brickchat-prompt";
+import {
+  BrickchatRevision,
+  BrickchatRevisionGroup,
+  BrickchatRevisionStatus,
+} from "../../types/brickchat-revision";
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getBrickchatLog = async (
@@ -59,6 +67,98 @@ export const updateBrickchatFeedback = async (
   const { data } = await axiosApiInstance.patch<BrickchatFeedback>(
     `/brickchat-feedback/${id}`,
     updates,
+  );
+  return data;
+};
+
+// Drafts the feedback's assessment with an LLM - replaces any earlier
+// draft and clears its confirmation
+export const assessBrickchatFeedback = async (
+  id: string,
+): Promise<BrickchatFeedback> => {
+  const { data } = await axiosApiInstance.post<BrickchatFeedback>(
+    `/brickchat-feedback/${id}/assess`,
+  );
+  return data;
+};
+
+// A reviewer's edits to the assessment (null clears a field), and/or
+// confirming it (confirm: true, with reviewer) or withdrawing that (false)
+export type BrickchatFeedbackAssessmentUpdate = {
+  rootCause?: BrickchatFeedbackAssessment["rootCause"];
+  blocks?: string[];
+  expected?: string | null;
+  checks?: Record<string, unknown> | null;
+  question?: string | null;
+  confirm?: boolean;
+  reviewer?: string;
+};
+
+export const updateBrickchatFeedbackAssessment = async (
+  id: string,
+  update: BrickchatFeedbackAssessmentUpdate,
+): Promise<BrickchatFeedback> => {
+  const { data } = await axiosApiInstance.patch<BrickchatFeedback>(
+    `/brickchat-feedback/${id}/assessment`,
+    update,
+  );
+  return data;
+};
+
+// --- prompt revisions from feedback (all under /brickchat-feedback) ---
+
+export const getRevisionGroups = async (): Promise<BrickchatRevisionGroup[]> => {
+  const { data } = await axiosApiInstance.get<BrickchatRevisionGroup[]>(
+    `/brickchat-feedback/revision-groups`,
+  );
+  return data;
+};
+
+// Drafts a revision with an LLM from the given open cases
+export const generateRevision = async (
+  feedbackIds: string[],
+  createdBy?: string,
+): Promise<BrickchatRevision> => {
+  const { data } = await axiosApiInstance.post<BrickchatRevision>(
+    `/brickchat-feedback/revision-groups/generate`,
+    { feedbackIds, createdBy },
+  );
+  return data;
+};
+
+export const getRevisions = async (
+  status?: BrickchatRevisionStatus,
+): Promise<BrickchatRevision[]> => {
+  const { data } = await axiosApiInstance.get<BrickchatRevision[]>(
+    `/brickchat-feedback/revisions`,
+    { params: status ? { status } : {} },
+  );
+  return data;
+};
+
+// A reviewer's edits to a draft: new bodies for any of its blocks and/or a
+// new rationale
+export const updateRevision = async (
+  revisionId: string,
+  update: { blocks?: { key: string; body: unknown }[]; rationale?: string },
+): Promise<BrickchatRevision> => {
+  const { data } = await axiosApiInstance.patch<BrickchatRevision>(
+    `/brickchat-feedback/revisions/${revisionId}`,
+    update,
+  );
+  return data;
+};
+
+export type RevisionAction = "activate" | "reject" | "rollback";
+
+export const runRevisionAction = async (
+  revisionId: string,
+  action: RevisionAction,
+  reviewer: string,
+): Promise<BrickchatRevision> => {
+  const { data } = await axiosApiInstance.post<BrickchatRevision>(
+    `/brickchat-feedback/revisions/${revisionId}/${action}`,
+    { reviewer },
   );
   return data;
 };

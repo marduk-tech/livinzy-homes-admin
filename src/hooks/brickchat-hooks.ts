@@ -2,6 +2,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
+  assessBrickchatFeedback,
+  BrickchatFeedbackAssessmentUpdate,
   getBrickchatConversation,
   getBrickchatFeedback,
   getBrickchatLog,
@@ -9,7 +11,16 @@ import {
   getLlmCallsForRun,
   getRecentBrickchatLogs,
   updateBrickchatFeedback,
+  updateBrickchatFeedbackAssessment,
+  generateRevision,
+  getRevisionGroups,
+  getRevisions,
+  RevisionAction,
+  runRevisionAction,
+  updateRevision,
 } from "../libs/api/brickchat";
+import { BrickchatRevisionStatus } from "../types/brickchat-revision";
+import { errorMessage } from "../libs/api-error";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { BrickchatFeedback } from "../types/brickchat-feedback";
@@ -58,6 +69,128 @@ export function useGetBrickchatFeedback() {
   return useQuery({
     queryKey: [queryKeys.getBrickchatFeedback],
     queryFn: () => getBrickchatFeedback(),
+  });
+}
+
+export function useAssessBrickchatFeedbackMutation() {
+  return useMutation({
+    mutationFn: (id: string) => assessBrickchatFeedback(id),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to assess feedback"),
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getBrickchatFeedback],
+      });
+    },
+  });
+}
+
+export function useUpdateBrickchatFeedbackAssessmentMutation() {
+  return useMutation({
+    mutationFn: ({
+      id,
+      update,
+    }: {
+      id: string;
+      update: BrickchatFeedbackAssessmentUpdate;
+    }) => updateBrickchatFeedbackAssessment(id, update),
+    // the server explains why a confirm was refused (e.g. missing blocks)
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to update assessment"),
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getBrickchatFeedback],
+      });
+    },
+  });
+}
+
+// A revision changes feedback statuses and (once active) what prompts serve,
+// so every revision mutation refreshes all four lists
+const invalidateRevisionQueries = () =>
+  Promise.all(
+    [
+      queryKeys.getRevisionGroups,
+      queryKeys.getRevisions,
+      queryKeys.getBrickchatFeedback,
+      queryKeys.getBrickchatPrompts,
+    ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+  );
+
+export function useGetRevisionGroups() {
+  return useQuery({
+    queryKey: [queryKeys.getRevisionGroups],
+    queryFn: () => getRevisionGroups(),
+  });
+}
+
+export function useGetRevisions(status?: BrickchatRevisionStatus) {
+  return useQuery({
+    queryKey: [queryKeys.getRevisions, status],
+    queryFn: () => getRevisions(status),
+  });
+}
+
+export function useGenerateRevisionMutation() {
+  return useMutation({
+    mutationFn: ({
+      feedbackIds,
+      createdBy,
+    }: {
+      feedbackIds: string[];
+      createdBy?: string;
+    }) => generateRevision(feedbackIds, createdBy),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to generate a revision"),
+      });
+    },
+    onSettled: invalidateRevisionQueries,
+  });
+}
+
+export function useUpdateRevisionMutation() {
+  return useMutation({
+    mutationFn: ({
+      revisionId,
+      update,
+    }: {
+      revisionId: string;
+      update: { blocks?: { key: string; body: unknown }[]; rationale?: string };
+    }) => updateRevision(revisionId, update),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to update the revision"),
+      });
+    },
+    onSettled: invalidateRevisionQueries,
+  });
+}
+
+export function useRevisionActionMutation() {
+  return useMutation({
+    mutationFn: ({
+      revisionId,
+      action,
+      reviewer,
+    }: {
+      revisionId: string;
+      action: RevisionAction;
+      reviewer: string;
+    }) => runRevisionAction(revisionId, action, reviewer),
+    // e.g. why an activation was refused (a block changed since drafting)
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to update the revision"),
+      });
+    },
+    onSettled: invalidateRevisionQueries,
   });
 }
 

@@ -16,5 +16,7 @@ export interface BrickchatPrompt {
   body: string | Record<string, unknown> | unknown[];
   version: number | null;
   status: BrickchatPromptStatus;
+  // the revision that created this version (null for a code default)
+  revisionId: string | null;
   updatedAt: string | null;
 }

@@ -5,12 +5,14 @@
 //   /brickfi-logger/threads/:threadId  -> threads tab with that thread loaded
 //   /brickfi-logger/feedback           -> feedback tab
 //   /brickfi-logger/prompts            -> prompts tab
+//   /brickfi-logger/revisions          -> prompt revisions tab
 export const BRICKFI_LOGGER_BASE = "/brickfi-logger";
 
 export const BRICKFI_LOGGER_TABS = {
   threads: "threads",
   feedback: "feedback",
   prompts: "prompts",
+  revisions: "revisions",
 } as const;
 
 export type BrickfiLoggerTab =

@@ -19,6 +19,7 @@ import {
   useGetRecentBrickchatLogs,
 } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
+import { brickfiAppUrl } from "../../libs/constants";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import {
@@ -501,18 +502,35 @@ export function BrickchatThreadsTab() {
     }
 
     const lastTurnId = data.turns[data.turns.length - 1].turnId;
+    // eval threads only ever existed in the eval script's in-memory
+    // checkpointer, so the app can't load them - show them in the modal
+    // (rebuilt from the LangSmith trace) instead
+    const isEvalThread = searchedThreadId.includes("eval");
     return (
       <>
         <Flex justify="flex-end" style={{ marginBottom: 8 }}>
-          <Button icon={<MessageOutlined />} onClick={() => setConversationOpen(true)}>
-            See Conversation
-          </Button>
+          {isEvalThread ? (
+            <Button icon={<MessageOutlined />} onClick={() => setConversationOpen(true)}>
+              See Conversation
+            </Button>
+          ) : (
+            <Button
+              icon={<MessageOutlined />}
+              href={`${brickfiAppUrl}/app/brickchat/${encodeURIComponent(searchedThreadId)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              See Conversation
+            </Button>
+          )}
         </Flex>
-        <ConversationModal
-          threadId={searchedThreadId}
-          open={conversationOpen}
-          onClose={() => setConversationOpen(false)}
-        />
+        {isEvalThread && (
+          <ConversationModal
+            threadId={searchedThreadId}
+            open={conversationOpen}
+            onClose={() => setConversationOpen(false)}
+          />
+        )}
         <Table
           // remount per thread so the latest-turn default expansion re-applies
           key={searchedThreadId}

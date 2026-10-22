@@ -79,6 +79,10 @@ export const Router = () => {
           path="/brickfi-logger/prompts"
           element={<BrickfiLoggerPage tab="prompts" />}
         />
+        <Route
+          path="/brickfi-logger/revisions"
+          element={<BrickfiLoggerPage tab="revisions" />}
+        />
         <Route path="/traces" element={<Navigate to="/brickfi-logger/threads" replace />} />
 
         <Route path="/marketing" element={<MarketingPage />} />

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 import { ColumnSearch } from "../common/column-search";
+import { brickfiAppUrl } from "../../libs/constants";
 import { Loader } from "../common/loader";
 
 export const Brick360ProjectsList: React.FC = () => {
@@ -13,9 +14,6 @@ export const Brick360ProjectsList: React.FC = () => {
     useGetAllLvnzyProjects(false);
 
   const [showUnverified, setShowUnverified] = useState(false);
-
-  const brickfiAppUrl =
-    import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
 
   const columns: TableColumnType<LvnzyProject>[] = [
     {
