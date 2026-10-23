@@ -18,7 +18,17 @@ import {
   RevisionAction,
   runRevisionAction,
   updateRevision,
+  getEvalCases,
+  getEvalRun,
+  getEvalRuns,
+  startEvalRun,
+  stopEvalRun,
+  createEvalCase,
+  updateEvalCase,
+  deleteEvalCase,
+  importEvalCases,
 } from "../libs/api/brickchat";
+import { EvalRunStatus } from "../types/brickchat-eval";
 import { BrickchatRevisionStatus } from "../types/brickchat-revision";
 import { errorMessage } from "../libs/api-error";
 import { queryKeys } from "../libs/constants";
@@ -230,5 +240,116 @@ export function useUpdateBrickchatFeedbackMutation() {
         queryKey: [queryKeys.getBrickchatFeedback],
       });
     },
+  });
+}
+
+// active runs are polled for live results
+const EVAL_POLL_MS = 4000;
+export const isEvalRunActive = (status?: EvalRunStatus) =>
+  status === "queued" || status === "running";
+
+const invalidateEvalQueries = () =>
+  Promise.all(
+    [queryKeys.getEvalCases, queryKeys.getEvalRuns, queryKeys.getEvalRun].map(
+      (key) => queryClient.invalidateQueries({ queryKey: [key] }),
+    ),
+  );
+
+export function useGetEvalCases(poll = false) {
+  return useQuery({
+    queryKey: [queryKeys.getEvalCases],
+    queryFn: () => getEvalCases(),
+    refetchInterval: poll ? EVAL_POLL_MS : false,
+  });
+}
+
+export function useGetEvalRuns() {
+  return useQuery({
+    queryKey: [queryKeys.getEvalRuns],
+    queryFn: () => getEvalRuns(),
+    refetchInterval: (query) =>
+      query.state.data?.some((r) => isEvalRunActive(r.status))
+        ? EVAL_POLL_MS
+        : false,
+  });
+}
+
+export function useGetEvalRun(runId: string | null | undefined) {
+  return useQuery({
+    queryKey: [queryKeys.getEvalRun, runId],
+    queryFn: () => getEvalRun(runId!),
+    enabled: !!runId,
+    retry: false,
+    refetchInterval: (query) =>
+      isEvalRunActive(query.state.data?.status) ? EVAL_POLL_MS : false,
+  });
+}
+
+export function useStartEvalRunMutation() {
+  return useMutation({
+    mutationFn: startEvalRun,
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to start the eval run"),
+      });
+    },
+    onSettled: invalidateEvalQueries,
+  });
+}
+
+export function useStopEvalRunMutation() {
+  return useMutation({
+    mutationFn: (runId: string) => stopEvalRun(runId),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to stop the eval run"),
+      });
+    },
+    onSettled: invalidateEvalQueries,
+  });
+}
+
+const invalidateEvalCases = () =>
+  queryClient.invalidateQueries({ queryKey: [queryKeys.getEvalCases] });
+
+export function useSaveEvalCaseMutation() {
+  return useMutation({
+    mutationFn: ({
+      evalCase,
+      isNew,
+    }: {
+      evalCase: Parameters<typeof createEvalCase>[0];
+      isNew: boolean;
+    }) => (isNew ? createEvalCase(evalCase) : updateEvalCase(evalCase)),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to save the case"),
+      });
+    },
+    onSettled: invalidateEvalCases,
+  });
+}
+
+export function useDeleteEvalCaseMutation() {
+  return useMutation({
+    mutationFn: (caseId: string) => deleteEvalCase(caseId),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to delete the case"),
+      });
+    },
+    onSettled: invalidateEvalCases,
+  });
+}
+
+export function useImportEvalCasesMutation() {
+  return useMutation({
+    mutationFn: importEvalCases,
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to import cases"),
+      });
+    },
+    onSettled: (data) => (data?.imported ? invalidateEvalCases() : undefined),
   });
 }

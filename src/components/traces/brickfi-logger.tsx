@@ -2,6 +2,7 @@ import { Tabs } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Brick360ThreadsTab } from "./brick360-threads-tab";
 import { BrickchatThreadsTab } from "./brickchat-threads-tab";
+import { EvalsTab } from "./evals-tab";
 import {
   BRICKFI_LOGGER_PATHS,
   BRICKFI_LOGGER_TABS,
@@ -40,6 +41,10 @@ export function BrickfiLogger({ tab }: { tab: BrickfiLoggerTab }) {
 
       <Tabs.TabPane tab="Revisions" key={BRICKFI_LOGGER_TABS.revisions}>
         <RevisionsTab />
+      </Tabs.TabPane>
+
+      <Tabs.TabPane tab="Evals" key={BRICKFI_LOGGER_TABS.evals}>
+        <EvalsTab />
       </Tabs.TabPane>
     </Tabs>
   );

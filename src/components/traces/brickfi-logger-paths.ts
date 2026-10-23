@@ -6,6 +6,8 @@
 //   /brickfi-logger/feedback           -> feedback tab
 //   /brickfi-logger/prompts            -> prompts tab
 //   /brickfi-logger/revisions          -> prompt revisions tab
+//   /brickfi-logger/evals              -> eval cases and runs
+//   /brickfi-logger/evals/:runId       -> evals tab with that run open
 export const BRICKFI_LOGGER_BASE = "/brickfi-logger";
 
 export const BRICKFI_LOGGER_TABS = {
@@ -13,6 +15,7 @@ export const BRICKFI_LOGGER_TABS = {
   feedback: "feedback",
   prompts: "prompts",
   revisions: "revisions",
+  evals: "evals",
 } as const;
 
 export type BrickfiLoggerTab =
@@ -22,4 +25,6 @@ export const BRICKFI_LOGGER_PATHS = {
   tab: (tab: BrickfiLoggerTab) => `${BRICKFI_LOGGER_BASE}/${tab}`,
   thread: (threadId: string) =>
     `${BRICKFI_LOGGER_BASE}/${BRICKFI_LOGGER_TABS.threads}/${encodeURIComponent(threadId)}`,
+  evalRun: (runId: string) =>
+    `${BRICKFI_LOGGER_BASE}/${BRICKFI_LOGGER_TABS.evals}/${encodeURIComponent(runId)}`,
 };

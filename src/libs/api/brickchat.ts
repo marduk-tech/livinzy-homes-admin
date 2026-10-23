@@ -14,6 +14,13 @@ import {
   BrickchatRevisionGroup,
   BrickchatRevisionStatus,
 } from "../../types/brickchat-revision";
+import {
+  EvalCaseInput,
+  EvalCasesResponse,
+  EvalImportPreview,
+  EvalRun,
+  EvalRunListItem,
+} from "../../types/brickchat-eval";
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getBrickchatLog = async (
@@ -166,6 +173,93 @@ export const runRevisionAction = async (
 export const getBrickchatPrompts = async (): Promise<BrickchatPrompt[]> => {
   const { data } = await axiosApiInstance.get<BrickchatPrompt[]>(
     `/brickchat-prompts`,
+  );
+  return data;
+};
+
+export const getEvalCases = async (): Promise<EvalCasesResponse> => {
+  const { data } = await axiosApiInstance.get<EvalCasesResponse>(
+    `/brickchat-evals/cases`,
+  );
+  return data;
+};
+
+export const getEvalRuns = async (): Promise<EvalRunListItem[]> => {
+  const { data } = await axiosApiInstance.get<EvalRunListItem[]>(
+    `/brickchat-evals/runs`,
+  );
+  return data;
+};
+
+export const getEvalRun = async (runId: string): Promise<EvalRun> => {
+  const { data } = await axiosApiInstance.get<EvalRun>(
+    `/brickchat-evals/runs/${runId}`,
+  );
+  return data;
+};
+
+export const startEvalRun = async (payload: {
+  intent?: string;
+  caseIds?: string[];
+  triggeredBy?: string;
+}): Promise<EvalRun> => {
+  const { data } = await axiosApiInstance.post<EvalRun>(
+    `/brickchat-evals/runs`,
+    payload,
+  );
+  return data;
+};
+
+export const stopEvalRun = async (runId: string): Promise<{ ok: boolean }> => {
+  const { data } = await axiosApiInstance.post<{ ok: boolean }>(
+    `/brickchat-evals/runs/${runId}/stop`,
+  );
+  return data;
+};
+
+export const createEvalCase = async (
+  evalCase: EvalCaseInput & { updatedBy?: string },
+): Promise<EvalCaseInput> => {
+  const { data } = await axiosApiInstance.post<EvalCaseInput>(
+    `/brickchat-evals/cases`,
+    evalCase,
+  );
+  return data;
+};
+
+export const updateEvalCase = async (
+  evalCase: EvalCaseInput & { updatedBy?: string },
+): Promise<EvalCaseInput> => {
+  const { data } = await axiosApiInstance.put<EvalCaseInput>(
+    `/brickchat-evals/cases/${encodeURIComponent(evalCase.id)}`,
+    evalCase,
+  );
+  return data;
+};
+
+export const deleteEvalCase = async (caseId: string): Promise<{ ok: boolean }> => {
+  const { data } = await axiosApiInstance.delete<{ ok: boolean }>(
+    `/brickchat-evals/cases/${encodeURIComponent(caseId)}`,
+  );
+  return data;
+};
+
+// dryRun only previews - nothing is written
+export const importEvalCases = async (payload: {
+  cases: unknown[];
+  dryRun: boolean;
+  updatedBy?: string;
+}): Promise<EvalImportPreview> => {
+  const { data } = await axiosApiInstance.post<EvalImportPreview>(
+    `/brickchat-evals/cases/import`,
+    payload,
+  );
+  return data;
+};
+
+export const exportEvalCases = async (): Promise<EvalCaseInput[]> => {
+  const { data } = await axiosApiInstance.get<EvalCaseInput[]>(
+    `/brickchat-evals/cases/export`,
   );
   return data;
 };
