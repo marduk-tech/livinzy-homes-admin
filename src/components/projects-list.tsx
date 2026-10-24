@@ -218,7 +218,7 @@ export const ProjectsList: React.FC = () => {
       sortDirections: ["descend"],
       showSorterTooltip: false,
       ...ColumnSearch(["info", "name"]),
-      render: (name: string, record: Project) => (
+      render: (name: string, record: Project, index: number) => (
         <Flex
           style={{
             padding: 2,
@@ -226,6 +226,9 @@ export const ProjectsList: React.FC = () => {
           gap={1}
           align="center"
         >
+          <Tag bordered={false} style={{ minWidth: 28, textAlign: "center" }}>
+            {index + 1}
+          </Tag>
           <Tag>
             <Flex gap={4} align="center">
               <Tooltip title={name}>
@@ -302,6 +305,14 @@ export const ProjectsList: React.FC = () => {
     {
       title: "Developer",
       dataIndex: ["info", "developerId", "name"],
+      filters: [
+        { text: "Developer Present", value: "present" },
+        { text: "Developer Not Present", value: "absent" },
+      ],
+      onFilter: (value, record) => {
+        const hasDeveloper = !!(record.info.developerId as any)?.name;
+        return value === "present" ? hasDeveloper : !hasDeveloper;
+      },
     },
     {
       title: "Corridors",

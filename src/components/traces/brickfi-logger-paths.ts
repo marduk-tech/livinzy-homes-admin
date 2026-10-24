@@ -8,6 +8,7 @@
 //   /brickfi-logger/revisions          -> prompt revisions tab
 //   /brickfi-logger/evals              -> eval cases and runs
 //   /brickfi-logger/evals/:runId       -> evals tab with that run open
+//   /brickfi-logger/offerings          -> Brickfi offerings tab
 export const BRICKFI_LOGGER_BASE = "/brickfi-logger";
 
 export const BRICKFI_LOGGER_TABS = {
@@ -16,6 +17,7 @@ export const BRICKFI_LOGGER_TABS = {
   prompts: "prompts",
   revisions: "revisions",
   evals: "evals",
+  offerings: "offerings",
 } as const;
 
 export type BrickfiLoggerTab =
