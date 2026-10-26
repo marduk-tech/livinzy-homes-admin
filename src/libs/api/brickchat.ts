@@ -177,6 +177,21 @@ export const getBrickchatPrompts = async (): Promise<BrickchatPrompt[]> => {
   return data;
 };
 
+// A hand edit of one prompt block, saved as a draft manual revision - it
+// still has to be activated from the revision before it's served
+export const createPromptDraft = async (draft: {
+  key: string;
+  body: unknown;
+  rationale?: string;
+  createdBy?: string;
+}): Promise<BrickchatRevision> => {
+  const { data } = await axiosApiInstance.post<BrickchatRevision>(
+    `/brickchat-prompts/revisions`,
+    draft,
+  );
+  return data;
+};
+
 export const getEvalCases = async (): Promise<EvalCasesResponse> => {
   const { data } = await axiosApiInstance.get<EvalCasesResponse>(
     `/brickchat-evals/cases`,

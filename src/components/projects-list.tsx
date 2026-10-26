@@ -21,6 +21,7 @@ import {
   Modal,
   Row,
   Select,
+  Spin,
   Switch,
   Table,
   TableColumnType,
@@ -48,6 +49,7 @@ import {
   useRunProjectChecksMutation,
   useToggleStatusCommentResolvedMutation,
 } from "../hooks/project-hooks";
+import { useGetReraProjectById } from "../hooks/rera-projects-hooks";
 import { useDevice } from "../hooks/use-device";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
@@ -95,8 +97,7 @@ const ISSUE_TYPE_OPTIONS = [
 
 export const ProjectsList: React.FC = () => {
   const { isMobile } = useDevice();
-  const { data: corridors, isLoading: isCorridorsDataLoading } =
-    useFetchCorridors();
+  const { data: corridors } = useFetchCorridors();
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<string[]>(
@@ -122,7 +123,13 @@ export const ProjectsList: React.FC = () => {
     projectId: string;
   }>();
   const [selectedIssueToResolve, setsSelectedIssueToResolve] = useState<any>();
-  const [selectedReraProject, setSelectedReraProject] = useState<any>();
+  const [selectedReraProject, setSelectedReraProject] = useState<{
+    projectName: string;
+    reraProjectId?: string;
+  }>();
+  // fetched only when the RERA modal is opened (enabled on a non-empty id)
+  const { data: selectedReraData, isLoading: isReraDataLoading } =
+    useGetReraProjectById(selectedReraProject?.reraProjectId ?? "");
 
   const resolveProjectIssue = useResolveProjectIssueMutation({
     enableToasts: true,
@@ -158,10 +165,12 @@ export const ProjectsList: React.FC = () => {
   });
   const { user } = useAuth0();
 
-  // Helper to update specific project in cache without refetching
+  // Helper to update specific project in cache without refetching - every
+  // cached projects list, since each filter combination is cached under its
+  // own [queryKeys.projects, params] key
   const updateProjectInCache = (projectId: string, statusComment: any) => {
-    queryClient.setQueryData(
-      [queryKeys.projects],
+    queryClient.setQueriesData(
+      { queryKey: [queryKeys.projects] },
       (oldData: Project[] | undefined) => {
         if (!oldData) return oldData;
 
@@ -174,16 +183,21 @@ export const ProjectsList: React.FC = () => {
     );
   };
 
+  // projectsLoading (any fetch, including a background refresh) only drives
+  // the search box's spinner; the table only covers its rows on the first
+  // load, or while showing the previous filter's rows (placeholder data)
   const {
     data: projects,
     isFetching: projectsLoading,
+    isLoading: isProjectsFirstLoad,
+    isPlaceholderData: isShowingPreviousProjects,
     refetch: refetchProjects,
   } = useGetAllProjects({
     searchKeyword,
     issueSeverity: issueSeverity == "all" ? "" : issueSeverity,
     statusFilter: projectStatusFilter.join(","),
     issueType: issueType.join(","),
-    limit: 200,
+    limit: 100,
     sortBy: "updatedAt:desc",
     hasStatusComments,
     developerPartner: developerPartnerFilter,
@@ -218,7 +232,7 @@ export const ProjectsList: React.FC = () => {
       sortDirections: ["descend"],
       showSorterTooltip: false,
       ...ColumnSearch(["info", "name"]),
-      render: (name: string, record: Project) => (
+      render: (name: string, record: Project, index: number) => (
         <Flex
           style={{
             padding: 2,
@@ -226,6 +240,9 @@ export const ProjectsList: React.FC = () => {
           gap={1}
           align="center"
         >
+          <Tag bordered={false} style={{ minWidth: 28, textAlign: "center" }}>
+            {index + 1}
+          </Tag>
           <Tag>
             <Flex gap={4} align="center">
               <Tooltip title={name}>
@@ -302,6 +319,14 @@ export const ProjectsList: React.FC = () => {
     {
       title: "Developer",
       dataIndex: ["info", "developerId", "name"],
+      filters: [
+        { text: "Developer Present", value: "present" },
+        { text: "Developer Not Present", value: "absent" },
+      ],
+      onFilter: (value, record) => {
+        const hasDeveloper = !!(record.info.developerId as any)?.name;
+        return value === "present" ? hasDeveloper : !hasDeveloper;
+      },
     },
     {
       title: "Corridors",
@@ -313,7 +338,9 @@ export const ProjectsList: React.FC = () => {
         return (
           <Flex style={{ width: 125, flexWrap: "wrap" }} gap={4}>
             {projectCorridors.map((c: any) => {
-              const corridorObj = corridors!.find(
+              // the table no longer waits for corridors - names fill in
+              // once they've loaded
+              const corridorObj = corridors?.find(
                 (corr) => corr._id == c.corridorId,
               );
               if (corridorObj) {
@@ -409,7 +436,9 @@ export const ProjectsList: React.FC = () => {
                   onClick={() =>
                     setSelectedReraProject({
                       projectName: record.info.name,
-                      reraData: record.info.reraProjectId,
+                      // the list only carries the RERA record's timeline -
+                      // the modal fetches the full record by this id
+                      reraProjectId: (record.info.reraProjectId as any)?._id,
                     })
                   }
                   style={{ padding: 0, height: "auto", minWidth: "auto" }}
@@ -1208,18 +1237,18 @@ export const ProjectsList: React.FC = () => {
         </Col>
       </Row>
 
-      {projectsLoading ? "..":   <Typography.Text
+      {isProjectsFirstLoad || isShowingPreviousProjects ? "..":   <Typography.Text
         style={{ display: "block", padding: "0 10px", marginBottom: 8 }}
       >
         Total <span style={{fontWeight: 800}}>{projects?.length || 0}</span> projects shown
       </Typography.Text>}
-    
+
 
       <Table
         dataSource={projects}
         columns={columns}
         rowKey="_id"
-        loading={projectsLoading || isCorridorsDataLoading}
+        loading={isProjectsFirstLoad || isShowingPreviousProjects}
         pagination={false}
       />
       <JsonProjectImport
@@ -1370,7 +1399,11 @@ export const ProjectsList: React.FC = () => {
           },
         }}
       >
-        {selectedReraProject?.reraData ? (
+        {selectedReraProject?.reraProjectId && isReraDataLoading ? (
+          <Flex align="center" justify="center" style={{ height: "100%" }}>
+            <Spin />
+          </Flex>
+        ) : selectedReraData ? (
           <div
             style={{
               height: "100%",
@@ -1380,7 +1413,7 @@ export const ProjectsList: React.FC = () => {
             }}
           >
             <ReactJson
-              src={selectedReraProject.reraData}
+              src={selectedReraData}
               theme="rjv-default"
               displayDataTypes={true}
               displayObjectSize={true}

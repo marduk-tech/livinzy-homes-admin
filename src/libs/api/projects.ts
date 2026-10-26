@@ -21,8 +21,11 @@ export const getAllProjects = async ({
   hasStatusComments,
   developerPartner,
   projectIds,
+  view,
 }: {
   source?: string;
+  // "list": only the fields the projects table shows (admin source only)
+  view?: "list";
   searchKeyword?: string;
   issueSeverity?: string;
   statusFilter?: string;
@@ -45,6 +48,10 @@ export const getAllProjects = async ({
 
   if (projectIds?.length) {
     endpoint += `&projectIds=${projectIds.join(",")}`;
+  }
+
+  if (view) {
+    endpoint += `&view=${view}`;
   }
 
   return axiosApiInstance.get(endpoint).then((response) => {

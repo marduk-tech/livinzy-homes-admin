@@ -133,7 +133,7 @@ const fromForm = (f: CaseForm): EvalCaseInput => {
     } as EvalTurnSpec;
   });
   const expect = compact({
-    minProjects: f.expectMinProjects,
+    minProjects: f.expectMinProjects ?? undefined,
     directAnswer: f.directAnswer,
     expectImages: f.expectImages,
     answerMentions: f.answerMentions,

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { FormInstance, notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
@@ -24,8 +24,16 @@ export function useGetAllProjects(params: {
 }) {
   return useQuery({
     queryKey: [queryKeys.projects, params],
-    queryFn: () => api.getAllProjects({ source: "admin", ...params }),
+    // the projects table's slim response - only the fields it shows
+    queryFn: () =>
+      api.getAllProjects({ source: "admin", view: "list", ...params }),
     refetchOnWindowFocus: false,
+    // coming back to the page within a minute shows the cached list without
+    // refetching
+    staleTime: 60 * 1000,
+    // changing a filter keeps the current rows on screen until the new ones
+    // arrive, instead of emptying the table
+    placeholderData: keepPreviousData,
   });
 }
 

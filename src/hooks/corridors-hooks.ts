@@ -15,6 +15,8 @@ export function useFetchCorridors() {
   return useQuery({
     queryKey: [queryKeys.getAllCorridors],
     queryFn: () => getAllCorridors(),
+    // corridors rarely change - reuse them across pages for a while
+    staleTime: 10 * 60 * 1000,
   });
 }
 

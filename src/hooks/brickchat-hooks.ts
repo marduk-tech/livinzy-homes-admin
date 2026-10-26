@@ -8,6 +8,7 @@ import {
   getBrickchatFeedback,
   getBrickchatLog,
   getBrickchatPrompts,
+  createPromptDraft,
   getLlmCallsForRun,
   getRecentBrickchatLogs,
   updateBrickchatFeedback,
@@ -208,6 +209,19 @@ export function useGetBrickchatPrompts() {
   return useQuery({
     queryKey: [queryKeys.getBrickchatPrompts],
     queryFn: () => getBrickchatPrompts(),
+  });
+}
+
+export function useCreatePromptDraftMutation() {
+  return useMutation({
+    mutationFn: createPromptDraft,
+    // e.g. a dropped {{placeholder}} or no change from the active version
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to save the draft"),
+      });
+    },
+    onSettled: invalidateRevisionQueries,
   });
 }
 
