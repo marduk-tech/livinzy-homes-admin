@@ -5,9 +5,10 @@ export type DiffLine = {
 
 // Line-level diff of two texts via longest common subsequence - fine for
 // prompt-sized inputs (a few hundred lines each).
-export const diffLines = (before: string, after: string): DiffLine[] => {
-  const a = before.split("\n");
-  const b = after.split("\n");
+export const diffLines = (before: string, after: string): DiffLine[] =>
+  diffTokens(before.split("\n"), after.split("\n"));
+
+export const diffTokens = (a: string[], b: string[]): DiffLine[] => {
   // lcs[i][j] = length of the LCS of a[i..] and b[j..]
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
     new Array(b.length + 1).fill(0),

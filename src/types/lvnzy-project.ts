@@ -9,6 +9,7 @@ export interface LvnzyProject {
   connectivity: any;
   originalProjectId: any;
   score: any;
+  scoreOriginal?: any;
   createdAt: string;
   updatedAt: string;
 }

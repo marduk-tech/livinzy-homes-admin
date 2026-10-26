@@ -3,6 +3,7 @@ import { Button, Flex, Popconfirm, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EditScoreDialog } from "../../components/brick360/edit-score-dialog";
+import { ScoreDiffDialog } from "../../components/brick360/score-diff-dialog";
 import { Loader } from "../../components/common/loader";
 import {
   containerStyle,
@@ -172,15 +173,23 @@ export function Brick360Full() {
                 <div key={key} style={containerStyle}>
                   <Flex justify="space-between" align="center">
                     <div style={sectionTitleStyle}>{label}</div>
-                    <EditScoreDialog
-                      sectionData={sectionData}
-                      sectionKey={key}
-                      onSave={(updatedData) => {
-                        const newProjectData = { ...brick360ProjectData };
-                        newProjectData.score[key] = updatedData;
-                        setBrick360ProjectData(newProjectData as LvnzyProject);
-                      }}
-                    />
+                    <Flex gap={8} align="center">
+                      <ScoreDiffDialog
+                        label={label}
+                        sectionKey={key}
+                        original={brick360ProjectData?.scoreOriginal?.[key]}
+                        current={sectionData}
+                      />
+                      <EditScoreDialog
+                        sectionData={sectionData}
+                        sectionKey={key}
+                        onSave={(updatedData) => {
+                          const newProjectData = { ...brick360ProjectData };
+                          newProjectData.score[key] = updatedData;
+                          setBrick360ProjectData(newProjectData as LvnzyProject);
+                        }}
+                      />
+                    </Flex>
                   </Flex>
                   {content(sectionData)}
                 </div>
