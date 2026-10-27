@@ -183,7 +183,7 @@ export const getProjectStatusCounts = async () => {
 };
 
 // Pre-processes project data (drivers, developer history, investment comps
-// etc). Must complete before generateScore below.
+// etc) on its own - generateScore below already does this first.
 export const processProjectData = async (projectId: string) => {
   const endpoint = `/projects/process-data`;
   return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
@@ -191,13 +191,27 @@ export const processProjectData = async (projectId: string) => {
   });
 };
 
-// Generates the score card off already pre-processed data - separate from
-// processProjectData above so it can be retried on its own.
-export const generateScore = async (projectId: string) => {
+// The score card's parts that can be generated on their own - the four
+// pillars, then the summary (pros/cons) written from them. Mirrors
+// SCORE_PARTS in the services' score-card-v3.js.
+export const SCORE_CARD_PARTS = [
+  { value: "property", label: "Property" },
+  { value: "developer", label: "Developer" },
+  { value: "areaConnectivity", label: "Area & Connectivity" },
+  { value: "financials", label: "Financials" },
+  { value: "summary", label: "Summary (pros & cons)" },
+] as const;
+
+// Generates the score card - always re-processes the project's data first,
+// then scores it. With `pillars`, only those parts are generated, and
+// regenerated even if already scored; without, every part not yet scored.
+export const generateScore = async (projectId: string, pillars?: string[]) => {
   const endpoint = `/projects/generate-score`;
-  return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
-    return response.data;
-  });
+  return axiosApiInstance
+    .post(endpoint, { projectId, ...(pillars?.length ? { pillars } : {}) })
+    .then((response) => {
+      return response.data;
+    });
 };
 
 export const runProjectChecksForProject = async (projectId: string) => {

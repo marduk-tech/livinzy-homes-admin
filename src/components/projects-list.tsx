@@ -51,6 +51,7 @@ import {
 } from "../hooks/project-hooks";
 import { useGetReraProjectById } from "../hooks/rera-projects-hooks";
 import { useDevice } from "../hooks/use-device";
+import { SCORE_CARD_PARTS } from "../libs/api/projects";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { FONT_SIZES } from "../theme/font-sizes";
@@ -117,6 +118,12 @@ export const ProjectsList: React.FC = () => {
   const [hasStatusComments, setHasStatusComments] = useState<boolean>(false);
   const [developerPartnerFilter, setDeveloperPartnerFilter] =
     useState<boolean>(false);
+  // the project whose score card dialog is open, and the parts picked in it
+  const [scoreCardProject, setScoreCardProject] = useState<{
+    projectId: string;
+    projectName: string;
+  }>();
+  const [scoreCardPillars, setScoreCardPillars] = useState<string[]>([]);
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
     projectName: string;
@@ -757,16 +764,11 @@ export const ProjectsList: React.FC = () => {
           return COLORS.textColorDark;
         };
 
+        // opens the score card dialog (see the Modal at the bottom), where
+        // the parts to generate are picked
         const handleGenerateScoreCard = () => {
-          Modal.confirm({
-            title: "Generate Score Card",
-            content: `Are you sure you want to generate the score card for "${record.info.name}"? This process may take a few minutes.`,
-            okText: "Generate",
-            cancelText: "Cancel",
-            onOk: () => {
-              generateScoreCardMutation.mutate({ projectId: id });
-            },
-          });
+          setScoreCardPillars([]);
+          setScoreCardProject({ projectId: id, projectName: record.info.name });
         };
 
         const getProcessDataTooltip = () => {
@@ -823,7 +825,7 @@ export const ProjectsList: React.FC = () => {
               </Tooltip>
             )}
 
-            {canShowScoreCard && (
+            {/* {canShowScoreCard && (
               <Tooltip title={getProcessDataTooltip()}>
                 <Button
                   type="link"
@@ -839,7 +841,7 @@ export const ProjectsList: React.FC = () => {
                   onClick={handleProcessProjectData}
                 />
               </Tooltip>
-            )}
+            )} */}
 
             {canShowScoreCard && (
               <Tooltip title={getScoreCardTooltip()}>
@@ -1255,6 +1257,52 @@ export const ProjectsList: React.FC = () => {
         isModalOpen={isJsonImportModalOpen}
         setIsModalOpen={setIsJsonImportModalOpen}
       />
+      <Modal
+        title={`Generate Score Card - ${scoreCardProject?.projectName || ""}`}
+        open={!!scoreCardProject}
+        okText={
+          scoreCardPillars.length
+            ? `Regenerate ${scoreCardPillars.length} part${scoreCardPillars.length > 1 ? "s" : ""}`
+            : "Generate"
+        }
+        onOk={() => {
+          if (!scoreCardProject) return;
+          generateScoreCardMutation.mutate({
+            projectId: scoreCardProject.projectId,
+            pillars: scoreCardPillars.length ? scoreCardPillars : undefined,
+          });
+          setScoreCardProject(undefined);
+        }}
+        onCancel={() => setScoreCardProject(undefined)}
+        destroyOnClose
+      >
+        <Flex vertical gap={12}>
+          <Typography.Text type="secondary">
+            The project's data is re-processed first, then scored - this may
+            take a few minutes. Pick the parts to regenerate, or leave them
+            all unchecked to generate whatever hasn't been scored yet.
+          </Typography.Text>
+          <Checkbox.Group
+            value={scoreCardPillars}
+            onChange={(values) => setScoreCardPillars(values as string[])}
+          >
+            <Flex vertical gap={8}>
+              {SCORE_CARD_PARTS.map((part) => (
+                <Checkbox key={part.value} value={part.value}>
+                  {part.label}
+                </Checkbox>
+              ))}
+            </Flex>
+          </Checkbox.Group>
+          {scoreCardPillars.length > 0 &&
+            !scoreCardPillars.includes("summary") && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                The summary (pros & cons) is written from all pillars - tick
+                it too if a regenerated pillar should be reflected there.
+              </Typography.Text>
+            )}
+        </Flex>
+      </Modal>
       <Modal
         title={projectIssuesSelected?.projectName}
         open={!!projectIssuesSelected}

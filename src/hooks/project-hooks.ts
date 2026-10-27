@@ -425,10 +425,17 @@ export function useGenerateScoreCardMutation({
   enableToasts?: boolean;
 }) {
   return useMutation({
-    // Data processing has its own button/mutation above - project data must
-    // already be processed (the backend rejects otherwise) before this runs.
-    mutationFn: ({ projectId }: { projectId: string }) => {
-      return api.generateScore(projectId);
+    // The backend re-processes the project's data first, then scores it -
+    // only the given pillars (regenerated even if already scored), or every
+    // part not yet scored when none are given
+    mutationFn: ({
+      projectId,
+      pillars,
+    }: {
+      projectId: string;
+      pillars?: string[];
+    }) => {
+      return api.generateScore(projectId, pillars);
     },
     onSuccess: () => {
       if (enableToasts) {
