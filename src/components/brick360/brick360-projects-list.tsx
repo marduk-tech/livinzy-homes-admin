@@ -63,7 +63,7 @@ export const Brick360ProjectsList: React.FC = () => {
       render: (slug: string, record: LvnzyProject) => {
         if (!slug) return "-";
         const reportUrl = `${brickfiAppUrl}/app/brick360/${slug}`;
-        if (!record.score) {
+        if (!record.scoreExists) {
           return "Report Missing";
         }
         return (
@@ -112,7 +112,8 @@ export const Brick360ProjectsList: React.FC = () => {
       </Flex>
       <Table
         dataSource={projects.filter((p: any) => {
-          if (!p || !p.score) return false;
+          // the list sends whether there's a score, not the score itself
+          if (!p || !p.scoreExists) return false;
           const isVerified = p.originalProjectId?.info?.status === "report-verified";
           return showUnverified ? !isVerified : isVerified;
         })}

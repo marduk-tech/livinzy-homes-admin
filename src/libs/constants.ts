@@ -42,6 +42,7 @@ export const queryKeys = {
   getBrickchatFeedback: "getBrickchatFeedback",
   getBrickchatPrompts: "getBrickchatPrompts",
   getBrickfiOfferings: "getBrickfiOfferings",
+  getBrickfiOfferingTickets: "getBrickfiOfferingTickets",
   getRevisionGroups: "getRevisionGroups",
   getRevisions: "getRevisions",
   getEvalCases: "getEvalCases",

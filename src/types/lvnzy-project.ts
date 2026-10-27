@@ -1,6 +1,8 @@
 export interface LvnzyProject {
   _id: string;
   slug?: string;
+  // GET /lvnzy-projects (the list) sends this instead of the score itself
+  scoreExists?: boolean;
   property: any;
   developer: any;
   investment: any;

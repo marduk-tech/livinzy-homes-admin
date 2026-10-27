@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import {
   createBrickfiOffering,
+  getBrickfiOfferingTickets,
   getBrickfiOfferings,
   updateBrickfiOffering,
 } from "../libs/api/brickfi-offerings";
@@ -53,5 +54,12 @@ export function useUpdateBrickfiOfferingMutation() {
       });
     },
     onSettled: invalidateOfferings,
+  });
+}
+
+export function useGetBrickfiOfferingTickets() {
+  return useQuery({
+    queryKey: [queryKeys.getBrickfiOfferingTickets],
+    queryFn: () => getBrickfiOfferingTickets(),
   });
 }

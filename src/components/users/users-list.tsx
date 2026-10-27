@@ -60,6 +60,7 @@ import { SetCallbackModal } from "./set-callback-modal";
 import { COLORS } from "../../theme/colors";
 import DynamicReactIcon from "../common/dynamic-react-icon";
 import { ActionableLeads } from "./actionable-leads";
+import { OfferingTickets } from "./offering-tickets";
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
@@ -135,9 +136,9 @@ export function UsersList() {
   const [notificationType, setNotificationType] = useState<
     "report" | "legal"
   >("report");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "leads" | "actionable-leads">(
-    "users",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "users" | "reports" | "leads" | "actionable-leads" | "tickets"
+  >("users");
 
   const [isLeadTrailModalOpen, setIsLeadTrailModalOpen] = useState(false);
   const [leadTrailUser, setLeadTrailUser] = useState<User | undefined>();
@@ -1419,7 +1420,7 @@ _If you need any kind of assistance with regards to ${
 
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as "users" | "reports" | "leads" | "actionable-leads")}
+        onChange={(key) => setActiveTab(key as typeof activeTab)}
       >
         <Tabs.TabPane tab="All Users" key="users">
           <Search
@@ -1497,6 +1498,12 @@ _If you need any kind of assistance with regards to ${
               }}
             />
           )}
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="Tickets" key="tickets">
+          {/* requests raised from Brickfi offerings in brickchat - only
+            fetched once the tab is opened */}
+          {activeTab === "tickets" && <OfferingTickets />}
         </Tabs.TabPane>
       </Tabs>
 

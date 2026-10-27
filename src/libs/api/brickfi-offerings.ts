@@ -1,6 +1,7 @@
 import {
   BrickfiOffering,
   BrickfiOfferingInput,
+  BrickfiOfferingTicket,
   BrickfiOfferingUpdate,
 } from "../../types/brickfi-offering";
 import { axiosApiInstance } from "../axios-api-Instance";
@@ -29,6 +30,15 @@ export const updateBrickfiOffering = async (
   const { data } = await axiosApiInstance.patch<BrickfiOffering>(
     `/brickfi-offerings/${id}`,
     update,
+  );
+  return data;
+};
+
+export const getBrickfiOfferingTickets = async (): Promise<
+  BrickfiOfferingTicket[]
+> => {
+  const { data } = await axiosApiInstance.get<BrickfiOfferingTicket[]>(
+    `/brickfi-offerings/tickets`,
   );
   return data;
 };

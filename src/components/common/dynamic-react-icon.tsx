@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-type IconSetKey =
+export type IconSetKey =
   | "fa"
   | "bi"
   | "fc"

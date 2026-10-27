@@ -13,6 +13,8 @@ export interface BrickfiOfferingCta {
   label: string;
   flowKey: string;
   description?: string;
+  // optional button icon - a react-icons set key and an icon name in it
+  icon?: { iconSet: string; iconName: string };
 }
 
 // A Brickfi service suggested in brickchat when the conversation fits it
@@ -41,3 +43,33 @@ export type BrickfiOfferingInput = Omit<
 
 // key can't be changed after creation
 export type BrickfiOfferingUpdate = Partial<Omit<BrickfiOfferingInput, "key">>;
+
+export type BrickfiOfferingTicketStatus = "open" | "in-progress" | "closed";
+
+// A request a user submitted from an offering's CTA flow in brickchat (see
+// GET /brickfi-offerings/tickets)
+export interface BrickfiOfferingTicket {
+  _id: string;
+  ticketId: string;
+  // the signed-in user who raised it - null for a guest
+  user: {
+    _id: string;
+    name?: string;
+    mobile?: string;
+    countryCode?: string;
+    email?: string;
+  } | null;
+  guestId?: string;
+  threadId: string;
+  turnId?: string;
+  offeringKey: string;
+  // current names - null if the offering or CTA no longer exists
+  offeringTitle: string | null;
+  ctaId: string;
+  ctaLabel: string | null;
+  // whatever the CTA's flow collected - its shape is the flow's own
+  data: Record<string, unknown>;
+  status: BrickfiOfferingTicketStatus;
+  createdAt: string;
+  updatedAt: string;
+}

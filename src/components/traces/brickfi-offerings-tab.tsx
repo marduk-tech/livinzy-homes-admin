@@ -30,6 +30,7 @@ import {
   BrickfiOfferingInput,
   BrickfiOfferingStatus,
 } from "../../types/brickfi-offering";
+import DynamicReactIcon, { IconSetKey } from "../common/dynamic-react-icon";
 import { markdownBox, markdownComponents } from "./prompt-text-styles";
 
 const STATUS_COLORS: Record<BrickfiOfferingStatus, string> = {
@@ -45,6 +46,27 @@ const STATUS_OPTIONS = BRICKFI_OFFERING_STATUSES.map((s) => ({
 
 // same slug rule for offering keys and CTA ids
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+// react-icons sets a CTA icon can come from - the ones this app's
+// DynamicReactIcon can preview, all of which brickfi-app renders too
+const CTA_ICON_SETS: IconSetKey[] = [
+  "ai",
+  "bi",
+  "bs",
+  "fa",
+  "fa6",
+  "fc",
+  "fi",
+  "gi",
+  "hi",
+  "io",
+  "io5",
+  "md",
+  "pi",
+  "ri",
+  "si",
+  "tb",
+];
 
 const formatDate = (date?: string) =>
   // @ant-design/pro-chat sets dayjs's global locale to zh-cn, so pin English
@@ -75,6 +97,10 @@ const cleanValues = (values: BrickfiOfferingInput): BrickfiOfferingInput => ({
     label: cta.label.trim(),
     flowKey: cta.flowKey.trim(),
     ...(cta.description?.trim() ? { description: cta.description.trim() } : {}),
+    // only a complete icon is kept - a cleared one is dropped
+    ...(cta.icon?.iconSet && cta.icon?.iconName?.trim()
+      ? { icon: { iconSet: cta.icon.iconSet, iconName: cta.icon.iconName.trim() } }
+      : {}),
   })),
   status: values.status,
 });
@@ -410,10 +436,91 @@ function OfferingDrawer({
                     <Form.Item
                       name={[field.name, "description"]}
                       label="Description"
-                      style={{ marginBottom: 0 }}
+                      style={{ marginBottom: 8 }}
                     >
                       <Input placeholder="Optional" />
                     </Form.Item>
+                    <Flex gap={12} align="flex-start">
+                      <Form.Item
+                        name={[field.name, "icon", "iconSet"]}
+                        label="Icon set"
+                        tooltip="Optional button icon - a react-icons set, e.g. md for Material Design"
+                        dependencies={[["ctas", field.name, "icon", "iconName"]]}
+                        rules={[
+                          ({ getFieldValue }) => ({
+                            validator: async (_, iconSet?: string) => {
+                              const iconName = getFieldValue([
+                                "ctas",
+                                field.name,
+                                "icon",
+                                "iconName",
+                              ]);
+                              if (iconName?.trim() && !iconSet) {
+                                throw new Error("Pick the icon's set");
+                              }
+                            },
+                          }),
+                        ]}
+                        style={{ width: 140, marginBottom: 0 }}
+                      >
+                        <Select
+                          allowClear
+                          placeholder="e.g. md"
+                          options={CTA_ICON_SETS.map((s) => ({ label: s, value: s }))}
+                        />
+                      </Form.Item>
+                      <Form.Item
+                        name={[field.name, "icon", "iconName"]}
+                        label="Icon name"
+                        tooltip="The icon's name in that set, as on react-icons.github.io - e.g. MdGavel"
+                        dependencies={[["ctas", field.name, "icon", "iconSet"]]}
+                        rules={[
+                          ({ getFieldValue }) => ({
+                            validator: async (_, iconName?: string) => {
+                              const iconSet = getFieldValue([
+                                "ctas",
+                                field.name,
+                                "icon",
+                                "iconSet",
+                              ]);
+                              if (iconSet && !iconName?.trim()) {
+                                throw new Error("Enter the icon's name");
+                              }
+                            },
+                          }),
+                        ]}
+                        style={{ flex: 1, marginBottom: 0 }}
+                      >
+                        <Input placeholder="e.g. MdGavel" />
+                      </Form.Item>
+                      <Form.Item label="Preview" style={{ marginBottom: 0 }}>
+                        <Form.Item noStyle shouldUpdate>
+                          {({ getFieldValue }) => {
+                            const icon = getFieldValue(["ctas", field.name, "icon"]);
+                            return (
+                              <Flex
+                                align="center"
+                                justify="center"
+                                style={{ width: 32, height: 32 }}
+                              >
+                                {icon?.iconSet && icon?.iconName?.trim() ? (
+                                  // keyed so a changed set/name starts fresh
+                                  // instead of keeping the last icon found
+                                  <DynamicReactIcon
+                                    key={`${icon.iconSet}:${icon.iconName.trim()}`}
+                                    iconSet={icon.iconSet}
+                                    iconName={icon.iconName.trim()}
+                                    size={20}
+                                  />
+                                ) : (
+                                  <Typography.Text type="secondary">-</Typography.Text>
+                                )}
+                              </Flex>
+                            );
+                          }}
+                        </Form.Item>
+                      </Form.Item>
+                    </Flex>
                   </Card>
                 ))}
                 <Button

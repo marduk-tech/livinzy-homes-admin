@@ -1,4 +1,8 @@
-import { CheckCircleFilled } from "@ant-design/icons";
+import {
+  CheckCircleFilled,
+  DownOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 import { Button, Flex, Popconfirm, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -15,6 +19,7 @@ import {
   useUpdateLvnzyProject,
 } from "../../hooks/lvnzyprojects-hooks";
 import { useUpdateProjectMutation } from "../../hooks/project-hooks";
+import { brickfiAppUrl } from "../../libs/constants";
 import { LvnzyProject } from "../../types/lvnzy-project";
 
 export function Brick360Full() {
@@ -25,6 +30,22 @@ export function Brick360Full() {
 
   const [brick360ProjectData, setBrick360ProjectData] =
     useState<LvnzyProject>();
+
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   const updateProjectMutation = useUpdateLvnzyProject();
 
@@ -121,6 +142,9 @@ export function Brick360Full() {
     }),
   ];
 
+  // shown in the preview iframe and opened by "Open Report"
+  const reportUrl = `${brickfiAppUrl}/app/brick360/${brick360ProjectId}?open=standalone`;
+
   if (brick360ProjectIsLoading || !brick360Project) {
     return <Loader></Loader>;
   }
@@ -129,7 +153,16 @@ export function Brick360Full() {
       <Flex gap={24} align="flex-start">
         <div style={{ width: "75%" }}>
           <Flex justify="space-between" align="center">
-            <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
+            <Flex gap={12} align="center">
+              <h1 style={{ margin: 0 }}>{brick360Project.meta.projectName}</h1>
+              <Button
+                href={reportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Report
+              </Button>
+            </Flex>
             <Flex gap={8} align="center">
               {isVerified ? (
                 <Typography.Text type="success">
@@ -169,11 +202,33 @@ export function Brick360Full() {
               const sectionData = brick360Project["score"][key];
               if (!sectionData) return null;
 
+              const isExpanded = expandedSections.has(key);
+
               return (
                 <div key={key} style={containerStyle}>
-                  <Flex justify="space-between" align="center">
-                    <div style={sectionTitleStyle}>{label}</div>
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    onClick={() => toggleSection(key)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <Flex gap={8} align="center">
+                      {isExpanded ? <DownOutlined /> : <RightOutlined />}
+                      <div
+                        style={{
+                          ...sectionTitleStyle,
+                          marginBottom: 0,
+                        }}
+                      >
+                        {label}
+                      </div>
+                    </Flex>
+                    {/* stop clicks (incl. ones bubbling from dialog portals) from toggling the section */}
+                    <Flex
+                      gap={8}
+                      align="center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <ScoreDiffDialog
                         label={label}
                         sectionKey={key}
@@ -191,7 +246,11 @@ export function Brick360Full() {
                       />
                     </Flex>
                   </Flex>
-                  {content(sectionData)}
+                  {isExpanded && (
+                    <div style={{ marginTop: "1rem" }}>
+                      {content(sectionData)}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -209,7 +268,7 @@ export function Brick360Full() {
         >
           <iframe
             key={brick360ProjectId}
-            src={`https://www.brickfi.in/app/brick360/${brick360ProjectId}`}
+            src={reportUrl}
             title="Brick360 mobile preview"
             style={{
               width: "100%",
