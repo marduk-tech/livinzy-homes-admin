@@ -33,6 +33,7 @@ import {
   useUpdateBrickchatFeedbackMutation,
 } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
+import { brickfiAppUrl } from "../../libs/constants";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import {
   BRICKCHAT_FEEDBACK_CATEGORY_OPTIONS,
@@ -46,7 +47,6 @@ import {
   RESOLVED_BRICKCHAT_FEEDBACK_STATUSES,
 } from "../../types/brickchat-feedback";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
-import { ConversationModal } from "./conversation-modal";
 import { FeedbackAssessmentDrawer } from "./feedback-assessment-drawer";
 import { langsmithThreadUrl, ThreadLinksButton } from "./thread-id-link";
 
@@ -139,7 +139,7 @@ function FeedbackEntryModal({
   onClose: () => void;
 }) {
   const navigate = useNavigate();
-  const [conversationOpen, setConversationOpen] = useState(false);
+  const updateFeedback = useUpdateBrickchatFeedbackMutation();
 
   const renderBody = () => {
     if (isLoading) {
@@ -169,6 +169,22 @@ function FeedbackEntryModal({
             </Tag>
           )}
         </Flex>
+        <Flex align="center" gap={8}>
+          <Typography.Text type="secondary">Status</Typography.Text>
+          <Select
+            value={feedback.status ?? "new"}
+            options={BRICKCHAT_FEEDBACK_STATUS_OPTIONS}
+            loading={updateFeedback.isPending}
+            disabled={updateFeedback.isPending}
+            style={{ width: 160 }}
+            // API errors are toasted by the mutation
+            onChange={(status) =>
+              updateFeedback
+                .mutateAsync({ id: feedback._id, updates: { status } })
+                .catch(() => {})
+            }
+          />
+        </Flex>
         <Flex wrap gap={8}>
           <Button
             icon={<ExportOutlined />}
@@ -192,7 +208,9 @@ function FeedbackEntryModal({
           </Button>
           <Button
             icon={<MessageOutlined />}
-            onClick={() => setConversationOpen(true)}
+            href={`${brickfiAppUrl}/app/brickchat/${encodeURIComponent(threadId)}`}
+            target="_blank"
+            rel="noopener noreferrer"
           >
             See conversation
           </Button>
@@ -213,11 +231,6 @@ function FeedbackEntryModal({
             </Flex>
           </Image.PreviewGroup>
         )}
-        <ConversationModal
-          threadId={threadId}
-          open={conversationOpen}
-          onClose={() => setConversationOpen(false)}
-        />
       </Flex>
     );
   };
