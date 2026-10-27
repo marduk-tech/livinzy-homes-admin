@@ -1,10 +1,11 @@
 import { PlayCircleFilled } from "@ant-design/icons";
-import { Alert, Avatar, Card, Col, Descriptions, Empty, Flex, Image, List, Modal, Row, Select, Tag, Typography } from "antd";
+import { Alert, Avatar, Card, Col, Descriptions, Empty, Flex, Image, List, Modal, Row, Select, Tabs, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useIvyListings } from "../../hooks/third-party-hooks";
 import type { IvyListing, IvyStagingGroup, IvyVideo } from "../../libs/api/ivy-homes";
 import { errorMessage } from "../../libs/api-error";
 import { HlsVideo } from "./hls-video";
+import { IvyProjectMapping } from "./ivy-project-mapping";
 
 const formatPrice = (price: number) => `₹${price.toLocaleString("en-IN")}`;
 
@@ -131,7 +132,7 @@ function ExploreSpace({ groups }: { groups: IvyStagingGroup[] }) {
   );
 }
 
-export function IvyHomesTab() {
+function IvyListingsView() {
   const { data: listings = [], isLoading, error } = useIvyListings();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [projectId, setProjectId] = useState<number | undefined>();
@@ -221,5 +222,18 @@ export function IvyHomesTab() {
         )}
       </Col>
     </Row>
+  );
+}
+
+export function IvyHomesTab() {
+  return (
+    <Tabs
+      size="small"
+      destroyInactiveTabPane
+      items={[
+        { key: "listings", label: "Listings", children: <IvyListingsView /> },
+        { key: "project-mapping", label: "Project Mapping", children: <IvyProjectMapping /> },
+      ]}
+    />
   );
 }

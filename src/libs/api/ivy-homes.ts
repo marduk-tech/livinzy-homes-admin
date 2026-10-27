@@ -1,4 +1,5 @@
 import axios from "axios";
+import { axiosApiInstance } from "../axios-api-Instance";
 
 // Public partner API, no auth (see Ivy Homes Live Listings API v2 doc).
 const IVY_LISTINGS_URL = "https://api.ivy.homes/api/v2/properties/paginated/";
@@ -74,4 +75,74 @@ export const getIvyListings = async (): Promise<IvyListing[]> => {
     params = undefined; // the "next" URL already carries the query string
   }
   return listings.map((l) => ({ ...l, city: "Bangalore" }));
+};
+
+// Project mapping lives in services (/third-party/ivy-homes/mappings); the
+// mapping itself is stored on the Brickfi project's inventoryStatus.
+
+export interface IvyProjectSummary {
+  id: number;
+  name: string;
+  slug?: string;
+  locality?: string;
+  salesArea?: string;
+  lat?: number;
+  lng?: number;
+  listingCount?: number;
+  statuses?: string[];
+}
+
+export interface IvyProjectMatch {
+  _id: string;
+  name: string;
+  score: number | null;
+  distanceKm: number | null;
+  confident?: boolean; // would be auto-mapped by "Run matching"
+}
+
+// mapped: already in the DB, matched: auto-mapped by this run,
+// stale: mapped in the DB but Ivy no longer lists the project
+export type IvyMappingOutcome = "mapped" | "matched" | "suggested" | "unmatched" | "error" | "stale";
+
+export interface IvyProjectMapping {
+  ivyProject: IvyProjectSummary;
+  mappedProject: IvyProjectMatch | null;
+  suggestion: IvyProjectMatch | null;
+  outcome: IvyMappingOutcome;
+  error?: string;
+}
+
+export interface IvyMappingsResponse {
+  rows: IvyProjectMapping[];
+  summary: Partial<Record<IvyMappingOutcome, number>>;
+}
+
+export interface IvyMappingUpdate {
+  ivyProjectId: number;
+  mappedProject: IvyProjectMatch | null;
+  removedFrom: string[];
+}
+
+export const getIvyMappings = async (): Promise<IvyMappingsResponse> => {
+  const response = await axiosApiInstance.get<IvyMappingsResponse>("/third-party/ivy-homes/mappings");
+  return response.data;
+};
+
+export const runIvyMatching = async (): Promise<IvyMappingsResponse> => {
+  const response = await axiosApiInstance.post<IvyMappingsResponse>("/third-party/ivy-homes/mappings/match");
+  return response.data;
+};
+
+// projectId null removes the mapping
+export const updateIvyMapping = async ({
+  ivyProjectId,
+  projectId,
+}: {
+  ivyProjectId: number;
+  projectId: string | null;
+}): Promise<IvyMappingUpdate> => {
+  const response = await axiosApiInstance.put<IvyMappingUpdate>(`/third-party/ivy-homes/mappings/${ivyProjectId}`, {
+    projectId,
+  });
+  return response.data;
 };

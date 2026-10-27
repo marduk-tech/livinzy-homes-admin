@@ -64,6 +64,7 @@ export const queryKeys = {
   portalConfig: "portalConfig",
 
   ivyListings: "ivyListings",
+  ivyMappings: "ivyMappings",
   ambakMasterdata: "ambakMasterdata",
 };
 export const LivIndexDrivers = [
