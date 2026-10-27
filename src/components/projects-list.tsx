@@ -51,7 +51,7 @@ import {
 } from "../hooks/project-hooks";
 import { useGetReraProjectById } from "../hooks/rera-projects-hooks";
 import { useDevice } from "../hooks/use-device";
-import { SCORE_CARD_PARTS } from "../libs/api/projects";
+import { GenerateScoreCardModal } from "./brick360/generate-score-card-modal";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
 import { FONT_SIZES } from "../theme/font-sizes";
@@ -70,7 +70,7 @@ const RESOLVABLE_ISSUE_FIELDS = [
   "Sqft Pricing",
 ];
 
-const STATUS_OPTIONS = [
+export const STATUS_OPTIONS = [
   { label: "Basic Details Ready", value: "basic-details-ready" },
   { label: "Data Populated", value: "data-populated" },
   { label: "Data Verified", value: "data-verified" },
@@ -118,12 +118,11 @@ export const ProjectsList: React.FC = () => {
   const [hasStatusComments, setHasStatusComments] = useState<boolean>(false);
   const [developerPartnerFilter, setDeveloperPartnerFilter] =
     useState<boolean>(false);
-  // the project whose score card dialog is open, and the parts picked in it
+  // the project whose score card dialog is open
   const [scoreCardProject, setScoreCardProject] = useState<{
     projectId: string;
     projectName: string;
   }>();
-  const [scoreCardPillars, setScoreCardPillars] = useState<string[]>([]);
   const [projectIssuesSelected, setProjectIssuesSelected] = useState<{
     issues: any[];
     projectName: string;
@@ -767,7 +766,6 @@ export const ProjectsList: React.FC = () => {
         // opens the score card dialog (see the Modal at the bottom), where
         // the parts to generate are picked
         const handleGenerateScoreCard = () => {
-          setScoreCardPillars([]);
           setScoreCardProject({ projectId: id, projectName: record.info.name });
         };
 
@@ -1257,52 +1255,19 @@ export const ProjectsList: React.FC = () => {
         isModalOpen={isJsonImportModalOpen}
         setIsModalOpen={setIsJsonImportModalOpen}
       />
-      <Modal
-        title={`Generate Score Card - ${scoreCardProject?.projectName || ""}`}
+      <GenerateScoreCardModal
         open={!!scoreCardProject}
-        okText={
-          scoreCardPillars.length
-            ? `Regenerate ${scoreCardPillars.length} part${scoreCardPillars.length > 1 ? "s" : ""}`
-            : "Generate"
-        }
-        onOk={() => {
+        subject={scoreCardProject?.projectName || ""}
+        onGenerate={(pillars) => {
           if (!scoreCardProject) return;
           generateScoreCardMutation.mutate({
             projectId: scoreCardProject.projectId,
-            pillars: scoreCardPillars.length ? scoreCardPillars : undefined,
+            pillars: pillars.length ? pillars : undefined,
           });
           setScoreCardProject(undefined);
         }}
         onCancel={() => setScoreCardProject(undefined)}
-        destroyOnClose
-      >
-        <Flex vertical gap={12}>
-          <Typography.Text type="secondary">
-            The project's data is re-processed first, then scored - this may
-            take a few minutes. Pick the parts to regenerate, or leave them
-            all unchecked to generate whatever hasn't been scored yet.
-          </Typography.Text>
-          <Checkbox.Group
-            value={scoreCardPillars}
-            onChange={(values) => setScoreCardPillars(values as string[])}
-          >
-            <Flex vertical gap={8}>
-              {SCORE_CARD_PARTS.map((part) => (
-                <Checkbox key={part.value} value={part.value}>
-                  {part.label}
-                </Checkbox>
-              ))}
-            </Flex>
-          </Checkbox.Group>
-          {scoreCardPillars.length > 0 &&
-            !scoreCardPillars.includes("summary") && (
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                The summary (pros & cons) is written from all pillars - tick
-                it too if a regenerated pillar should be reflected there.
-              </Typography.Text>
-            )}
-        </Flex>
-      </Modal>
+      />
       <Modal
         title={projectIssuesSelected?.projectName}
         open={!!projectIssuesSelected}
