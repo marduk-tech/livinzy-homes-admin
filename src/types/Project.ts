@@ -108,6 +108,7 @@ export interface IInfo {
       | 'report-processing-error';
     comments?: string;
     reportId?: string;
+    lastUpdated?: string;
   };
 }
 

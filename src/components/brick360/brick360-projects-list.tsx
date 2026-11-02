@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Flex,
+  Popover,
   Spin,
   Table,
   TableColumnType,
@@ -16,6 +17,7 @@ import { Link } from "react-router-dom";
 
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
+import { Project } from "../../types/Project";
 import { ColumnSearch } from "../common/column-search";
 import {
   generateScoresStreamed,
@@ -227,6 +229,50 @@ export const Brick360ProjectsList: React.FC = () => {
                 "-"
               );
             },
+          },
+          {
+            title: "Report Status",
+            dataIndex: ["originalProjectId", "info", "reportStatus"],
+            key: "reportStatus",
+            filters: Array.from(
+              new Set(
+                projectsByTab.ungeneratedReportReady
+                  .map((p) => p.originalProjectId?.info?.reportStatus?.status)
+                  .filter(Boolean),
+              ),
+            ).map((status) => ({ text: status, value: status })),
+            onFilter: (value: React.Key | boolean, record: LvnzyProject) =>
+              record.originalProjectId?.info?.reportStatus?.status === value,
+            // click shows the comments and when the status last changed
+            render: (reportStatus?: Project["info"]["reportStatus"]) =>
+              reportStatus?.status ? (
+                <Popover
+                  trigger="click"
+                  title={reportStatus.status}
+                  content={
+                    <Flex vertical gap={4} style={{ maxWidth: 400 }}>
+                      <Typography.Text style={{ whiteSpace: "pre-wrap" }}>
+                        {reportStatus.comments || "No comments"}
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        Last updated:{" "}
+                        {reportStatus.lastUpdated
+                          ? new Date(reportStatus.lastUpdated).toLocaleString()
+                          : "-"}
+                      </Typography.Text>
+                    </Flex>
+                  }
+                >
+                  <Tag
+                    color={reportStatus.status.endsWith("-error") ? "red" : "blue"}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {reportStatus.status}
+                  </Tag>
+                </Popover>
+              ) : (
+                "-"
+              ),
           },
         ]
       : []),
