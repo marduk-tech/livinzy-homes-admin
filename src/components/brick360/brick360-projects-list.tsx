@@ -55,7 +55,7 @@ const totalChecks = (p: LvnzyProject) =>
 
 // most projects one report request can take - each one runs its own data
 // processing and LLM scoring on the server
-const MAX_REPORT_SELECTION = 20;
+const MAX_REPORT_SELECTION = 50;
 
 // One line describing where a streamed report request has got to
 const describeProgress = ({
