@@ -15,12 +15,13 @@ import {
   sectionTitleStyle,
 } from "../../components/common/score-html-list";
 import {
+  useAddLvnzyProjectScoreComment,
   useFetchLvnzyProjectById,
   useUpdateLvnzyProject,
 } from "../../hooks/lvnzyprojects-hooks";
 import { useUpdateProjectMutation } from "../../hooks/project-hooks";
 import { brickfiAppUrl } from "../../libs/constants";
-import { LvnzyProject } from "../../types/lvnzy-project";
+import { LvnzyProject, NewScoreComment } from "../../types/lvnzy-project";
 
 export function Brick360Full() {
   const { brick360ProjectId } = useParams();
@@ -48,6 +49,7 @@ export function Brick360Full() {
   };
 
   const updateProjectMutation = useUpdateLvnzyProject();
+  const addScoreCommentMutation = useAddLvnzyProjectScoreComment();
 
   const updateOriginalProjectMutation = useUpdateProjectMutation({
     projectId: brick360ProjectData?.originalProjectId?._id || "",
@@ -66,6 +68,16 @@ export function Brick360Full() {
         payload: brick360ProjectData,
       });
     }
+  };
+
+  // merged into local state rather than refetched, so unsaved score edits
+  // survive (see useAddLvnzyProjectScoreComment)
+  const handleAddScoreComment = async (payload: NewScoreComment) => {
+    const scoreComments = await addScoreCommentMutation.mutateAsync({
+      id: brick360ProjectId!,
+      payload,
+    });
+    setBrick360ProjectData((prev) => (prev ? { ...prev, scoreComments } : prev));
   };
 
   const isVerified =
@@ -234,6 +246,8 @@ export function Brick360Full() {
                         sectionKey={key}
                         original={brick360ProjectData?.scoreOriginal?.[key]}
                         current={sectionData}
+                        comments={brick360ProjectData?.scoreComments}
+                        onAddComment={handleAddScoreComment}
                       />
                       <EditScoreDialog
                         sectionData={sectionData}

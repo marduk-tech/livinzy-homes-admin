@@ -21,12 +21,24 @@ import {
   Timeline,
   Typography,
   theme,
+  type FormInstance,
 } from "antd";
 import type { Dayjs } from "dayjs";
 import { useRef, useState } from "react";
 import { useAmbakMasterdata, useAmbakOffers } from "../../hooks/third-party-hooks";
-import type { AmbakMasterOption, AmbakOffer, AmbakOffersRequest } from "../../libs/api/ambak";
+import type { AmbakMasterdata, AmbakMasterOption, AmbakOffer, AmbakOffersRequest } from "../../libs/api/ambak";
 import { errorMessage } from "../../libs/api-error";
+import { CreateLeadDialog, type LeadFormValues } from "./ambak-create-lead-dialog";
+import {
+  amountInput,
+  compact,
+  formatINR,
+  MASTERDATA_ERROR_TITLE,
+  masterOptions,
+  sectionOfFirstError,
+  YES_NO,
+} from "./ambak-form-helpers";
+import { AmbakLeadStatusTab } from "./ambak-lead-status-tab";
 
 type YesNo = "Yes" | "No";
 type LeadDetails = AmbakOffersRequest["lead_details"];
@@ -41,22 +53,6 @@ type FormValues = Omit<LeadDetails, "Fullfilment_type"> &
 
 const HOME_LOAN = 1;
 const LAP = 2;
-
-// Used when master data can't be fetched - values from the guide (staging, Oct 2026).
-const FALLBACK_LOAN_TYPES: AmbakMasterOption[] = [
-  { id: "1", label: "Home Loan" },
-  { id: "2", label: "LAP" },
-];
-const FALLBACK_PROFESSIONS: AmbakMasterOption[] = [
-  { id: "1", label: "Salaried" },
-  { id: "2", label: "Self-Employed Professional" },
-  { id: "3", label: "Self-Employed non-Professional" },
-];
-
-const YES_NO = [
-  { value: "Yes", label: "Yes" },
-  { value: "No", label: "No" },
-];
 
 const toOptions = (values: string[]) => values.map((v) => ({ value: v, label: v.replace(/_/g, " ") }));
 
@@ -104,21 +100,6 @@ const SECTION_FIELDS: Record<string, string[]> = {
   coApplicant: ["is_co_additional_income", "ca_profession", "ca_gross_monthly_salary"],
 };
 
-const masterOptions = (list: AmbakMasterOption[] | undefined, fallback: AmbakMasterOption[]) =>
-  (list?.length ? list : fallback).map((o) => ({ value: Number(o.id), label: o.label }));
-
-const formatINR = (value?: number | string | null) => {
-  if (value === undefined || value === null || value === "") return "-";
-  const n = Number(value);
-  return Number.isFinite(n) ? `₹${n.toLocaleString("en-IN")}` : String(value);
-};
-
-const amountInput = <InputNumber prefix="₹" min={0} style={{ width: "100%" }} />;
-
-// Leave unset optional fields out rather than sending null/"".
-const compact = <T extends object>(obj: T): T =>
-  Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== "")) as T;
-
 const buildPayload = (v: FormValues): AmbakOffersRequest => {
   const isLap = v.loan_type === LAP;
   const property = compact<NonNullable<PropertyDetails>>({
@@ -164,6 +145,41 @@ const buildPayload = (v: FormValues): AmbakOffersRequest => {
   };
 };
 
+// Offers takes property fields as strings; create_lead takes master ids. These
+// are the master labels for the offers values whose names don't match exactly.
+const HL_PROPERTY_TYPE_LABELS: Record<string, string> = {
+  Builder_endorsement: "Builder Endorsement",
+  Builder_allotment: "Builder Direct Allotment",
+  Authority_allotment: "Authority Direct Allotment",
+};
+
+const masterIdByLabel = (list: AmbakMasterOption[] | undefined, label?: string) => {
+  const id = label && list?.find((o) => o.label.toLowerCase() === label.toLowerCase())?.id;
+  return id ? Number(id) : undefined;
+};
+
+// Carries what's been entered in Enter Requirements (submitted or not) into the
+// create lead form; fields with no lead equivalent (city, sub type...) are skipped.
+const toLeadPrefill = (v: Partial<FormValues>, masterdata?: AmbakMasterdata): Partial<LeadFormValues> =>
+  compact<Partial<LeadFormValues>>({
+    loan_type: v.loan_type,
+    dob: v.dob,
+    loan_amount: v.loan_amount,
+    tenure: v.max_tenure,
+    profession: v.profession,
+    annual_income: v.gross_monthly_salary !== undefined ? v.gross_monthly_salary * 12 : undefined,
+    existing_emi: v.existing_emi_amount,
+    cibil_score: v.cibil_score,
+    is_property_identified: v.is_property_decided === "Yes" ? "1" : v.is_property_decided === "No" ? "0" : undefined,
+    property_value: v.expected_market_value,
+    property_type: masterIdByLabel(
+      masterdata?.property_type,
+      v.property_type && (HL_PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type),
+    ),
+    usage_type: masterIdByLabel(masterdata?.usage_type, v.property_usage),
+    agreement_type: masterIdByLabel(masterdata?.agreement_type, v.agreement_type),
+  });
+
 function StepDot({ n, active }: { n: number; active: boolean }) {
   const { token } = theme.useToken();
   return (
@@ -187,22 +203,35 @@ function StepDot({ n, active }: { n: number; active: boolean }) {
   );
 }
 
-function RequirementsForm({ onSubmit, submitting }: { onSubmit: (p: AmbakOffersRequest) => void; submitting: boolean }) {
-  const [form] = Form.useForm<FormValues>();
+// The form instance comes from the tab, which reads it to prefill the create lead dialog.
+function RequirementsForm({
+  form,
+  onSubmit,
+  submitting,
+}: {
+  form: FormInstance<FormValues>;
+  onSubmit: (p: AmbakOffersRequest) => void;
+  submitting: boolean;
+}) {
   const [section, setSection] = useState("lead");
-  const { data: masterdata, isLoading: masterLoading, error: masterError } = useAmbakMasterdata();
+  const {
+    data: masterdata,
+    isLoading: masterLoading,
+    isFetching: masterFetching,
+    error: masterError,
+    refetch: refetchMasterdata,
+  } = useAmbakMasterdata();
 
   const loanType = Form.useWatch("loan_type", form);
   const propertyDecided = Form.useWatch("is_property_decided", form) as YesNo | undefined;
   const additionalIncome = Form.useWatch("is_additional_income", form) as YesNo | undefined;
   const coApplicantIncome = Form.useWatch("is_co_additional_income", form) as YesNo | undefined;
 
-  const loanTypeOptions = masterOptions(masterdata?.loan_type, FALLBACK_LOAN_TYPES);
-  const professionOptions = masterOptions(masterdata?.profession, FALLBACK_PROFESSIONS);
+  const loanTypeOptions = masterOptions(masterdata?.loan_type);
+  const professionOptions = masterOptions(masterdata?.profession);
 
   const onFinishFailed = ({ errorFields }: { errorFields: { name: (string | number)[] }[] }) => {
-    const first = String(errorFields[0]?.name[0] ?? "");
-    const target = Object.keys(SECTION_FIELDS).find((k) => SECTION_FIELDS[k].includes(first));
+    const target = sectionOfFirstError(SECTION_FIELDS, errorFields);
     if (target) setSection(target);
   };
 
@@ -412,11 +441,16 @@ function RequirementsForm({ onSubmit, submitting }: { onSubmit: (p: AmbakOffersR
     <Card>
       {masterError && (
         <Alert
-          type="warning"
+          type="error"
           showIcon
           style={{ marginBottom: 16 }}
-          message="Couldn't load Ambak master data - using the guide's loan type and profession lists"
+          message={MASTERDATA_ERROR_TITLE}
           description={errorMessage(masterError, "Unknown error")}
+          action={
+            <Button size="small" loading={masterFetching} onClick={() => refetchMasterdata()}>
+              Retry
+            </Button>
+          }
         />
       )}
       <Form
@@ -429,7 +463,7 @@ function RequirementsForm({ onSubmit, submitting }: { onSubmit: (p: AmbakOffersR
       >
         <Tabs activeKey={section} onChange={setSection} items={sections} />
         <Flex justify="flex-end">
-          <Button type="primary" htmlType="submit" loading={submitting}>
+          <Button type="primary" htmlType="submit" loading={submitting} disabled={!masterdata}>
             Submit
           </Button>
         </Flex>
@@ -583,10 +617,19 @@ function Offers({ mutation }: { mutation: ReturnType<typeof useAmbakOffers> }) {
   );
 }
 
-export function AmbakHomeLoanTab() {
+function OffersAndLead() {
   const offersMutation = useAmbakOffers();
   const offersRef = useRef<HTMLDivElement>(null);
   const hasOffers = !!offersMutation.data;
+  const [requirementsForm] = Form.useForm<FormValues>();
+  const { data: masterdata } = useAmbakMasterdata();
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [leadPrefill, setLeadPrefill] = useState<Partial<LeadFormValues>>();
+
+  const openLeadDialog = () => {
+    setLeadPrefill(toLeadPrefill(requirementsForm.getFieldsValue(true), masterdata));
+    setLeadDialogOpen(true);
+  };
 
   const submit = (payload: AmbakOffersRequest) => {
     offersMutation.mutate(payload, {
@@ -595,31 +638,60 @@ export function AmbakHomeLoanTab() {
   };
 
   return (
-    <Timeline
-      style={{ paddingTop: 8 }}
+    <>
+      <Flex justify="flex-end" style={{ paddingTop: 8, marginBottom: 16 }}>
+        <Button type="primary" onClick={openLeadDialog}>
+          Create Lead
+        </Button>
+      </Flex>
+      <CreateLeadDialog
+        open={leadDialogOpen}
+        onClose={() => setLeadDialogOpen(false)}
+        initialValues={leadPrefill}
+      />
+      <Timeline
+        style={{ paddingTop: 8 }}
+        items={[
+          {
+            dot: <StepDot n={1} active />,
+            children: (
+              <>
+                <Typography.Title level={5} style={{ marginTop: 0 }}>
+                  Enter Requirements
+                </Typography.Title>
+                <RequirementsForm
+                  form={requirementsForm}
+                  onSubmit={submit}
+                  submitting={offersMutation.isPending}
+                />
+              </>
+            ),
+          },
+          {
+            dot: <StepDot n={2} active={hasOffers || offersMutation.isPending} />,
+            children: (
+              <div ref={offersRef}>
+                <Typography.Title level={5} style={{ marginTop: 0 }}>
+                  See Offers
+                </Typography.Title>
+                <Offers mutation={offersMutation} />
+              </div>
+            ),
+          },
+        ]}
+      />
+    </>
+  );
+}
+
+// Tabs keep a visited pane mounted, so switching to Track Lead and back keeps
+// the entered requirements and offers.
+export function AmbakHomeLoanTab() {
+  return (
+    <Tabs
       items={[
-        {
-          dot: <StepDot n={1} active />,
-          children: (
-            <>
-              <Typography.Title level={5} style={{ marginTop: 0 }}>
-                Enter Requirements
-              </Typography.Title>
-              <RequirementsForm onSubmit={submit} submitting={offersMutation.isPending} />
-            </>
-          ),
-        },
-        {
-          dot: <StepDot n={2} active={hasOffers || offersMutation.isPending} />,
-          children: (
-            <div ref={offersRef}>
-              <Typography.Title level={5} style={{ marginTop: 0 }}>
-                See Offers
-              </Typography.Title>
-              <Offers mutation={offersMutation} />
-            </div>
-          ),
-        },
+        { key: "offers", label: "Offers & Lead", children: <OffersAndLead /> },
+        { key: "track", label: "Track Lead", children: <AmbakLeadStatusTab /> },
       ]}
     />
   );

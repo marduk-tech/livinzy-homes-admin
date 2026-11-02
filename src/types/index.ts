@@ -29,7 +29,10 @@ export interface ILivIndexPlaces {
 
 export interface IGlobalKnowledge {
   _id: string;
+  title?: string;
   content: string;
+  // inactive notes are never retrieved by brickchat; missing means active
+  active?: boolean;
   sources?: string;
   tags?: string[];
   createdAt: string;

@@ -67,6 +67,7 @@ export const queryKeys = {
   ivyListings: "ivyListings",
   ivyMappings: "ivyMappings",
   ambakMasterdata: "ambakMasterdata",
+  ambakLeadStatus: "ambakLeadStatus",
 };
 export const LivIndexDrivers = [
   "road",

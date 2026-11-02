@@ -79,6 +79,7 @@ export interface LeadTrailComment {
 
 export interface LeadTrail {
   comments: LeadTrailComment[];
+  thirdPartyAmbak?: { leadId?: number }; // latest Ambak lead created from the admin
 }
 
 export interface User {

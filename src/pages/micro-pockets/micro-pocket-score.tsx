@@ -18,8 +18,8 @@ import { IMicroPocket } from "../../types/micro-pocket";
 // src/api/models/micro-pockets.model.js) - unlike a project's score, there's
 // no "summary" pros/cons pillar here.
 const scoreParams = [
-  { key: "location", label: "Location" },
-  { key: "investment", label: "Investment" },
+  { key: "areaConnectivity", label: "Area & Connectivity" },
+  { key: "financials", label: "Financials" },
 ];
 
 const sections = scoreParams.map((param) => ({

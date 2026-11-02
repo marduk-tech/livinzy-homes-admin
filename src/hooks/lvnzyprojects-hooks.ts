@@ -3,12 +3,13 @@ import { notification } from "antd";
 import { AxiosError } from "axios";
 import { api } from "../libs/api";
 import {
+  addLvnzyProjectScoreComment,
   getAllLvnzyProjects,
   getLvnzyProjectById,
   updateLvnzyProject,
 } from "../libs/api/lvnzy-projects";
 import { queryKeys } from "../libs/constants";
-import { LvnzyProject } from "../types/lvnzy-project";
+import { LvnzyProject, NewScoreComment } from "../types/lvnzy-project";
 
 export function useGetAllLvnzyProjects(onlyVerifiedReports?: boolean) {
   return useQuery({
@@ -58,6 +59,23 @@ export const useUpdateLvnzyProject = () => {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.lvnzyProjects] });
+    },
+  });
+};
+
+// Doesn't invalidate the project query - the brick360 page keeps unsaved
+// score edits in local state seeded from it, so a refetch would wipe them.
+// The caller merges the returned scoreComments into that state instead.
+export const useAddLvnzyProjectScoreComment = () => {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: NewScoreComment }) =>
+      addLvnzyProjectScoreComment(id, payload),
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: `Couldn't save the comment. Please try again.`,
+      });
+
+      console.log(error);
     },
   });
 };

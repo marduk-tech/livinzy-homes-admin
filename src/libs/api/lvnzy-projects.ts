@@ -1,3 +1,4 @@
+import { NewScoreComment, ScoreComment } from "../../types/lvnzy-project";
 import { axiosApiInstance } from "../axios-api-Instance";
 
 export const getAllLvnzyProjects = async (onlyVerifiedReports?: boolean) => {
@@ -14,6 +15,16 @@ export const getAllLvnzyProjects = async (onlyVerifiedReports?: boolean) => {
 export const getLvnzyProjectById = async (id: string) => {
   const endpoint = `/lvnzy-projects/${id}`;
   return axiosApiInstance.get(endpoint).then((response) => {
+    return response.data;
+  });
+};
+
+export const addLvnzyProjectScoreComment = async (
+  id: string,
+  payload: NewScoreComment,
+): Promise<ScoreComment[]> => {
+  const endpoint = `/lvnzy-projects/${id}/score-comments`;
+  return axiosApiInstance.post(endpoint, payload).then((response) => {
     return response.data;
   });
 };

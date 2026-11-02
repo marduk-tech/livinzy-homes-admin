@@ -25,7 +25,11 @@ export function CreateGlobalKnowladgeForm({
 
   useEffect(() => {
     if (initialData) {
-      form.setFieldsValue(initialData);
+      // notes saved before "active" existed have no value - they're active
+      form.setFieldsValue({
+        ...initialData,
+        active: initialData.active !== false,
+      });
     }
   }, [initialData, form]);
   const tags = useGlobalKnowledgeTags();
@@ -52,6 +56,14 @@ export function CreateGlobalKnowladgeForm({
   return (
     <>
       <Form form={form} layout="vertical">
+        <Form.Item
+          name="title"
+          label="Title"
+          extra="Leave empty to use the content's first heading"
+        >
+          <Input placeholder="Title" />
+        </Form.Item>
+
         {isPreview ? (
           <div
             style={{
@@ -91,6 +103,16 @@ export function CreateGlobalKnowladgeForm({
             tokenSeparators={[","]}
             options={tags.map((tag) => ({ label: tag, value: tag }))}
           />
+        </Form.Item>
+
+        <Form.Item
+          name="active"
+          label="Status"
+          valuePropName="checked"
+          initialValue={true}
+          extra="Inactive notes are never used in chat answers"
+        >
+          <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
         </Form.Item>
 
         <Flex gap={20} justify="flex-end">

@@ -19,6 +19,10 @@ import { IGlobalKnowledge } from "../../types";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
 import { CreateGlobalKnowladgeForm } from "./create-global-knowledge-form";
 
+// The note's first markdown heading - what stands in for a missing title
+const headingOf = (content: string) =>
+  content?.match(/^#+\s*(.+)$/m)?.[1]?.trim() || "";
+
 export function GlobalKnowladgeList() {
   const { data, isLoading, isError } = useFetchGlobalKnowledge();
 
@@ -28,10 +32,12 @@ export function GlobalKnowladgeList() {
     null
   );
   const [infoModalData, setInfoModalData] = useState<{
+    title: string;
     content: string;
     tags: string[];
     createdAt: string;
   }>({
+    title: "",
     content: "",
     tags: [],
     createdAt: "",
@@ -41,6 +47,7 @@ export function GlobalKnowladgeList() {
     setIsInfoModalOpen(true);
 
     setInfoModalData({
+      title: record.title || headingOf(record.content),
       content: record.content,
       tags: record.tags || [],
       createdAt,
@@ -50,6 +57,7 @@ export function GlobalKnowladgeList() {
   const handleCancel = () => {
     setIsInfoModalOpen(false);
     setInfoModalData({
+      title: "",
       content: "",
       tags: [],
       createdAt: "",
@@ -74,6 +82,21 @@ export function GlobalKnowladgeList() {
   };
 
   const columns: TableColumnType<IGlobalKnowledge>[] = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      // a note without its own title shows its first heading, greyed out
+      render: (title: string, record: IGlobalKnowledge) =>
+        title ? (
+          title
+        ) : (
+          <Typography.Text type="secondary">
+            {headingOf(record.content) || "-"}
+          </Typography.Text>
+        ),
+      width: 250,
+    },
     {
       title: "Content",
       dataIndex: "content",
@@ -121,6 +144,19 @@ export function GlobalKnowladgeList() {
           "-"
         ),
       width: 200,
+    },
+    {
+      title: "Status",
+      dataIndex: "active",
+      key: "active",
+      // notes saved before "active" existed have no value - they're active
+      render: (active?: boolean) =>
+        active === false ? (
+          <Tag>Inactive</Tag>
+        ) : (
+          <Tag color="green">Active</Tag>
+        ),
+      width: 100,
     },
     {
       title: "Created At",
@@ -190,6 +226,9 @@ export function GlobalKnowladgeList() {
         ]}
       >
         <div style={{ maxHeight: 500, overflow: "auto" }}>
+          <Typography.Title level={5}>Title</Typography.Title>
+          <Typography.Paragraph>{infoModalData.title || "-"}</Typography.Paragraph>
+
           <Typography.Title level={5}>Content</Typography.Title>
           <Typography.Paragraph>{infoModalData.content}</Typography.Paragraph>
 

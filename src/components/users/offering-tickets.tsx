@@ -1,7 +1,10 @@
 import {
+  Button,
   Empty,
   Flex,
   Input,
+  Modal,
+  Select,
   Table,
   TableColumnType,
   Tag,
@@ -9,7 +12,10 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
-import { useGetBrickfiOfferingTickets } from "../../hooks/brickfi-offering-hooks";
+import {
+  useGetBrickfiOfferingTickets,
+  useUpdateBrickfiOfferingTicketMutation,
+} from "../../hooks/brickfi-offering-hooks";
 import { errorMessage } from "../../libs/api-error";
 import {
   BrickfiOfferingTicket,
@@ -26,11 +32,6 @@ const STATUS_COLORS: Record<BrickfiOfferingTicketStatus, string> = {
 };
 
 const STATUSES: BrickfiOfferingTicketStatus[] = ["open", "in-progress", "closed"];
-
-const PROPERTY_STAGE_LABELS: Record<string, string> = {
-  "under-construction": "Under construction",
-  resale: "Resale",
-};
 
 const formatDate = (date?: string) =>
   // @ant-design/pro-chat sets dayjs's global locale to zh-cn, so pin English
@@ -55,95 +56,19 @@ const contactOf = (ticket: BrickfiOfferingTicket) => {
   };
 };
 
-// data keys shown as their own lines/tags below - everything else falls
-// through to a generic "key: value" line, so a new flow's fields still show
-const KNOWN_DATA_KEYS = new Set([
-  "propertyStage",
-  "query",
-  "details",
-  "services",
-  "askExpertToContact",
-  "callbackOnly",
-  "scheduleVisit",
-  "projects",
-  "visitDate",
-  "consentToContact",
-  "contact",
-]);
-
-const prettyKey = (key: string) =>
-  key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
-
-// What the user asked for, from whatever the CTA's flow collected (see
+// What the user asked for - just the query their CTA's flow collected (see
 // offering-flows.tsx in brickfi-app)
 function TicketRequest({ data }: { data: Record<string, unknown> }) {
-  const projects = (data.projects as { projectName?: string }[]) || [];
-  const tags = [
-    data.askExpertToContact || data.callbackOnly ? "Expert callback" : null,
-    data.scheduleVisit ? "Site visit" : null,
-  ].filter(Boolean) as string[];
-  const otherEntries = Object.entries(data).filter(
-    ([key, value]) =>
-      !KNOWN_DATA_KEYS.has(key) && value !== undefined && value !== null,
-  );
-
+  if (typeof data.query !== "string" || !data.query.trim()) {
+    return <Typography.Text type="secondary">—</Typography.Text>;
+  }
   return (
-    <Flex vertical gap={4} style={{ maxWidth: 420 }}>
-      {tags.length > 0 && (
-        <Flex gap={4} wrap>
-          {tags.map((t) => (
-            <Tag key={t} color="purple" bordered={false}>
-              {t}
-            </Tag>
-          ))}
-        </Flex>
-      )}
-      {typeof data.propertyStage === "string" && (
-        <Typography.Text>
-          <Typography.Text type="secondary">Property: </Typography.Text>
-          {PROPERTY_STAGE_LABELS[data.propertyStage] || data.propertyStage}
-        </Typography.Text>
-      )}
-      {data.scheduleVisit === true && (
-        <Typography.Text>
-          <Typography.Text type="secondary">Visit: </Typography.Text>
-          {projects.map((p) => p.projectName).filter(Boolean).join(", ") ||
-            "no project picked"}
-          {typeof data.visitDate === "string" &&
-            ` on ${dayjs(data.visitDate).locale("en").format("DD MMM YYYY")}`}
-        </Typography.Text>
-      )}
-      {Array.isArray(data.services) && data.services.length > 0 && (
-        <Typography.Text>
-          <Typography.Text type="secondary">Services: </Typography.Text>
-          {data.services.join(", ")}
-        </Typography.Text>
-      )}
-      {typeof data.query === "string" && data.query && (
-        <Typography.Paragraph
-          style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
-          ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-        >
-          <Typography.Text type="secondary">Query: </Typography.Text>
-          {data.query}
-        </Typography.Paragraph>
-      )}
-      {typeof data.details === "string" && data.details && (
-        <Typography.Paragraph
-          style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
-          ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-        >
-          <Typography.Text type="secondary">Details: </Typography.Text>
-          {data.details}
-        </Typography.Paragraph>
-      )}
-      {otherEntries.map(([key, value]) => (
-        <Typography.Text key={key}>
-          <Typography.Text type="secondary">{prettyKey(key)}: </Typography.Text>
-          {typeof value === "string" ? value : JSON.stringify(value)}
-        </Typography.Text>
-      ))}
-    </Flex>
+    <Typography.Paragraph
+      style={{ marginBottom: 0, whiteSpace: "pre-wrap", maxWidth: 420 }}
+      ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+    >
+      {data.query}
+    </Typography.Paragraph>
   );
 }
 
@@ -170,8 +95,15 @@ const matchesSearch = (ticket: BrickfiOfferingTicket, keyword: string) => {
 // site visits, callbacks ...) - one row per ticket, newest first
 export function OfferingTickets() {
   const { data, isLoading, isError, error } = useGetBrickfiOfferingTickets();
+  const updateTicket = useUpdateBrickfiOfferingTicketMutation();
   const [searchKeyword, setSearchKeyword] = useState("");
   const [shownCount, setShownCount] = useState<number | null>(null);
+  // by ticketId, so the modal shows the refetched replies after sending
+  const [replyTicketId, setReplyTicketId] = useState<string | null>(null);
+  const setReplyTicket = (ticket: BrickfiOfferingTicket) =>
+    setReplyTicketId(ticket.ticketId);
+  const replyTicket =
+    (data || []).find((t) => t.ticketId === replyTicketId) || null;
 
   const tickets = useMemo(
     () => (data || []).filter((t) => matchesSearch(t, searchKeyword)),
@@ -267,12 +199,44 @@ export function OfferingTickets() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 150,
       filters: STATUSES.map((s) => ({ text: s, value: s })),
       onFilter: (value, ticket) => ticket.status === value,
-      render: (status: BrickfiOfferingTicketStatus) => (
-        <Tag color={STATUS_COLORS[status]}>{status}</Tag>
+      render: (status: BrickfiOfferingTicketStatus, ticket) => (
+        <Select<BrickfiOfferingTicketStatus>
+          value={status}
+          size="small"
+          style={{ width: 130 }}
+          loading={
+            updateTicket.isPending &&
+            updateTicket.variables?.ticketId === ticket.ticketId &&
+            !!updateTicket.variables?.update.status
+          }
+          onChange={(next) =>
+            updateTicket.mutate({
+              ticketId: ticket.ticketId,
+              update: { status: next },
+            })
+          }
+          options={STATUSES.map((s) => ({
+            value: s,
+            label: <Tag color={STATUS_COLORS[s]} bordered={false}>{s}</Tag>,
+          }))}
+        />
       ),
+    },
+    {
+      title: "Reply",
+      key: "reply",
+      width: 110,
+      render: (_, ticket) => {
+        const count = ticket.replies?.length || 0;
+        return (
+          <Button size="small" onClick={() => setReplyTicket(ticket)}>
+            {count ? `Reply (${count})` : "Reply"}
+          </Button>
+        );
+      },
     },
     {
       title: "Thread",
@@ -316,6 +280,109 @@ export function OfferingTickets() {
         pagination={{ pageSize: 20 }}
         onChange={(_, __, ___, extra) => setShownCount(extra.currentDataSource.length)}
       />
+      <TicketReplyModal
+        ticket={replyTicket}
+        sending={updateTicket.isPending && !!updateTicket.variables?.update.reply}
+        onSend={(reply) =>
+          replyTicket &&
+          updateTicket.mutateAsync({
+            ticketId: replyTicket.ticketId,
+            update: { reply },
+          })
+        }
+        onClose={() => setReplyTicketId(null)}
+      />
     </>
+  );
+}
+
+// Earlier replies, and a box for a new one - each is posted to the user's
+// brickchat thread as it's sent, as written
+function TicketReplyModal({
+  ticket,
+  sending,
+  onSend,
+  onClose,
+}: {
+  ticket: BrickfiOfferingTicket | null;
+  sending: boolean;
+  onSend: (reply: string) => Promise<unknown> | null;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState("");
+  const replies = ticket?.replies || [];
+
+  const send = async () => {
+    const reply = text.trim();
+    if (!reply) return;
+    try {
+      await onSend(reply);
+      setText("");
+    } catch (_) {
+      // the mutation's onError already showed it - keep the text to retry
+    }
+  };
+
+  return (
+    <Modal
+      open={!!ticket}
+      onCancel={() => !sending && onClose()}
+      afterClose={() => setText("")}
+      title={
+        ticket ? `Reply · ${ticket.ticketId} · ${ticket.offeringTitle || ticket.offeringKey}` : ""
+      }
+      okText="Send reply"
+      onOk={send}
+      okButtonProps={{ disabled: !text.trim(), loading: sending }}
+      cancelButtonProps={{ disabled: sending }}
+      width={560}
+    >
+      {ticket && (
+        <Flex vertical gap={12}>
+          {typeof ticket.data?.query === "string" && ticket.data.query && (
+            <Typography.Paragraph
+              style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
+              ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
+            >
+              <Typography.Text type="secondary">Query: </Typography.Text>
+              {ticket.data.query}
+            </Typography.Paragraph>
+          )}
+          {replies.length > 0 && (
+            <Flex vertical gap={8}>
+              {replies.map((r) => (
+                <Flex
+                  key={r._id}
+                  vertical
+                  gap={2}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "rgba(0, 0, 0, 0.03)",
+                  }}
+                >
+                  <Typography.Text style={{ whiteSpace: "pre-wrap" }}>
+                    {r.text}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {formatDate(r.createdAt)} ·{" "}
+                    {r.notified ? "posted to chat" : "not posted yet"}
+                  </Typography.Text>
+                </Flex>
+              ))}
+            </Flex>
+          )}
+          <Input.TextArea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            autoSize={{ minRows: 3, maxRows: 8 }}
+            maxLength={2000}
+            showCount
+            placeholder="Write a reply to the user"
+            disabled={sending}
+          />
+        </Flex>
+      )}
+    </Modal>
   );
 }

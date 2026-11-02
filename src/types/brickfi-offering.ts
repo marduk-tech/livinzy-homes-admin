@@ -70,6 +70,22 @@ export interface BrickfiOfferingTicket {
   // whatever the CTA's flow collected - its shape is the flow's own
   data: Record<string, unknown>;
   status: BrickfiOfferingTicketStatus;
+  // replies sent to the user from here - notified once posted to their
+  // thread (right away, unless posting failed)
+  replies?: BrickfiOfferingTicketReply[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BrickfiOfferingTicketReply {
+  _id: string;
+  text: string;
+  createdAt: string;
+  notified: boolean;
+}
+
+// PATCH /brickfi-offerings/tickets/:ticketId - either or both
+export interface BrickfiOfferingTicketUpdate {
+  status?: BrickfiOfferingTicketStatus;
+  reply?: string;
 }

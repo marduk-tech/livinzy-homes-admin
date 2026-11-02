@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getAmbakMasterdata, getAmbakOffers } from "../libs/api/ambak";
+import { createAmbakLead, getAmbakLeadStatus, getAmbakMasterdata, getAmbakOffers } from "../libs/api/ambak";
 import {
   getIvyListings,
   getIvyMappings,
@@ -68,4 +68,18 @@ export function useAmbakMasterdata() {
 
 export function useAmbakOffers() {
   return useMutation({ mutationFn: getAmbakOffers });
+}
+
+export function useCreateAmbakLead() {
+  return useMutation({ mutationFn: createAmbakLead });
+}
+
+// Ambak errors (wrong partner, unknown lead) won't fix themselves, so don't retry.
+export function useAmbakLeadStatus(leadId?: number) {
+  return useQuery({
+    queryKey: [queryKeys.ambakLeadStatus, leadId],
+    queryFn: () => getAmbakLeadStatus(leadId!),
+    enabled: !!leadId,
+    retry: false,
+  });
 }

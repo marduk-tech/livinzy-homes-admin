@@ -1,5 +1,5 @@
-import { DiffOutlined } from "@ant-design/icons";
-import { Button, Flex, Modal, Switch, Tag, Typography } from "antd";
+import { CommentOutlined, DiffOutlined } from "@ant-design/icons";
+import { Button, Flex, Input, Modal, Switch, Tag, Typography } from "antd";
 import React, { useMemo, useState } from "react";
 import {
   diffPillar,
@@ -8,6 +8,11 @@ import {
   WordPart,
 } from "../../libs/score-diff";
 import { FONT_SIZES } from "../../theme/font-sizes";
+import {
+  NewScoreComment,
+  ScoreComment,
+  ScoreSnapshot,
+} from "../../types/lvnzy-project";
 
 const COLORS = {
   addedBg: "#e6ffec",
@@ -183,12 +188,95 @@ function RatingChange({
   );
 }
 
+// a sub-pillar as stored on the pillar - {rating, reasoning}, or a bare
+// reasoning array for the summary's pros/cons
+const toSnapshot = (value: any): ScoreSnapshot | undefined => {
+  if (value == null) return undefined;
+  if (Array.isArray(value) || typeof value === "string") {
+    return { reasoning: [value].flat() };
+  }
+  return {
+    rating: value.rating ?? undefined,
+    reasoning: [value.reasoning ?? []].flat(),
+  };
+};
+
+function GroupComments({
+  comments,
+  onAdd,
+}: {
+  comments: ScoreComment[];
+  onAdd: (comment: string) => Promise<unknown>;
+}) {
+  const [draft, setDraft] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleAdd = async () => {
+    setIsSaving(true);
+    try {
+      await onAdd(draft.trim());
+      setDraft("");
+    } catch {
+      // the mutation already notified - keep the draft so it can be retried
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Flex
+      vertical
+      gap={8}
+      style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed #f0f0f0" }}
+    >
+      {comments.map((c) => (
+        <div
+          key={c._id}
+          style={{ background: "#fafafa", borderRadius: 6, padding: "6px 10px" }}
+        >
+          <Typography.Text style={{ whiteSpace: "pre-wrap" }}>
+            {c.comment}
+          </Typography.Text>
+          <div>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {new Date(c.createdAt).toLocaleString()}
+              {c.original?.rating != null || c.updated?.rating != null
+                ? ` · rating ${c.original?.rating ?? "—"} → ${c.updated?.rating ?? "—"}`
+                : ""}
+            </Typography.Text>
+          </div>
+        </div>
+      ))}
+      <Flex gap={8} align="flex-start">
+        <Input.TextArea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Comment on this change..."
+          autoSize={{ minRows: 1, maxRows: 4 }}
+        />
+        <Button
+          icon={<CommentOutlined />}
+          onClick={handleAdd}
+          loading={isSaving}
+          disabled={!draft.trim()}
+        >
+          Add
+        </Button>
+      </Flex>
+    </Flex>
+  );
+}
+
 function GroupCard({
   group,
   showUnchanged,
+  comments,
+  onAddComment,
 }: {
   group: GroupDiff;
   showUnchanged: boolean;
+  comments: ScoreComment[];
+  onAddComment: (comment: string) => Promise<unknown>;
 }) {
   const points = showUnchanged
     ? group.points
@@ -224,6 +312,7 @@ function GroupCard({
           </Typography.Text>
         )}
       </Flex>
+      <GroupComments comments={comments} onAdd={onAddComment} />
     </div>
   );
 }
@@ -235,11 +324,16 @@ export function ScoreDiffDialog({
   sectionKey,
   original,
   current,
+  comments = [],
+  onAddComment,
 }: {
   label: string;
   sectionKey: string;
   original: any;
   current: any;
+  // every scoreComment on the project - filtered to this pillar below
+  comments?: ScoreComment[];
+  onAddComment: (payload: NewScoreComment) => Promise<unknown>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showUnchanged, setShowUnchanged] = useState(false);
@@ -334,6 +428,18 @@ export function ScoreDiffDialog({
             key={group.key}
             group={group}
             showUnchanged={showUnchanged}
+            comments={comments.filter(
+              (c) => c.pillar === sectionKey && c.subPillar === group.key,
+            )}
+            onAddComment={(comment) =>
+              onAddComment({
+                pillar: sectionKey,
+                subPillar: group.key,
+                comment,
+                original: toSnapshot(original?.[group.key]),
+                updated: toSnapshot(current?.[group.key]),
+              })
+            }
           />
         ))}
       </Modal>

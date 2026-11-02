@@ -604,6 +604,12 @@ export function useProjectForm(form: FormInstance) {
         fieldDisplayName: "Expert Info",
         fieldDescription: "Any specific expert analysis to be provided",
       },
+      {
+        dbField: ["realTimeStatus", "projectStalledSince"],
+        type: "date_month_year",
+        fieldDisplayName: "Project Stalled Since",
+        fieldDescription: "Date since when the project has been stalled",
+      },
     ],
   };
 
