@@ -3,8 +3,8 @@ export interface LvnzyProject {
   slug?: string;
   // GET /lvnzy-projects (the list) sends this instead of the score itself
   scoreExists?: boolean;
-  // list only: unresolved severity-5 internal checks on the original project
-  blockerCount?: number;
+  // list only: unresolved internal checks on the original project, per field
+  checkCountsByField?: Record<string, number>;
   property: any;
   developer: any;
   investment: any;
