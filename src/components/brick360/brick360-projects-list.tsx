@@ -26,12 +26,13 @@ import { Loader } from "../common/loader";
 import { STATUS_OPTIONS } from "../projects-list";
 import { GenerateScoreCardModal } from "./generate-score-card-modal";
 
-type ReportTabKey = "verified" | "unverified" | "notPrepared" | "invalidStatus";
+type ReportTabKey = "verified" | "unverified" | "notPrepared" | "verifiedWithBlockers" | "invalidStatus";
 
 const REPORT_TABS: { key: ReportTabKey; label: string }[] = [
   { key: "verified", label: "Verified Reports" },
   { key: "unverified", label: "Unverified Reports" },
   { key: "notPrepared", label: "Report Not Prepared" },
+  { key: "verifiedWithBlockers", label: "Verified with Blockers" },
   { key: "invalidStatus", label: "Invalid Status" },
 ];
 
@@ -41,7 +42,7 @@ const VALID_REPORT_STATUSES = ["data-verified", "report-ready", "report-verified
 
 // the tabs whose projects can have reports generated - Invalid Status
 // projects would be rejected by the generate-score endpoint
-const GENERATABLE_TABS: ReportTabKey[] = ["verified", "unverified", "notPrepared"];
+const GENERATABLE_TABS: ReportTabKey[] = ["verified", "unverified", "notPrepared", "verifiedWithBlockers"];
 
 // most projects one report request can take - each one runs its own data
 // processing and LLM scoring on the server
@@ -132,23 +133,31 @@ export const Brick360ProjectsList: React.FC = () => {
 
   const canGenerate = GENERATABLE_TABS.includes(activeTab);
 
-  // one bucket per tab - an invalid status wins over everything else; then a
-  // project without a score is "not prepared" even if its status says
-  // verified, since there's no report to show for it
+  // an invalid status wins over everything else; then a project without a
+  // score is "not prepared" even if its status says verified, since there's
+  // no report to show for it - unless it has blockers (unresolved severity-5
+  // internal checks), which hold back report generation. Verified with
+  // Blockers lists every valid-status project with blockers, so it also
+  // repeats the ones that already have a report (Verified/Unverified)
   const projectsByTab = useMemo(() => {
     const buckets: Record<ReportTabKey, LvnzyProject[]> = {
       verified: [],
       unverified: [],
       notPrepared: [],
+      verifiedWithBlockers: [],
       invalidStatus: [],
     };
     (projects || []).forEach((p: LvnzyProject) => {
       const status = p.originalProjectId?.info?.status;
-      if (!VALID_REPORT_STATUSES.includes(status))
+      if (!VALID_REPORT_STATUSES.includes(status)) {
         buckets.invalidStatus.push(p);
-      else if (!p.scoreExists) buckets.notPrepared.push(p);
-      else if (status === "report-verified")
-        buckets.verified.push(p);
+        return;
+      }
+      const hasBlockers = !!p.blockerCount;
+      if (hasBlockers) buckets.verifiedWithBlockers.push(p);
+      if (!p.scoreExists) {
+        if (!hasBlockers) buckets.notPrepared.push(p);
+      } else if (status === "report-verified") buckets.verified.push(p);
       else buckets.unverified.push(p);
     });
     return buckets;
@@ -195,6 +204,16 @@ export const Brick360ProjectsList: React.FC = () => {
       render: (status?: string) =>
         STATUS_OPTIONS.find((o) => o.value === status)?.label || status || "-",
     },
+    ...(activeTab === "verifiedWithBlockers"
+      ? [
+          {
+            title: "Blockers",
+            dataIndex: "blockerCount",
+            key: "blockerCount",
+            sorter: (a: LvnzyProject, b: LvnzyProject) => (a.blockerCount || 0) - (b.blockerCount || 0),
+          },
+        ]
+      : []),
     {
       title: "Date Created",
       dataIndex: "createdAt",

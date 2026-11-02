@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { FormInstance, notification } from "antd";
 import { AxiosError } from "axios";
+import { useMemo } from "react";
 import { api } from "../libs/api";
 import {
   CommunicationPreference,
@@ -480,6 +481,11 @@ export function useRunProjectChecksMutation({
 export function useProjectForm(form: FormInstance) {
   const { data: developers = [] } = useFetchDevelopers();
 
+  // memoized so callers can depend on these without re-running every render
+  return useMemo(() => buildProjectForm(form), [form]);
+}
+
+function buildProjectForm(form: FormInstance) {
   const projectStructure: ProjectStructure = {
     basicInfo: [
       {

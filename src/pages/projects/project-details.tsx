@@ -1213,23 +1213,18 @@ export function ProjectDetails({ projectId }: ProjectFormProps) {
     "realTimeStatus.expectedCompletionDate": !watchExpectedLaunchDate,
   };
 
-  const [visibleTabs, setVisibleTabs] = useState<ProjectStructure>();
-
-  useEffect(() => {
-    const homeType = form.getFieldValue(["info", "homeType"]);
-
-    const filteredFields = Object.fromEntries(
-      Object.entries(projectFields).filter(([key]) => {
-        if (homeType?.includes("farmland")) {
-          return key !== "unitDetails";
-        } else {
-          return key !== "plots";
-        }
-      }),
-    ) as ProjectStructure;
-
-    setVisibleTabs(filteredFields);
-  }, [watchHomeType, form, projectFields]);
+  // derived, not effect + state: setting state from an effect re-rendered the
+  // page on every render, and the constant re-renders kept resetting the
+  // date pickers' input mid-edit
+  const visibleTabs = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(projectFields).filter(([key]) =>
+          watchHomeType?.includes("farmland") ? key !== "unitDetails" : key !== "plots",
+        ),
+      ) as ProjectStructure,
+    [watchHomeType, projectFields],
+  );
 
   useEffect(() => {
     if (project) {
