@@ -101,10 +101,13 @@ export const Brick360ProjectsList: React.FC = () => {
   const [scoreCardModalOpen, setScoreCardModalOpen] = useState(false);
   const [reportRun, setReportRun] = useState<ReportRun>();
   const [movingToReportReady, setMovingToReportReady] = useState(false);
+  // what's picked in the Report Issues filter - see visibleProjects
+  const [reportIssueFilters, setReportIssueFilters] = useState<string[]>([]);
 
   const changeTab = (key: ReportTabKey) => {
     setActiveTab(key);
     setSelectedRowKeys([]);
+    setReportIssueFilters([]);
   };
 
   // `pillars` from the score card dialog - empty generates only the parts a
@@ -165,6 +168,21 @@ export const Brick360ProjectsList: React.FC = () => {
     });
     return buckets;
   }, [projects]);
+
+  // A project has to match every picked Report Issues option - the table's own
+  // onFilter keeps a row matching any of them, so the column has no onFilter
+  // and it's applied here instead
+  const visibleProjects = useMemo(
+    () =>
+      projectsByTab[activeTab].filter((p) =>
+        reportIssueFilters.every((value) =>
+          value === NO_REPORT_ISSUES_FILTER
+            ? !p.reportIssues?.length
+            : p.reportIssues?.includes(value),
+        ),
+      ),
+    [projectsByTab, activeTab, reportIssueFilters],
+  );
 
   // the ticked rows Move to Report Ready acts on - only data-verified ones:
   // report-ready already is, and report-verified would be a step back
@@ -357,10 +375,6 @@ export const Brick360ProjectsList: React.FC = () => {
                 .map((part) => ({ text: part, value: part })),
             ],
             filterSearch: true,
-            onFilter: (value: React.Key | boolean, record: LvnzyProject) =>
-              value === NO_REPORT_ISSUES_FILTER
-                ? !record.reportIssues?.length
-                : !!record.reportIssues?.includes(String(value)),
             render: (reportIssues?: string[]) => {
               if (!reportIssues) return "-";
               return reportIssues.length ? (
@@ -580,10 +594,13 @@ export const Brick360ProjectsList: React.FC = () => {
           to another, where its values don't exist */}
       <Table
         key={activeTab}
-        dataSource={projectsByTab[activeTab]}
+        dataSource={visibleProjects}
         columns={columns}
         rowKey="_id"
         loading={projectsLoading}
+        onChange={(_pagination, filters) =>
+          setReportIssueFilters((filters.reportIssues as string[]) || [])
+        }
         rowSelection={
           canGenerate
             ? {
