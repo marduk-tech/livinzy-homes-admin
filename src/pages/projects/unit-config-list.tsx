@@ -70,6 +70,9 @@ const BHK_TYPE_OPTIONS = [
   "6.5 BHK",
 ];
 
+// Rs./sq ft above which the average is flagged as a likely data entry error
+const HIGH_SQFT_PRICE_WARNING = 20000;
+
 export const UnitConfigList: React.FC<UnitConfigListProps> = ({
   value = [],
   onChange,
@@ -239,12 +242,17 @@ export const UnitConfigList: React.FC<UnitConfigListProps> = ({
         style={{ marginBottom: 16 }}
         gap={8}
       >
-        <Typography.Text style={{ fontSize: 14 }}>
+        {/* <Typography.Text style={{ fontSize: 14 }}>
           Total {value.length} configurations
-        </Typography.Text>
+        </Typography.Text> */}
         {avgSqFtPrice !== null && (
           <Typography.Text style={{ fontSize: 14, color: "#888" }}>
             · Avg Rs. {avgSqFtPrice.toLocaleString()}/sq ft
+          </Typography.Text>
+        )}
+        {avgSqFtPrice !== null && avgSqFtPrice > HIGH_SQFT_PRICE_WARNING && (
+          <Typography.Text type="warning" style={{ fontSize: 14 }}>
+            Per sq ft price seems too high; please check
           </Typography.Text>
         )}
         <Button

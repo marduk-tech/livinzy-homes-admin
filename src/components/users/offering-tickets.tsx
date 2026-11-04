@@ -22,6 +22,7 @@ import {
   BrickfiOfferingTicketStatus,
 } from "../../types/brickfi-offering";
 import { ThreadIdLink } from "../traces/thread-id-link";
+import { TicketDataDrawer } from "./ticket-data-drawer";
 
 const { Search } = Input;
 
@@ -56,19 +57,25 @@ const contactOf = (ticket: BrickfiOfferingTicket) => {
   };
 };
 
-// What the user asked for - just the query their CTA's flow collected (see
-// offering-flows.tsx in brickfi-app)
+// What the user asked for - the query their CTA's flow collected (see
+// offerings/*-flow.tsx in brickfi-app). The cell opens everything the flow
+// collected (TicketDataDrawer), so the full query is read there.
 function TicketRequest({ data }: { data: Record<string, unknown> }) {
-  if (typeof data.query !== "string" || !data.query.trim()) {
-    return <Typography.Text type="secondary">—</Typography.Text>;
-  }
+  const hasQuery = typeof data.query === "string" && !!data.query.trim();
   return (
-    <Typography.Paragraph
-      style={{ marginBottom: 0, whiteSpace: "pre-wrap", maxWidth: 420 }}
-      ellipsis={{ rows: 3, expandable: true, symbol: "more" }}
-    >
-      {data.query}
-    </Typography.Paragraph>
+    <Flex vertical gap={2}>
+      {hasQuery ? (
+        <Typography.Paragraph
+          style={{ marginBottom: 0, whiteSpace: "pre-wrap", maxWidth: 420 }}
+          ellipsis={{ rows: 3 }}
+        >
+          {data.query as string}
+        </Typography.Paragraph>
+      ) : (
+        <Typography.Text type="secondary">—</Typography.Text>
+      )}
+      <Typography.Link style={{ fontSize: 12 }}>View all details</Typography.Link>
+    </Flex>
   );
 }
 
@@ -104,6 +111,8 @@ export function OfferingTickets() {
     setReplyTicketId(ticket.ticketId);
   const replyTicket =
     (data || []).find((t) => t.ticketId === replyTicketId) || null;
+  // the ticket whose full collected data is open (TicketDataDrawer)
+  const [dataTicket, setDataTicket] = useState<BrickfiOfferingTicket | null>(null);
 
   const tickets = useMemo(
     () => (data || []).filter((t) => matchesSearch(t, searchKeyword)),
@@ -193,6 +202,10 @@ export function OfferingTickets() {
     {
       title: "Request",
       key: "request",
+      onCell: (ticket) => ({
+        onClick: () => setDataTicket(ticket),
+        style: { cursor: "pointer" },
+      }),
       render: (_, ticket) => <TicketRequest data={ticket.data || {}} />,
     },
     {
@@ -292,6 +305,7 @@ export function OfferingTickets() {
         }
         onClose={() => setReplyTicketId(null)}
       />
+      <TicketDataDrawer ticket={dataTicket} onClose={() => setDataTicket(null)} />
     </>
   );
 }

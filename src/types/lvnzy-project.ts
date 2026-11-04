@@ -5,6 +5,8 @@ export interface LvnzyProject {
   scoreExists?: boolean;
   // list only: unresolved internal checks on the original project, per field
   checkCountsByField?: Record<string, number>;
+  // list only: the worst severity among those checks, per field
+  checkSeverityByField?: Record<string, number>;
   property: any;
   developer: any;
   investment: any;
