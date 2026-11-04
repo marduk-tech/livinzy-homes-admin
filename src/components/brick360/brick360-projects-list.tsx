@@ -51,6 +51,10 @@ const GENERATABLE_TABS: ReportTabKey[] = ["reports", "reportNotReady"];
 const totalChecks = (p: LvnzyProject) =>
   Object.values(p.checkCountsByField || {}).reduce((sum, n) => sum + n, 0);
 
+// the Report Issues filter's option for complete reports - not a real pillar
+// or criteria
+const NO_REPORT_ISSUES_FILTER = "__no_report_issues__";
+
 // the Checks filter's option for projects with no unresolved checks - not a
 // real check field name
 const NO_CHECKS_FILTER = "__no_checks__";
@@ -332,6 +336,45 @@ export const Brick360ProjectsList: React.FC = () => {
                 </Flex>
               ) : (
                 "-"
+              );
+            },
+          },
+        ]
+      : []),
+    ...(activeTab === "reports"
+      ? [
+          {
+            title: "Report Issues",
+            dataIndex: "reportIssues",
+            key: "reportIssues",
+            // the pillars and criteria missing in this tab, plus complete reports
+            filters: [
+              { text: "No issues", value: NO_REPORT_ISSUES_FILTER },
+              ...Array.from(
+                new Set(projectsByTab.reports.flatMap((p) => p.reportIssues || [])),
+              )
+                .sort()
+                .map((part) => ({ text: part, value: part })),
+            ],
+            filterSearch: true,
+            onFilter: (value: React.Key | boolean, record: LvnzyProject) =>
+              value === NO_REPORT_ISSUES_FILTER
+                ? !record.reportIssues?.length
+                : !!record.reportIssues?.includes(String(value)),
+            render: (reportIssues?: string[]) => {
+              if (!reportIssues) return "-";
+              return reportIssues.length ? (
+                <Flex wrap gap={4}>
+                  {reportIssues.map((part) => (
+                    <Tag key={part} color="error" style={{ marginInlineEnd: 0 }}>
+                      {part}
+                    </Tag>
+                  ))}
+                </Flex>
+              ) : (
+                <Tag color="green" style={{ marginInlineEnd: 0 }}>
+                  No issues
+                </Tag>
               );
             },
           },

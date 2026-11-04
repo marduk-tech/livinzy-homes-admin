@@ -7,6 +7,8 @@ export interface LvnzyProject {
   checkCountsByField?: Record<string, number>;
   // list only: the worst severity among those checks, per field
   checkSeverityByField?: Record<string, number>;
+  // list only: the pillars and "pillar.criteria" its report is missing
+  reportIssues?: string[];
   property: any;
   developer: any;
   investment: any;
