@@ -5,6 +5,7 @@ import {
   getJobs,
   getScriptManifest,
   JobFilters,
+  rerunJob,
   runScript,
   stopJob,
 } from "../libs/api/manage-scripts";
@@ -72,6 +73,22 @@ export function useStopJob() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.getScriptJobs] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.getScriptJob] });
+    },
+  });
+}
+
+export function useRerunJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: rerunJob,
+    onError: (error) => {
+      notification.error({
+        message: "Could not rerun",
+        description: errorMessage(error, "Failed to start the run again"),
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.getScriptJobs] });
     },
   });
 }

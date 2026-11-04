@@ -119,3 +119,10 @@ export async function stopJob(jobId: string): Promise<{ ok: boolean }> {
   const { data } = await scriptServerApiInstance.post(`/jobs/${jobId}/stop`);
   return data;
 }
+
+export async function rerunJob(
+  jobId: string,
+): Promise<{ jobId: string; status: string }> {
+  const { data } = await scriptServerApiInstance.post(`/jobs/${jobId}/rerun`);
+  return data;
+}

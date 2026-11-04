@@ -34,7 +34,11 @@ export function ManageScriptsPage() {
       key: "runs",
       label: "Runs",
       children: (
-        <RunsTab selectedJobId={selectedJobId} onSelectJob={setSelectedJobId} />
+        <RunsTab
+          selectedJobId={selectedJobId}
+          onSelectJob={setSelectedJobId}
+          onStarted={handleStarted}
+        />
       ),
     },
   ];

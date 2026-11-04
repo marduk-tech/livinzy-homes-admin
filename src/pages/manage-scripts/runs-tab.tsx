@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { useCronSchedules } from "../../hooks/cron-schedules-hooks";
 import {
+  useRerunJob,
   useScriptJob,
   useScriptJobs,
   useStopJob,
@@ -126,9 +127,14 @@ function LogNotice({ job }: { job: Job }) {
 interface RunsTabProps {
   selectedJobId?: string;
   onSelectJob: (jobId?: string) => void;
+  onStarted: (jobId: string) => void;
 }
 
-export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
+export function RunsTab({
+  selectedJobId,
+  onSelectJob,
+  onStarted,
+}: RunsTabProps) {
   const [kind, setKind] = useState<string>("all");
   const [limit, setLimit] = useState(PAGE);
 
@@ -140,6 +146,10 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
   const { data: job } = useScriptJob(selectedJobId);
   const { data: schedules } = useCronSchedules();
   const stopJob = useStopJob();
+  const rerunJob = useRerunJob();
+
+  const rerun = (jobId: string) =>
+    rerunJob.mutate(jobId, { onSuccess: (data) => onStarted(data.jobId) });
 
   const scheduleName = (id?: string) => {
     if (!id) return undefined;
@@ -197,7 +207,7 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
     {
       title: "",
       key: "actions",
-      width: 90,
+      width: 100,
       render: (_, record) =>
         record.status === "running" ? (
           <Popconfirm
@@ -213,7 +223,28 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
               Stop
             </Button>
           </Popconfirm>
-        ) : null,
+        ) : (
+          <Popconfirm
+            title="Run this again?"
+            description={
+              <Typography.Text
+                style={{ fontFamily: "monospace", fontSize: 12 }}
+              >
+                {summarize(record)}
+              </Typography.Text>
+            }
+            okText="Rerun"
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              rerun(record.id);
+            }}
+            onCancel={(e) => e?.stopPropagation()}
+          >
+            <Button size="small" onClick={(e) => e.stopPropagation()}>
+              Rerun
+            </Button>
+          </Popconfirm>
+        ),
     },
   ];
 
@@ -289,11 +320,22 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
           )
         }
         extra={
-          job?.status === "running" && (
+          job &&
+          (job.status === "running" ? (
             <Button danger size="small" onClick={() => stopJob.mutate(job.id)}>
               Stop
             </Button>
-          )
+          ) : (
+            <Popconfirm
+              title="Run this again?"
+              okText="Rerun"
+              onConfirm={() => rerun(job.id)}
+            >
+              <Button size="small" loading={rerunJob.isPending}>
+                Rerun
+              </Button>
+            </Popconfirm>
+          ))
         }
       >
         {job && (
@@ -302,6 +344,17 @@ export function RunsTab({ selectedJobId, onSelectJob }: RunsTabProps) {
               Started {new Date(job.startedAt).toLocaleString()} · ran for{" "}
               {duration(job)}
             </Typography.Text>
+
+            {typeof job.meta?.rerunOf === "string" && (
+              <Typography.Text type="secondary">
+                Rerun of{" "}
+                <Typography.Link
+                  onClick={() => onSelectJob(job.meta.rerunOf as string)}
+                >
+                  {job.meta.rerunOf.slice(0, 8)}
+                </Typography.Link>
+              </Typography.Text>
+            )}
 
             {job.error && <Alert type="error" showIcon message={job.error} />}
 
