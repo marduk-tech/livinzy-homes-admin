@@ -2,6 +2,7 @@ import {
   BrickchatConversation,
   BrickchatLog,
   BrickchatRecentThread,
+  BrickchatThreadUser,
   LlmCallsForRun,
 } from "../../types/brickchat-logger";
 import {
@@ -42,11 +43,21 @@ export const getBrickchatConversation = async (
 };
 
 export const getRecentBrickchatLogs = async (
-  limit = 10,
+  limit = 20,
+  before?: string,
 ): Promise<BrickchatRecentThread[]> => {
   const { data } = await axiosApiInstance.get<BrickchatRecentThread[]>(
     `/brickchat-logger/recent`,
-    { params: { limit } },
+    { params: { limit, before } },
+  );
+  return data;
+};
+
+export const getBrickchatThreadUser = async (
+  threadId: string,
+): Promise<BrickchatThreadUser | null> => {
+  const { data } = await axiosApiInstance.get<BrickchatThreadUser | null>(
+    `/brickchat-logger/${threadId}/user`,
   );
   return data;
 };

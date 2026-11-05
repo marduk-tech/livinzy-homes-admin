@@ -50,6 +50,15 @@ export interface BrickchatRecentThread {
   query: string;
   startedAt: string;
   createdAt: string;
+  isInternal: boolean;
+  isGuest: boolean;
+}
+
+export interface BrickchatThreadUser {
+  id: string;
+  name?: string;
+  mobile: string;
+  role: string;
 }
 
 export interface LlmCallMessage {

@@ -38,6 +38,7 @@ export const queryKeys = {
   getBrickchatLog: "getBrickchatLog",
   getBrickchatConversation: "getBrickchatConversation",
   getRecentBrickchatLogs: "getRecentBrickchatLogs",
+  getBrickchatThreadUser: "getBrickchatThreadUser",
   getLlmCallsForRun: "getLlmCallsForRun",
   getBrickchatFeedback: "getBrickchatFeedback",
   getBrickchatPrompts: "getBrickchatPrompts",

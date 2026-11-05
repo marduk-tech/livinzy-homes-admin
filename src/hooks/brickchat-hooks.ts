@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { AxiosError } from "axios";
 import {
@@ -8,6 +8,7 @@ import {
   getBrickchatFeedback,
   getBrickchatLog,
   getBrickchatPrompts,
+  getBrickchatThreadUser,
   createPromptDraft,
   getLlmCallsForRun,
   getRecentBrickchatLogs,
@@ -58,10 +59,24 @@ export function useGetBrickchatConversation(
   });
 }
 
-export function useGetRecentBrickchatLogs(limit = 10) {
-  return useQuery({
+export function useGetRecentBrickchatLogs(limit = 20) {
+  return useInfiniteQuery({
     queryKey: [queryKeys.getRecentBrickchatLogs, limit],
-    queryFn: () => getRecentBrickchatLogs(limit),
+    queryFn: ({ pageParam }) => getRecentBrickchatLogs(limit, pageParam),
+    initialPageParam: undefined as string | undefined,
+    // a short page means there's nothing older left
+    getNextPageParam: (lastPage) =>
+      lastPage.length === limit
+        ? lastPage[lastPage.length - 1].createdAt
+        : undefined,
+  });
+}
+
+export function useGetBrickchatThreadUser(threadId: string) {
+  return useQuery({
+    queryKey: [queryKeys.getBrickchatThreadUser, threadId],
+    queryFn: () => getBrickchatThreadUser(threadId),
+    retry: false,
   });
 }
 
