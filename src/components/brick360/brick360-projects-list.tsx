@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 import { Project } from "../../types/Project";
+import { ColumnDateRange } from "../common/column-date-range";
 import { ColumnSearch } from "../common/column-search";
 import {
   generateScoresStreamed,
@@ -450,6 +451,7 @@ export const Brick360ProjectsList: React.FC = () => {
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       sortDirections: ["descend", "ascend"],
+      ...ColumnDateRange("createdAt"),
       render: (createdAt: string) => new Date(createdAt).toLocaleDateString(),
     },
     {
@@ -459,6 +461,7 @@ export const Brick360ProjectsList: React.FC = () => {
     sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       sortDirections: ["descend", "ascend"],
+      ...ColumnDateRange("updatedAt"),
       render: (updatedAt: string) => new Date(updatedAt).toLocaleDateString(),
     },
     {

@@ -495,6 +495,11 @@ function buildProjectForm(form: FormInstance) {
         fieldDescription: "The name of the project.",
       },
       {
+        dbField: "aliases",
+        fieldDisplayName: "Aliases",
+        fieldDescription: "Add aliases comma separated",
+      },
+      {
         dbField: ["location", "mapLink"],
         mustHave: true,
         fieldDisplayName: "Location (Google maps url)",
