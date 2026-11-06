@@ -823,7 +823,7 @@ export const ProjectsList: React.FC = () => {
               </Tooltip>
             )}
 
-            {/* {canShowScoreCard && (
+            {canShowScoreCard && (
               <Tooltip title={getProcessDataTooltip()}>
                 <Button
                   type="link"
@@ -839,7 +839,7 @@ export const ProjectsList: React.FC = () => {
                   onClick={handleProcessProjectData}
                 />
               </Tooltip>
-            )} */}
+            )}
 
             {canShowScoreCard && (
               <Tooltip title={getScoreCardTooltip()}>
