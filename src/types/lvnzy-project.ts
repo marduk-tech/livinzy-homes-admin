@@ -1,5 +1,8 @@
 export interface LvnzyProject {
   _id: string;
+  // list only: a project with no LvnzyProject yet - _id is then the Project's
+  // own, and there's nothing to open on the Brick360 pages
+  lvnzyProjectMissing?: boolean;
   slug?: string;
   // GET /lvnzy-projects (the list) sends this instead of the score itself
   scoreExists?: boolean;
