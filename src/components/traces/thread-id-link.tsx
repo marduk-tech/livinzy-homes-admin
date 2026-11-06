@@ -6,11 +6,11 @@ import {
 import { Button, Flex, Modal, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { langsmithOrgId, langsmithProjectId } from "../../libs/constants";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 
-const LANGSMITH_PROJECT_URL =
-  "https://smith.langchain.com/o/f789969a-14ab-5073-b68e-2822efcebf90/projects/p/4e5569cf-0f16-4779-ac99-d4297e21b54f";
+const LANGSMITH_PROJECT_URL = `https://smith.langchain.com/o/${langsmithOrgId}/projects/p/${langsmithProjectId}`;
 
 export const langsmithThreadUrl = (threadId: string) =>
   `${LANGSMITH_PROJECT_URL}?runview=threads&peekedConversationId=${encodeURIComponent(threadId)}`;
