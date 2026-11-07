@@ -1,10 +1,15 @@
-import { MessageOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  MessageOutlined,
+  SearchOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Collapse,
   Empty,
   Flex,
   Input,
+  Modal,
   Spin,
   Table,
   TableColumnType,
@@ -15,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetBrickchatLog,
+  useGetBrickchatThreadUser,
   useGetLlmCallsForRun,
   useGetRecentBrickchatLogs,
 } from "../../hooks/brickchat-hooks";
@@ -378,6 +384,65 @@ const clampTwoLines: React.CSSProperties = {
 const SELECTED_ROW_BG = "#e6f4ff";
 const SELECTED_ROW_ACCENT = "#1677ff";
 
+const INTERNAL_ROLES = ["member", "admin"];
+
+const isEvalThreadId = (threadId: string) => threadId.includes("eval");
+
+function ThreadUserButton({ threadId }: { threadId: string }) {
+  const [open, setOpen] = useState(false);
+  const { data: user, isLoading, isError, error } =
+    useGetBrickchatThreadUser(threadId);
+
+  const renderUser = () => {
+    if (isError) {
+      return (
+        <Typography.Text type="danger">
+          {errorMessage(error, "Failed to fetch the thread's user")}
+        </Typography.Text>
+      );
+    }
+    if (!user) {
+      return (
+        <Typography.Text type="secondary">
+          No signed-in user is linked to this thread - it's a guest or eval
+          thread.
+        </Typography.Text>
+      );
+    }
+    return (
+      <Flex vertical gap={4}>
+        <Typography.Text>Name: {user.name || "-"}</Typography.Text>
+        <Typography.Text copyable={{ text: String(user.mobile) }}>
+          Mobile: {user.mobile}
+        </Typography.Text>
+        <Typography.Text copyable={{ text: user.id }}>
+          User ID: {user.id}
+        </Typography.Text>
+      </Flex>
+    );
+  };
+
+  return (
+    <Flex gap={8} align="center">
+      <Button
+        icon={<UserOutlined />}
+        aria-label="See user"
+        loading={isLoading}
+        onClick={() => setOpen(true)}
+      />
+      {user && INTERNAL_ROLES.includes(user.role) && <Tag>Internal</Tag>}
+      <Modal
+        title="User"
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+      >
+        {renderUser()}
+      </Modal>
+    </Flex>
+  );
+}
+
 export function BrickchatThreadsTab() {
   // the loaded thread lives in the URL (/brickfi-logger/threads/:threadId -
   // see BRICKFI_LOGGER_PATHS) so a thread view can be linked/shared and
@@ -395,8 +460,13 @@ export function BrickchatThreadsTab() {
   }, [searchedThreadId]);
 
   const { data, isLoading, isError, error } = useGetBrickchatLog(searchedThreadId);
-  const { data: recentThreads, isLoading: recentLoading } =
-    useGetRecentBrickchatLogs(10);
+  const {
+    data: recentThreads,
+    isLoading: recentLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useGetRecentBrickchatLogs(20);
 
   const openThread = (threadId: string) =>
     navigate(BRICKFI_LOGGER_PATHS.thread(threadId));
@@ -430,9 +500,16 @@ export function BrickchatThreadsTab() {
       render: (query: string, thread: BrickchatRecentThread) => (
         <>
           <div style={clampTwoLines}>{query || "(empty query)"}</div>
-          <Typography.Text type="secondary" style={{ fontSize: FONT_SIZES.SUB_TEXT }}>
-            {formatTimestamp(thread.startedAt)}
-          </Typography.Text>
+          <Flex align="center" gap={8}>
+            <Typography.Text type="secondary" style={{ fontSize: FONT_SIZES.SUB_TEXT }}>
+              {formatTimestamp(thread.startedAt)}
+            </Typography.Text>
+            {thread.isInternal && <Tag color="yellow" style={{ margin: 0 }}>Internal</Tag>}
+            {thread.isGuest && <Tag color="blue" style={{ margin: 0 }}>Guest</Tag>}
+            {isEvalThreadId(thread.thread_id) && (
+              <Tag color="purple" style={{ margin: 0 }}>Eval</Tag>
+            )}
+          </Flex>
         </>
       ),
     },
@@ -505,10 +582,11 @@ export function BrickchatThreadsTab() {
     // eval threads only ever existed in the eval script's in-memory
     // checkpointer, so the app can't load them - show them in the modal
     // (rebuilt from the LangSmith trace) instead
-    const isEvalThread = searchedThreadId.includes("eval");
+    const isEvalThread = isEvalThreadId(searchedThreadId);
     return (
       <>
-        <Flex justify="flex-end" style={{ marginBottom: 8 }}>
+        <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+          <ThreadUserButton threadId={searchedThreadId} />
           {isEvalThread ? (
             <Button icon={<MessageOutlined />} onClick={() => setConversationOpen(true)}>
               See Conversation
@@ -572,17 +650,29 @@ export function BrickchatThreadsTab() {
       </div>
       <div style={{ flex: "0 0 25%", minWidth: 0 }}>
         <Table
-          dataSource={recentThreads}
+          dataSource={recentThreads?.pages.flat()}
           columns={recentColumns}
           loading={recentLoading}
           rowKey="thread_id"
           size="small"
           pagination={false}
+          // the rows' max height - with the ~40px sticky header, 600px in all
+          scroll={{ y: 560 }}
           onRow={(record) => ({
             onClick: () => handleSelectRecentThread(record.thread_id),
             style: { cursor: "pointer" },
           })}
         />
+        {hasNextPage && (
+          <Button
+            block
+            loading={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            style={{ marginTop: 8 }}
+          >
+            See more
+          </Button>
+        )}
       </div>
     </Flex>
   );

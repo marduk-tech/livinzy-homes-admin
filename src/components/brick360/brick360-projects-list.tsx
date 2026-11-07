@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import { useGetAllLvnzyProjects } from "../../hooks/lvnzyprojects-hooks";
 import { LvnzyProject } from "../../types/lvnzy-project";
 import { Project } from "../../types/Project";
+import { ColumnDateRange } from "../common/column-date-range";
 import { ColumnSearch } from "../common/column-search";
 import {
   generateScoresStreamed,
@@ -91,7 +92,7 @@ interface ReportRun {
 
 export const Brick360ProjectsList: React.FC = () => {
   const { data: projects, isFetching: projectsLoading } =
-    useGetAllLvnzyProjects(false);
+    useGetAllLvnzyProjects(false, true);
 
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<ReportTabKey>("reports");
@@ -211,7 +212,7 @@ export const Brick360ProjectsList: React.FC = () => {
     // patched here rather than refetched - the server refreshes the list's
     // cache in the background, so a refetch can still return the old status
     queryClient.setQueryData<LvnzyProject[]>(
-      [queryKeys.lvnzyProjects, false],
+      [queryKeys.lvnzyProjects, false, true],
       (list) =>
         list?.map((p) =>
           movedIds.has(p._id)
@@ -274,6 +275,9 @@ export const Brick360ProjectsList: React.FC = () => {
             <Tag color="green" style={{ marginInlineEnd: 0 }}>
               verified
             </Tag>
+          ) : null}
+          {record.lvnzyProjectMissing ? (
+            <Tag style={{ marginInlineEnd: 0 }}>not processed</Tag>
           ) : null}
         </Flex>
       ),
@@ -450,6 +454,7 @@ export const Brick360ProjectsList: React.FC = () => {
       sorter: (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       sortDirections: ["descend", "ascend"],
+      ...ColumnDateRange("createdAt"),
       render: (createdAt: string) => new Date(createdAt).toLocaleDateString(),
     },
     {
@@ -459,6 +464,7 @@ export const Brick360ProjectsList: React.FC = () => {
     sorter: (a, b) =>
         new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
       sortDirections: ["descend", "ascend"],
+      ...ColumnDateRange("updatedAt"),
       render: (updatedAt: string) => new Date(updatedAt).toLocaleDateString(),
     },
     {
@@ -486,7 +492,21 @@ export const Brick360ProjectsList: React.FC = () => {
       align: "right",
       dataIndex: "_id",
       key: "_id",
-      render: (id: string) => {
+      render: (id: string, record: LvnzyProject) => {
+        // no Brick360 entry to open yet - id is the Project's own
+        if (record.lvnzyProjectMissing) {
+          return (
+            <Flex gap={15} justify="end">
+              <Link to={`/projects/${id}/edit`} target="_blank">
+                <Button
+                  type="default"
+                  shape="default"
+                  icon={<EditOutlined />}
+                ></Button>
+              </Link>
+            </Flex>
+          );
+        }
         return (
           <Flex gap={15} justify="end">
             <Link to={`/brick360/${id}`} target="_blank">

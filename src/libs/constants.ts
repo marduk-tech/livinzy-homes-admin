@@ -6,6 +6,15 @@ export const scriptServerApiUrl = import.meta.env.VITE_SCRIPT_SERVER_API_URL;
 export const scriptServerApiKey = import.meta.env.VITE_SCRIPT_SERVER_API_KEY;
 export const brickfiAppUrl =
   import.meta.env.VITE_BRICKFI_APP_URL || "https://brickfi.in";
+// only used to build links into LangSmith - defaults to the "Brickfi Prod"
+// project. Should match LANGSMITH_ORG_ID / LANGCHAIN_PROJECT on the services
+// backend this admin points at, or links open a project without its runs.
+export const langsmithOrgId =
+  import.meta.env.VITE_LANGSMITH_ORG_ID ||
+  "01a1a59d-5da7-77f2-a04b-d293a5b2f4e6";
+export const langsmithProjectId =
+  import.meta.env.VITE_LANGSMITH_PROJECT_ID ||
+  "8853bce6-ab5c-4571-aeca-9afaade2aa6a";
 
 export const queryKeys = {
   projects: "projects",
@@ -38,6 +47,7 @@ export const queryKeys = {
   getBrickchatLog: "getBrickchatLog",
   getBrickchatConversation: "getBrickchatConversation",
   getRecentBrickchatLogs: "getRecentBrickchatLogs",
+  getBrickchatThreadUser: "getBrickchatThreadUser",
   getLlmCallsForRun: "getLlmCallsForRun",
   getBrickchatFeedback: "getBrickchatFeedback",
   getBrickchatPrompts: "getBrickchatPrompts",

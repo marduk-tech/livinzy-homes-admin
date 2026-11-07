@@ -39,6 +39,7 @@ export interface IMedia {
 export interface IInfo {
   _id: string;
   name: string;
+  aliases?: string;
   location: {
     _id: string;
     mapLink: string;

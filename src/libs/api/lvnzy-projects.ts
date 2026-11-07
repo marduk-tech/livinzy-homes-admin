@@ -1,13 +1,24 @@
 import { NewScoreComment, ScoreComment } from "../../types/lvnzy-project";
 import { axiosApiInstance } from "../axios-api-Instance";
 
-export const getAllLvnzyProjects = async (onlyVerifiedReports?: boolean) => {
+// includeProjectsWithoutLvnzy also returns report-ready projects with no
+// LvnzyProject yet - their _id is the Project's, see LvnzyProject's
+// lvnzyProjectMissing
+export const getAllLvnzyProjects = async (
+  onlyVerifiedReports?: boolean,
+  includeProjectsWithoutLvnzy?: boolean,
+) => {
   const endpoint = `/lvnzy-projects`;
   return axiosApiInstance
     .get(endpoint, {
       params: onlyVerifiedReports
         ? { onlyVerifiedReports: "true", basic: "true" }
-        : { includeReportIssues: "true" },
+        : {
+            includeReportIssues: "true",
+            ...(includeProjectsWithoutLvnzy
+              ? { includeProjectsWithoutLvnzy: "true" }
+              : {}),
+          },
     })
     .then((response) => {
       return response.data;

@@ -11,10 +11,18 @@ import {
 import { queryKeys } from "../libs/constants";
 import { LvnzyProject, NewScoreComment } from "../types/lvnzy-project";
 
-export function useGetAllLvnzyProjects(onlyVerifiedReports?: boolean) {
+export function useGetAllLvnzyProjects(
+  onlyVerifiedReports?: boolean,
+  includeProjectsWithoutLvnzy?: boolean,
+) {
   return useQuery({
-    queryKey: [queryKeys.lvnzyProjects, onlyVerifiedReports],
-    queryFn: () => getAllLvnzyProjects(onlyVerifiedReports),
+    queryKey: [
+      queryKeys.lvnzyProjects,
+      onlyVerifiedReports,
+      includeProjectsWithoutLvnzy,
+    ],
+    queryFn: () =>
+      getAllLvnzyProjects(onlyVerifiedReports, includeProjectsWithoutLvnzy),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     gcTime: 15 * 60 * 1000,
