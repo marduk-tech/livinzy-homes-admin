@@ -76,18 +76,32 @@ export const generateDeveloperInfo = async (
   return data;
 };
 
+export const RERA_REFETCH_OPTIONS = [
+  { value: "project-details", label: "Project details" },
+  { value: "documents", label: "Documents" },
+  { value: "land-details", label: "Land details" },
+  { value: "complaints", label: "Complaints" },
+  { value: "promoter-details", label: "Promoter details" },
+];
+
+export interface ExtractDeveloperReraProjectsParams {
+  developerId?: string;
+  reraNumbers?: string;
+  refetch?: string[];
+}
+
 export interface ExtractDeveloperReraProjectsResponse {
   jobId: string;
   developerId?: string;
   reraNumbers?: string;
+  refetch?: string[];
   dryRun?: boolean;
   status: JobStatus;
 }
 
-export const extractDeveloperReraProjects = async (params: {
-  developerId?: string;
-  reraNumbers?: string;
-}): Promise<ExtractDeveloperReraProjectsResponse> => {
+export const extractDeveloperReraProjects = async (
+  params: ExtractDeveloperReraProjectsParams
+): Promise<ExtractDeveloperReraProjectsResponse> => {
   const { data } =
     await scriptServerApiInstance.post<ExtractDeveloperReraProjectsResponse>(
       "/developer-rera-projects",

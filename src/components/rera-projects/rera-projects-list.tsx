@@ -9,6 +9,7 @@ import {
 import {
   Alert,
   Button,
+  Checkbox,
   Col,
   DatePicker,
   Drawer,
@@ -28,6 +29,7 @@ const { Search } = Input;
 import ReactJson from "react-json-view";
 import { useExtractDeveloperReraProjectsMutation } from "../../hooks/developer-hooks";
 import { useScriptJob, useStopJob } from "../../hooks/manage-scripts-hooks";
+import { RERA_REFETCH_OPTIONS } from "../../libs/api/developer";
 import {
   useDeleteReraProjectMutation,
   useGetAllReraProjects,
@@ -83,6 +85,7 @@ export function ReraProjectsList() {
   const [reraExtractJobId, setReraExtractJobId] = useState<
     string | undefined
   >();
+  const [refetchSections, setRefetchSections] = useState<string[]>([]);
 
   const extractReraProjectsMutation = useExtractDeveloperReraProjectsMutation();
   const { data: reraExtractJob } = useScriptJob(reraExtractJobId);
@@ -433,12 +436,14 @@ export function ReraProjectsList() {
         title="Extract RERA Information"
         open={!!reraExtractTarget}
         onCancel={() => setReraExtractTarget(undefined)}
+        afterClose={() => setRefetchSections([])}
         okText="Extract"
         okButtonProps={{ loading: extractReraProjectsMutation.isPending }}
         onOk={async () => {
           if (!reraExtractTarget) return;
           const job = await extractReraProjectsMutation.mutateAsync({
             reraNumbers: reraExtractTarget.reraNumber,
+            refetch: refetchSections.length ? refetchSections : undefined,
           });
           setReraExtractTarget(undefined);
           setReraExtractJobId(job.jobId);
@@ -448,6 +453,16 @@ export function ReraProjectsList() {
           Extract RERA information for "{reraExtractTarget?.projectName}"?
           This takes a few minutes.
         </Typography.Text>
+        <Flex vertical gap={8} style={{ marginTop: 16 }}>
+          <Typography.Text type="secondary">
+            Pick sections to re-scrape. Leave empty to only fill what's missing.
+          </Typography.Text>
+          <Checkbox.Group
+            options={RERA_REFETCH_OPTIONS}
+            value={refetchSections}
+            onChange={(v) => setRefetchSections(v as string[])}
+          />
+        </Flex>
       </Modal>
 
       <Drawer

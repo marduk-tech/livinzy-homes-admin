@@ -6,6 +6,7 @@ import {
   createDeveloper,
   deleteDeveloper,
   extractDeveloperReraProjects,
+  ExtractDeveloperReraProjectsParams,
   generateDeveloperInfo,
   getAllDevelopers,
   getDeveloperById,
@@ -146,7 +147,7 @@ export function useGenerateDeveloperInfoMutation() {
 
 export function useExtractDeveloperReraProjectsMutation() {
   return useMutation({
-    mutationFn: (params: { developerId?: string; reraNumbers?: string }) =>
+    mutationFn: (params: ExtractDeveloperReraProjectsParams) =>
       extractDeveloperReraProjects(params),
 
     onSuccess: () => {
