@@ -478,6 +478,37 @@ export function useRunProjectChecksMutation({
   });
 }
 
+export function useBulkUpdateProjectStatusMutation() {
+  return useMutation({
+    mutationFn: ({
+      projectIds,
+      status,
+    }: {
+      projectIds: string[];
+      status: string;
+    }) => {
+      return api.bulkUpdateProjectStatus(projectIds, status);
+    },
+    onSuccess: (data) => {
+      notification.success({
+        message: `Status updated for ${data.updatedCount} project(s)`,
+      });
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message || `Failed to update project status.`,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projectStatusCounts],
+      });
+    },
+  });
+}
+
 export function useProjectForm(form: FormInstance) {
   const { data: developers = [] } = useFetchDevelopers();
 

@@ -296,6 +296,16 @@ export const generateScoresStreamed = async (
   return result;
 };
 
+export const bulkUpdateProjectStatus = async (
+  projectIds: string[],
+  status: string,
+): Promise<{ success: boolean; updatedCount: number; skippedCount: number }> => {
+  const endpoint = `/projects/bulk-update-status`;
+  return axiosApiInstance
+    .post(endpoint, { projectIds, status })
+    .then((response) => response.data);
+};
+
 export const runProjectChecksForProject = async (projectId: string) => {
   const endpoint = `/projects/run-checks`;
   return axiosApiInstance.post(endpoint, { projectId }).then((response) => {
