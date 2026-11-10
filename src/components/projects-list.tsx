@@ -84,6 +84,7 @@ export const STATUS_OPTIONS = [
 // statuses the bulk update can set, and the statuses a project must be in to
 // be bulk updated (mirrors the services bulk-update-status endpoint)
 const BULK_STATUS_OPTIONS = [
+  { label: "Basic Details Ready", value: "basic-details-ready" },
   { label: "Data Populated", value: "data-populated" },
   { label: "Data Verified", value: "data-verified" },
 ];
