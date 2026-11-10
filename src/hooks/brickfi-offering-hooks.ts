@@ -66,7 +66,8 @@ export function useGetBrickfiOfferingTickets() {
   });
 }
 
-// status change and/or reply - posted to the user's thread right away
+// status change and/or reply - reaches the user's thread once the ticket is
+// closed
 export function useUpdateBrickfiOfferingTicketMutation() {
   return useMutation({
     mutationFn: ({
@@ -77,13 +78,23 @@ export function useUpdateBrickfiOfferingTicketMutation() {
       update: BrickfiOfferingTicketUpdate;
     }) => updateBrickfiOfferingTicket(ticketId, update),
     onSuccess: (ticket, { update }) => {
-      // saved, but the thread couldn't be updated - it goes out with the
+      // saved, but it couldn't reach the user - it goes out with the
       // ticket's next update
       if (ticket?.threadPosted === false) {
         notification.warning({
           message: update.reply ? "Reply saved" : "Status updated",
-          description:
-            "Couldn't post it to the user's chat right now - it will go out with this ticket's next update.",
+          description: ticket.threadId
+            ? "Couldn't post it to the user's chat right now - it will go out with this ticket's next update."
+            : "Couldn't reach the user by WhatsApp or email right now - it will go out with this ticket's next update.",
+        });
+        return;
+      }
+      if (update.reply && ticket?.status !== "closed") {
+        notification.success({
+          message: "Reply saved",
+          description: ticket?.threadId
+            ? "It goes to the user's chat when this ticket is closed."
+            : "It goes to the user by WhatsApp and email, as written, when this ticket is closed.",
         });
         return;
       }

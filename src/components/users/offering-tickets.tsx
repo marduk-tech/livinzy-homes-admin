@@ -256,7 +256,8 @@ export function OfferingTickets() {
       dataIndex: "threadId",
       key: "threadId",
       width: 90,
-      render: (threadId: string) => <ThreadIdLink threadId={threadId} />,
+      render: (threadId?: string) =>
+        threadId ? <ThreadIdLink threadId={threadId} /> : "No thread",
     },
   ];
 
@@ -345,7 +346,7 @@ function TicketReplyModal({
       title={
         ticket ? `Reply · ${ticket.ticketId} · ${ticket.offeringTitle || ticket.offeringKey}` : ""
       }
-      okText="Send reply"
+      okText={ticket?.status === "closed" ? "Send reply" : "Save reply"}
       onOk={send}
       okButtonProps={{ disabled: !text.trim(), loading: sending }}
       cancelButtonProps={{ disabled: sending }}

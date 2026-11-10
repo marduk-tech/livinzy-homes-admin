@@ -60,7 +60,8 @@ export interface BrickfiOfferingTicket {
     email?: string;
   } | null;
   guestId?: string;
-  threadId: string;
+  /** absent for a ticket raised outside a conversation */
+  threadId?: string;
   turnId?: string;
   offeringKey: string;
   // current names - null if the offering or CTA no longer exists
