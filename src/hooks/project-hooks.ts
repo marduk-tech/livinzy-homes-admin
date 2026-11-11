@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { FormInstance, notification } from "antd";
 import { AxiosError } from "axios";
@@ -156,9 +157,15 @@ export function useUpdateProjectMutation({
   projectId: string;
   enableToasts?: boolean;
 }) {
+  const { user } = useAuth0();
+
   return useMutation({
     mutationFn: ({ projectData }: { projectData: Partial<Project> }) => {
-      return api.updateProject(projectId, projectData);
+      return api.updateProject(
+        projectId,
+        projectData,
+        user?.email ? { name: "bkfi-admin", id: user.email } : undefined,
+      );
     },
 
     // Write the mutation's own response straight into the cache instead of

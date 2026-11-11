@@ -69,14 +69,24 @@ export const getProjectById = async (id: string) => {
 };
 
 // Update a project by ID
+// who made the update - the services store it as info.rate.updatedBy (and on
+// the rateVersions entry) when the update recomputes the rate
+export interface UpdateSource {
+  name: string;
+  id?: string;
+}
+
 export const updateProject = async (
   id: string,
-  projectData: Partial<Project>
+  projectData: Partial<Project>,
+  source?: UpdateSource
 ) => {
   const endpoint = `/projects/${id}`;
-  return axiosApiInstance.put(endpoint, projectData).then((response) => {
-    return response.data as Project;
-  });
+  return axiosApiInstance
+    .put(endpoint, source ? { ...projectData, source } : projectData)
+    .then((response) => {
+      return response.data as Project;
+    });
 };
 
 // Delete a project by ID
@@ -315,6 +325,14 @@ export interface PriceCheckRun {
   dateParsed?: string;
   operation?: "projectUpdated" | "flagRaised" | "none";
   consensusPerSqft?: number | null;
+  // sites in the agreeing cluster (data.perSite)
+  perSite?: Record<string, unknown>[];
+  // from the info.rateVersions entry this run wrote (updatedBy.id = runId) and
+  // the one before it; null when no entry matches
+  sqftPriceUpdate?: {
+    oldPerSqft: number | null;
+    newPerSqft: number | null;
+  } | null;
 }
 
 export const getPriceCheckRuns = async (

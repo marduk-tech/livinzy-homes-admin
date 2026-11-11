@@ -4,12 +4,14 @@ import {
   Button,
   Flex,
   Input,
+  Modal,
   Table,
   TableColumnType,
   Tag,
   Typography,
 } from "antd";
 import { useMemo, useState } from "react";
+import ReactJson from "react-json-view";
 import { useGetPriceCheckRuns } from "../../hooks/project-hooks";
 import { PriceCheckRun } from "../../libs/api/projects";
 
@@ -30,6 +32,7 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
   const { data, isLoading, isFetching, error, refetch } =
     useGetPriceCheckRuns();
   const [search, setSearch] = useState("");
+  const [perSiteRow, setPerSiteRow] = useState<PriceCheckRun | null>(null);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -127,8 +130,33 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
       width: 150,
       align: "right",
       sorter: (a, b) => (a.consensusPerSqft ?? 0) - (b.consensusPerSqft ?? 0),
-      render: (value?: number | null) =>
-        typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "—",
+      render: (value: number | null | undefined, record) => {
+        const text =
+          typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "—";
+        return record.perSite ? (
+          <Typography.Link onClick={() => setPerSiteRow(record)}>
+            {text}
+          </Typography.Link>
+        ) : (
+          text
+        );
+      },
+    },
+    {
+      title: "Sqft Price Update",
+      key: "sqftPriceUpdate",
+      width: 190,
+      render: (_, record) => {
+        const update = record.sqftPriceUpdate;
+        if (!update) return <Typography.Text type="secondary">NA</Typography.Text>;
+        const fmt = (v: number | null) =>
+          typeof v === "number" ? `₹${v.toLocaleString("en-IN")}` : "NA";
+        return (
+          <span style={{ whiteSpace: "nowrap" }}>
+            {fmt(update.oldPerSqft)} &gt; {fmt(update.newPerSqft)}
+          </span>
+        );
+      },
     },
   ];
 
@@ -180,6 +208,36 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
         columns={columns}
         pagination={{ pageSize: 50, hideOnSinglePage: true }}
       />
+
+      <Modal
+        open={!!perSiteRow}
+        onCancel={() => setPerSiteRow(null)}
+        footer={null}
+        width={800}
+        title={`Per-site prices — ${perSiteRow?.projectName || perSiteRow?.projectId || ""}`}
+      >
+        {perSiteRow && (
+          <div
+            style={{
+              maxHeight: "65vh",
+              overflow: "auto",
+              padding: 10,
+              backgroundColor: "#f8f9fa",
+            }}
+          >
+            <ReactJson
+              src={perSiteRow.perSite || []}
+              name="perSite"
+              theme="rjv-default"
+              displayDataTypes={false}
+              displayObjectSize={true}
+              enableClipboard={true}
+              collapsed={2}
+              indentWidth={4}
+            />
+          </div>
+        )}
+      </Modal>
     </Flex>
   );
 }
