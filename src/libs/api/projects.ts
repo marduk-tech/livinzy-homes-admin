@@ -306,6 +306,25 @@ export const bulkUpdateProjectStatus = async (
     .then((response) => response.data);
 };
 
+// One price check written by a script-server pricing run
+export interface PriceCheckRun {
+  projectId: string;
+  projectName?: string;
+  projectStatus?: string;
+  runId: string;
+  dateParsed?: string;
+  operation?: "projectUpdated" | "flagRaised" | "none";
+  consensusPerSqft?: number | null;
+}
+
+export const getPriceCheckRuns = async (
+  limit?: number,
+): Promise<PriceCheckRun[]> => {
+  return axiosApiInstance
+    .get(`/projects/price-checks`, { params: limit ? { limit } : {} })
+    .then((response) => response.data);
+};
+
 export const runProjectChecksForProject = async (projectId: string) => {
   const endpoint = `/projects/run-checks`;
   return axiosApiInstance.post(endpoint, { projectId }).then((response) => {

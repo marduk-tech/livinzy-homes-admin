@@ -4,6 +4,7 @@ import {
   Button,
   Drawer,
   Flex,
+  Input,
   message,
   Popconfirm,
   Segmented,
@@ -143,7 +144,7 @@ export function RunsTab({
     isLoading,
     error,
   } = useScriptJobs({ limit, kind: kind === "all" ? undefined : kind });
-  const { data: job } = useScriptJob(selectedJobId);
+  const { data: job, isError: jobLoadFailed } = useScriptJob(selectedJobId);
   const { data: schedules } = useCronSchedules();
   const stopJob = useStopJob();
   const rerunJob = useRerunJob();
@@ -172,6 +173,22 @@ export function RunsTab({
       ),
       filters: STATUSES.map((s) => ({ text: s, value: s })),
       onFilter: (value, record) => record.status === value,
+    },
+    {
+      title: "Run ID",
+      dataIndex: "id",
+      width: 120,
+      // first 8 chars shown, the full id copied
+      render: (id: string) => (
+        <span onClick={(e) => e.stopPropagation()}>
+          <Typography.Text
+            copyable={{ text: id, tooltips: ["Copy run ID", "Copied"] }}
+            style={{ fontFamily: "monospace", fontSize: 12 }}
+          >
+            {id.slice(0, 8)}
+          </Typography.Text>
+        </span>
+      ),
     },
     { title: "Kind", dataIndex: "kind", width: 130 },
     {
@@ -267,6 +284,17 @@ export function RunsTab({
           scheduled runs are still here after a redeploy. Logs are cleared after{" "}
           {RETENTION_DAYS} days; the runs themselves stay.
         </Typography.Text>
+        {/* opens any run by its full id - including ones older than the
+          loaded page */}
+        <Input.Search
+          allowClear
+          placeholder="Find run by ID"
+          style={{ width: 300 }}
+          onSearch={(value) => {
+            const id = value.trim();
+            if (id) onSelectJob(id);
+          }}
+        />
         <Segmented
           value={kind}
           onChange={(value) => {
@@ -338,11 +366,37 @@ export function RunsTab({
           ))
         }
       >
+        {/* e.g. a mistyped id in Find run by ID, or a stale ?run= link */}
+        {!job && jobLoadFailed && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Run not found"
+            description={
+              <Typography.Text style={{ fontFamily: "monospace", fontSize: 12 }}>
+                {selectedJobId}
+              </Typography.Text>
+            }
+          />
+        )}
         {job && (
           <Flex vertical gap={12}>
             <Typography.Text type="secondary">
               Started {new Date(job.startedAt).toLocaleString()} · ran for{" "}
               {duration(job)}
+            </Typography.Text>
+
+            <Typography.Text type="secondary">
+              Run ID{" "}
+              <Typography.Text
+                copyable={{
+                  text: job.id,
+                  tooltips: ["Copy run ID", "Copied"],
+                }}
+                style={{ fontFamily: "monospace", fontSize: 12 }}
+              >
+                {job.id}
+              </Typography.Text>
             </Typography.Text>
 
             {typeof job.meta?.rerunOf === "string" && (

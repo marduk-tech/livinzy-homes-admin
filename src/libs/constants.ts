@@ -63,6 +63,7 @@ export const queryKeys = {
   getScriptManifest: "getScriptManifest",
   getScriptJobs: "getScriptJobs",
   getScriptJob: "getScriptJob",
+  getPriceCheckRuns: "getPriceCheckRuns",
   getCronSchedules: "getCronSchedules",
   getReraProjectNames: "getReraProjectNames",
   getProjectOptions: "getProjectOptions",

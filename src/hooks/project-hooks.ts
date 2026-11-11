@@ -478,6 +478,16 @@ export function useRunProjectChecksMutation({
   });
 }
 
+// price checks written by script-server pricing runs (Manage Scripts >
+// Pricing Updates)
+export function useGetPriceCheckRuns() {
+  return useQuery({
+    queryKey: [queryKeys.getPriceCheckRuns],
+    queryFn: () => api.getPriceCheckRuns(),
+    refetchOnWindowFocus: false,
+  });
+}
+
 export function useBulkUpdateProjectStatusMutation() {
   return useMutation({
     mutationFn: ({

@@ -1,13 +1,35 @@
 import { Tabs, Typography } from "antd";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BackendScriptsTab } from "./backend-scripts-tab";
+import { PricingUpdatesTab } from "./pricing-updates-tab";
 import { RunTab } from "./run-tab";
 import { RunsTab } from "./runs-tab";
 import { SchedulesTab } from "./schedules-tab";
 
 export function ManageScriptsPage() {
-  const [activeTab, setActiveTab] = useState("backend");
-  const [selectedJobId, setSelectedJobId] = useState<string>();
+  // ?run=<id> opens that run on the Runs tab - a link to it from anything
+  // that stored the run id (e.g. a project's priceChecks.runId)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const runParam = searchParams.get("run") || undefined;
+  const [activeTab, setActiveTab] = useState(runParam ? "runs" : "backend");
+  const [selectedJobId, setSelectedJobIdState] = useState<string | undefined>(
+    runParam,
+  );
+
+  // keeps ?run= in step with the open run, so it can be copied as a link
+  const setSelectedJobId = (jobId?: string) => {
+    setSelectedJobIdState(jobId);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (jobId) next.set("run", jobId);
+        else next.delete("run");
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const handleStarted = (jobId: string) => {
     setSelectedJobId(jobId);
@@ -40,6 +62,11 @@ export function ManageScriptsPage() {
           onStarted={handleStarted}
         />
       ),
+    },
+    {
+      key: "pricing-updates",
+      label: "Pricing Updates",
+      children: <PricingUpdatesTab onOpenRun={handleStarted} />,
     },
   ];
 
