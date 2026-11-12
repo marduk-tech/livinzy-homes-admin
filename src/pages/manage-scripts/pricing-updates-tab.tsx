@@ -158,6 +158,28 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
         );
       },
     },
+    {
+      title: "Sqft Pricing Issue",
+      dataIndex: "sqftPricingIssue",
+      width: 150,
+      render: (issue?: PriceCheckRun["sqftPricingIssue"]) => {
+        if (!issue) return <Typography.Text type="secondary">—</Typography.Text>;
+        return issue === "open" ? (
+          <Tag color="red" bordered={false}>
+            Open
+          </Tag>
+        ) : (
+          <Tag color="default" bordered={false}>
+            Resolved
+          </Tag>
+        );
+      },
+      filters: [
+        { text: "Open", value: "open" },
+        { text: "Resolved", value: "resolved" },
+      ],
+      onFilter: (value, record) => record.sqftPricingIssue === value,
+    },
   ];
 
   if (error) {

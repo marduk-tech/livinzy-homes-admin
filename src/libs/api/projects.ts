@@ -327,6 +327,9 @@ export interface PriceCheckRun {
   consensusPerSqft?: number | null;
   // sites in the agreeing cluster (data.perSite)
   perSite?: Record<string, unknown>[];
+  // the project's severity-5 "Sqft Pricing" internal check(s): "open" if any
+  // is unresolved, "resolved" if all are, null when there are none
+  sqftPricingIssue?: "open" | "resolved" | null;
   // from the info.rateVersions entry this run wrote (updatedBy.id = runId) and
   // the one before it; null when no entry matches
   sqftPriceUpdate?: {
