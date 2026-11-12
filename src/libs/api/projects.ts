@@ -69,14 +69,24 @@ export const getProjectById = async (id: string) => {
 };
 
 // Update a project by ID
+// who made the update - the services store it as info.rate.updatedBy (and on
+// the rateVersions entry) when the update recomputes the rate
+export interface UpdateSource {
+  name: string;
+  id?: string;
+}
+
 export const updateProject = async (
   id: string,
-  projectData: Partial<Project>
+  projectData: Partial<Project>,
+  source?: UpdateSource
 ) => {
   const endpoint = `/projects/${id}`;
-  return axiosApiInstance.put(endpoint, projectData).then((response) => {
-    return response.data as Project;
-  });
+  return axiosApiInstance
+    .put(endpoint, source ? { ...projectData, source } : projectData)
+    .then((response) => {
+      return response.data as Project;
+    });
 };
 
 // Delete a project by ID
@@ -294,6 +304,46 @@ export const generateScoresStreamed = async (
   handleLine(buffered);
   if (!result) throw new Error("The report request ended without a result");
   return result;
+};
+
+export const bulkUpdateProjectStatus = async (
+  projectIds: string[],
+  status: string,
+): Promise<{ success: boolean; updatedCount: number; skippedCount: number }> => {
+  const endpoint = `/projects/bulk-update-status`;
+  return axiosApiInstance
+    .post(endpoint, { projectIds, status })
+    .then((response) => response.data);
+};
+
+// One price check written by a script-server pricing run
+export interface PriceCheckRun {
+  projectId: string;
+  projectName?: string;
+  projectStatus?: string;
+  runId: string;
+  dateParsed?: string;
+  operation?: "projectUpdated" | "flagRaised" | "none";
+  consensusPerSqft?: number | null;
+  // sites in the agreeing cluster (data.perSite)
+  perSite?: Record<string, unknown>[];
+  // the project's severity-5 "Sqft Pricing" internal check(s): "open" if any
+  // is unresolved, "resolved" if all are, null when there are none
+  sqftPricingIssue?: "open" | "resolved" | null;
+  // from the info.rateVersions entry this run wrote (updatedBy.id = runId) and
+  // the one before it; null when no entry matches
+  sqftPriceUpdate?: {
+    oldPerSqft: number | null;
+    newPerSqft: number | null;
+  } | null;
+}
+
+export const getPriceCheckRuns = async (
+  limit?: number,
+): Promise<PriceCheckRun[]> => {
+  return axiosApiInstance
+    .get(`/projects/price-checks`, { params: limit ? { limit } : {} })
+    .then((response) => response.data);
 };
 
 export const runProjectChecksForProject = async (projectId: string) => {

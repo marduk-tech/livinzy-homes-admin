@@ -1,3 +1,4 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { FormInstance, notification } from "antd";
 import { AxiosError } from "axios";
@@ -156,9 +157,15 @@ export function useUpdateProjectMutation({
   projectId: string;
   enableToasts?: boolean;
 }) {
+  const { user } = useAuth0();
+
   return useMutation({
     mutationFn: ({ projectData }: { projectData: Partial<Project> }) => {
-      return api.updateProject(projectId, projectData);
+      return api.updateProject(
+        projectId,
+        projectData,
+        user?.email ? { name: "bkfi-admin", id: user.email } : undefined,
+      );
     },
 
     // Write the mutation's own response straight into the cache instead of
@@ -474,6 +481,47 @@ export function useRunProjectChecksMutation({
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+    },
+  });
+}
+
+// price checks written by script-server pricing runs (Manage Scripts >
+// Pricing Updates)
+export function useGetPriceCheckRuns() {
+  return useQuery({
+    queryKey: [queryKeys.getPriceCheckRuns],
+    queryFn: () => api.getPriceCheckRuns(),
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useBulkUpdateProjectStatusMutation() {
+  return useMutation({
+    mutationFn: ({
+      projectIds,
+      status,
+    }: {
+      projectIds: string[];
+      status: string;
+    }) => {
+      return api.bulkUpdateProjectStatus(projectIds, status);
+    },
+    onSuccess: (data) => {
+      notification.success({
+        message: `Status updated for ${data.updatedCount} project(s)`,
+      });
+    },
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message || `Failed to update project status.`,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.projects] });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.projectStatusCounts],
+      });
     },
   });
 }

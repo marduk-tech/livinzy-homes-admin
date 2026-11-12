@@ -33,7 +33,6 @@ import {
   useUpdateBrickchatFeedbackMutation,
 } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
-import { brickfiAppUrl } from "../../libs/constants";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import {
   BRICKCHAT_FEEDBACK_CATEGORY_OPTIONS,
@@ -48,8 +47,12 @@ import {
 } from "../../types/brickchat-feedback";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 import { FeedbackAssessmentDrawer } from "./feedback-assessment-drawer";
-import { langsmithThreadUrl, ThreadLinksButton } from "./thread-id-link";
 import { SendToFactoryButton } from "./send-to-factory-button";
+import {
+  brickchatConversationUrl,
+  langsmithThreadUrl,
+  ThreadLinksButton,
+} from "./thread-id-link";
 
 const STATUS_COLORS: Record<BrickchatFeedbackStatus, string> = {
   new: "blue",
@@ -209,7 +212,7 @@ function FeedbackEntryModal({
           </Button>
           <Button
             icon={<MessageOutlined />}
-            href={`${brickfiAppUrl}/app/brickchat/${encodeURIComponent(threadId)}`}
+            href={brickchatConversationUrl(threadId)}
             target="_blank"
             rel="noopener noreferrer"
           >

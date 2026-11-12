@@ -38,6 +38,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useFetchCorridors } from "../hooks/corridors-hooks";
 import {
   useAddStatusCommentMutation,
+  useBulkUpdateProjectStatusMutation,
   useDeleteProjectMutation,
   useDeleteStatusCommentMutation,
   useEditStatusCommentMutation,
@@ -78,6 +79,19 @@ export const STATUS_OPTIONS = [
   { label: "Report Verified", value: "report-verified" },
   { label: "Disabled", value: "disabled" },
   { label: "New", value: "new" },
+];
+
+// statuses the bulk update can set, and the statuses a project must be in to
+// be bulk updated (mirrors the services bulk-update-status endpoint)
+const BULK_STATUS_OPTIONS = [
+  { label: "Basic Details Ready", value: "basic-details-ready" },
+  { label: "Data Populated", value: "data-populated" },
+  { label: "Data Verified", value: "data-verified" },
+];
+const BULK_UPDATABLE_STATUSES = [
+  "basic-details-ready",
+  "data-populated",
+  "data-verified",
 ];
 
 const ISSUE_TYPE_OPTIONS = [
@@ -169,6 +183,12 @@ export const ProjectsList: React.FC = () => {
   const runProjectChecksMutation = useRunProjectChecksMutation({
     enableToasts: true,
   });
+  const bulkUpdateStatusMutation = useBulkUpdateProjectStatusMutation();
+  const [selectedProjectIds, setSelectedProjectIds] = useState<React.Key[]>(
+    [],
+  );
+  const [bulkStatus, setBulkStatus] = useState<string>();
+  const [isBulkStatusModalOpen, setIsBulkStatusModalOpen] = useState(false);
   const { user } = useAuth0();
 
   // Helper to update specific project in cache without refetching - every
@@ -971,6 +991,32 @@ export const ProjectsList: React.FC = () => {
     },
   ];
 
+  // only selected projects still in the list and in an updatable status
+  const bulkEligibleProjects = (projects || []).filter(
+    (p) =>
+      selectedProjectIds.includes(p._id) &&
+      BULK_UPDATABLE_STATUSES.includes(p.info.status),
+  );
+
+  const closeBulkStatusModal = () => {
+    setIsBulkStatusModalOpen(false);
+    setBulkStatus(undefined);
+  };
+
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus || !bulkEligibleProjects.length) return;
+    try {
+      await bulkUpdateStatusMutation.mutateAsync({
+        projectIds: bulkEligibleProjects.map((p) => p._id),
+        status: bulkStatus,
+      });
+      setSelectedProjectIds([]);
+      closeBulkStatusModal();
+    } catch {
+      // the hook shows the error notification; keep the dialog open to retry
+    }
+  };
+
   const getStatusLabel = (status: string, label: string) => {
     if (isStatusCountsLoading || !statusCounts) return label;
 
@@ -1226,14 +1272,33 @@ export const ProjectsList: React.FC = () => {
         </Col>
 
         <Col>
-          <Button
-            type="primary"
-            onClick={() => {
-              window.open("/projects/create");
-            }}
-          >
-            Create New Project
-          </Button>
+          <Flex gap={8}>
+            <Tooltip
+              title={
+                !bulkEligibleProjects.length
+                  ? "Select projects in Basic Details Ready, Data Populated or Data Verified status"
+                  : undefined
+              }
+            >
+              <Button
+                disabled={!bulkEligibleProjects.length}
+                onClick={() => setIsBulkStatusModalOpen(true)}
+              >
+                Bulk Update Status
+                {bulkEligibleProjects.length
+                  ? ` (${bulkEligibleProjects.length})`
+                  : ""}
+              </Button>
+            </Tooltip>
+            <Button
+              type="primary"
+              onClick={() => {
+                window.open("/projects/create");
+              }}
+            >
+              Create New Project
+            </Button>
+          </Flex>
         </Col>
       </Row>
 
@@ -1248,9 +1313,46 @@ export const ProjectsList: React.FC = () => {
         dataSource={projects}
         columns={columns}
         rowKey="_id"
+        rowSelection={{
+          selectedRowKeys: selectedProjectIds,
+          onChange: (keys) => setSelectedProjectIds(keys),
+          getCheckboxProps: (record) => ({
+            disabled: !BULK_UPDATABLE_STATUSES.includes(record.info.status),
+          }),
+        }}
         loading={isProjectsFirstLoad || isShowingPreviousProjects}
         pagination={false}
       />
+      <Modal
+        title={`Bulk Update Status (${bulkEligibleProjects.length} project${
+          bulkEligibleProjects.length === 1 ? "" : "s"
+        })`}
+        open={isBulkStatusModalOpen}
+        onOk={handleBulkStatusUpdate}
+        onCancel={closeBulkStatusModal}
+        okText="Update"
+        okButtonProps={{
+          disabled: !bulkStatus || !bulkEligibleProjects.length,
+          loading: bulkUpdateStatusMutation.isPending,
+        }}
+        width={600}
+        destroyOnClose
+      >
+        <Flex vertical gap={12} style={{ marginTop: 16 }}>
+          <Select
+            placeholder="Set status to"
+            value={bulkStatus}
+            onChange={(value) => setBulkStatus(value)}
+            options={BULK_STATUS_OPTIONS}
+            style={{ width: 200 }}
+          />
+          <Typography.Paragraph
+            style={{ maxHeight: 300, overflowY: "auto", marginBottom: 0 }}
+          >
+            {bulkEligibleProjects.map((p) => p.info.name).join(", ")}
+          </Typography.Paragraph>
+        </Flex>
+      </Modal>
       <JsonProjectImport
         isModalOpen={isJsonImportModalOpen}
         setIsModalOpen={setIsJsonImportModalOpen}

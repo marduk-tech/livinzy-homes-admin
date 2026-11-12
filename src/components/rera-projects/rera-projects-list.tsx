@@ -2,24 +2,19 @@ import {
   EyeOutlined,
   FileSearchOutlined,
   FileTextOutlined,
-  LoadingOutlined,
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import {
-  Alert,
   Button,
-  Checkbox,
   Col,
   DatePicker,
-  Drawer,
   Flex,
   Input,
   Modal,
   Row,
   Table,
   TableColumnType,
-  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -27,17 +22,14 @@ import React, { useState } from "react";
 
 const { Search } = Input;
 import ReactJson from "react-json-view";
-import { useExtractDeveloperReraProjectsMutation } from "../../hooks/developer-hooks";
-import { useScriptJob, useStopJob } from "../../hooks/manage-scripts-hooks";
-import { RERA_REFETCH_OPTIONS } from "../../libs/api/developer";
 import {
   useDeleteReraProjectMutation,
   useGetAllReraProjects,
 } from "../../hooks/rera-projects-hooks";
-import { JobLogViewer } from "../../pages/manage-scripts/job-log-viewer";
 import { ReraProject } from "../../types/rera-project";
 import { ColumnSearch } from "../common/column-search";
 import { AssignToDeveloperModal } from "./assign-to-developer-modal";
+import { ExtractReraInfo, ExtractReraTarget } from "./extract-rera-info";
 import { ReraDocumentsModal } from "./rera-documents-modal";
 import dayjs, { Dayjs } from "dayjs";
 const { RangePicker } = DatePicker;
@@ -45,15 +37,6 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { COLORS } from "../../theme/colors";
-
-const JOB_STATUS_COLOR: Record<string, string> = {
-  running: "processing",
-  done: "success",
-  error: "error",
-  stopped: "default",
-  interrupted: "warning",
-  skipped: "default",
-};
 
 export function ReraProjectsList() {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -79,17 +62,9 @@ export function ReraProjectsList() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
 
-  const [reraExtractTarget, setReraExtractTarget] = useState<
-    { reraNumber: string; projectName?: string } | undefined
+  const [reraExtractTargets, setReraExtractTargets] = useState<
+    ExtractReraTarget[] | undefined
   >();
-  const [reraExtractJobId, setReraExtractJobId] = useState<
-    string | undefined
-  >();
-  const [refetchSections, setRefetchSections] = useState<string[]>([]);
-
-  const extractReraProjectsMutation = useExtractDeveloperReraProjectsMutation();
-  const { data: reraExtractJob } = useScriptJob(reraExtractJobId);
-  const stopJobMutation = useStopJob();
 
   const selectedProjects = (data ?? [])
     .filter((p) => selectedRowKeys.includes(p._id))
@@ -285,17 +260,14 @@ export function ReraProjectsList() {
                 shape="default"
                 icon={<FileSearchOutlined />}
                 disabled={!record.projectDetails.projectRegistrationNumber}
-                loading={
-                  extractReraProjectsMutation.isPending &&
-                  extractReraProjectsMutation.variables?.reraNumbers ===
-                    record.projectDetails.projectRegistrationNumber
-                }
                 onClick={() =>
-                  setReraExtractTarget({
-                    reraNumber:
-                      record.projectDetails.projectRegistrationNumber!,
-                    projectName: record.projectDetails.projectName,
-                  })
+                  setReraExtractTargets([
+                    {
+                      reraNumber:
+                        record.projectDetails.projectRegistrationNumber!,
+                      projectName: record.projectDetails.projectName,
+                    },
+                  ])
                 }
               />
             </Tooltip>
@@ -337,13 +309,28 @@ export function ReraProjectsList() {
         </Col>
         <Col>
           {selectedRowKeys.length > 0 && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setAssignModalOpen(true)}
-            >
-              Assign to Developer ({selectedRowKeys.length})
-            </Button>
+            <Flex gap={8}>
+              <Button
+                icon={<FileSearchOutlined />}
+                onClick={() =>
+                  setReraExtractTargets(
+                    selectedProjects.map((p) => ({
+                      reraNumber: p.reraNumber,
+                      projectName: p.name,
+                    }))
+                  )
+                }
+              >
+                Extract RERA Info ({selectedRowKeys.length})
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setAssignModalOpen(true)}
+              >
+                Assign to Developer ({selectedRowKeys.length})
+              </Button>
+            </Flex>
           )}
         </Col>
       </Row>
@@ -432,83 +419,10 @@ export function ReraProjectsList() {
         projects={selectedProjects}
       />
 
-      <Modal
-        title="Extract RERA Information"
-        open={!!reraExtractTarget}
-        onCancel={() => setReraExtractTarget(undefined)}
-        afterClose={() => setRefetchSections([])}
-        okText="Extract"
-        okButtonProps={{ loading: extractReraProjectsMutation.isPending }}
-        onOk={async () => {
-          if (!reraExtractTarget) return;
-          const job = await extractReraProjectsMutation.mutateAsync({
-            reraNumbers: reraExtractTarget.reraNumber,
-            refetch: refetchSections.length ? refetchSections : undefined,
-          });
-          setReraExtractTarget(undefined);
-          setReraExtractJobId(job.jobId);
-        }}
-      >
-        <Typography.Text>
-          Extract RERA information for "{reraExtractTarget?.projectName}"?
-          This takes a few minutes.
-        </Typography.Text>
-        <Flex vertical gap={8} style={{ marginTop: 16 }}>
-          <Typography.Text type="secondary">
-            Pick sections to re-scrape. Leave empty to only fill what's missing.
-          </Typography.Text>
-          <Checkbox.Group
-            options={RERA_REFETCH_OPTIONS}
-            value={refetchSections}
-            onChange={(v) => setRefetchSections(v as string[])}
-          />
-        </Flex>
-      </Modal>
-
-      <Drawer
-        open={!!reraExtractJobId}
-        onClose={() => setReraExtractJobId(undefined)}
-        width={820}
-        title={
-          <Flex align="center" gap={12}>
-            <Tag
-              color={JOB_STATUS_COLOR[reraExtractJob?.status ?? "running"]}
-              icon={
-                reraExtractJob?.status === "running" ? (
-                  <LoadingOutlined spin />
-                ) : undefined
-              }
-            >
-              {reraExtractJob?.status ?? "starting"}
-            </Tag>
-            <Typography.Text>RERA project extract</Typography.Text>
-          </Flex>
-        }
-        extra={
-          reraExtractJob?.status === "running" && (
-            <Button
-              danger
-              size="small"
-              onClick={() => stopJobMutation.mutate(reraExtractJob.id)}
-            >
-              Stop
-            </Button>
-          )
-        }
-      >
-        <Flex vertical gap={12}>
-          {reraExtractJob?.status === "running" && (
-            <Typography.Text type="secondary">
-              Closing this drawer won't stop the job — it also shows up under
-              Manage Scripts → Runs.
-            </Typography.Text>
-          )}
-          {reraExtractJob?.error && (
-            <Alert type="error" showIcon message={reraExtractJob.error} />
-          )}
-          <JobLogViewer logs={reraExtractJob?.logs ?? []} height={520} />
-        </Flex>
-      </Drawer>
+      <ExtractReraInfo
+        targets={reraExtractTargets}
+        onClose={() => setReraExtractTargets(undefined)}
+      />
     </>
   );
 }

@@ -107,14 +107,14 @@ export function UsersList() {
   const [leadsSearchKeyword, setLeadsSearchKeyword] = useState<string>("");
 
   const { data, isLoading, isError } = useGetAllUsers({
-    limit: 1000,
-    sortBy: "updatedAt:desc",
+    limit: 50,
+    sortBy: "createdAt:desc",
     search: searchKeyword,
   });
   const { data: aggregatedReports, isLoading: isReportsLoading } =
     useGetAggregatedReports();
   const { data: leadsData, isLoading: isLeadsLoading } = useGetAllUsers({
-    limit: 500,
+    limit: 50,
     sortBy: "updatedAt:desc",
     status: "callback-request,active-lead,dropped-lead",
     search: leadsSearchKeyword,

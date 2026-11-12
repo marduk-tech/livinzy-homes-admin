@@ -1,12 +1,17 @@
 import {
   ExportOutlined,
   LinkOutlined,
+  MessageOutlined,
   ProfileOutlined,
 } from "@ant-design/icons";
 import { Button, Flex, Modal, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { langsmithOrgId, langsmithProjectId } from "../../libs/constants";
+import {
+  brickfiAppUrl,
+  langsmithOrgId,
+  langsmithProjectId,
+} from "../../libs/constants";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 
@@ -14,6 +19,10 @@ const LANGSMITH_PROJECT_URL = `https://smith.langchain.com/o/${langsmithOrgId}/p
 
 export const langsmithThreadUrl = (threadId: string) =>
   `${LANGSMITH_PROJECT_URL}?runview=threads&peekedConversationId=${encodeURIComponent(threadId)}`;
+
+// the conversation itself, as the user sees it in the Brickfi app
+export const brickchatConversationUrl = (threadId: string) =>
+  `${brickfiAppUrl}/app/brickchat/${encodeURIComponent(threadId)}`;
 
 // trace_id lets LangSmith open a nested (non-root) run inside its trace;
 // without it the run page still resolves, just without the trace tree
@@ -82,9 +91,10 @@ function ThreadLinkOption({
   );
 }
 
-// Icon button for a thread that opens a small dialog offering both places
-// to inspect it: the LangSmith thread view (new tab) and this admin's own
-// Brickfi Logger thread page (in-app navigation).
+// Icon button for a thread that opens a small dialog offering the places to
+// inspect it: the LangSmith thread view (new tab), this admin's own Brickfi
+// Logger thread page (in-app navigation) and the conversation in the Brickfi
+// app (new tab).
 export function ThreadLinksButton({
   threadId,
   size = "small",
@@ -147,6 +157,15 @@ export function ThreadLinksButton({
                 setOpen(false);
                 navigate(BRICKFI_LOGGER_PATHS.thread(threadId));
               }}
+            />
+            <ThreadLinkOption
+              icon={<MessageOutlined />}
+              title="Conversation"
+              description="The chat as the user sees it in the Brickfi app (new tab)"
+              href={brickchatConversationUrl(threadId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
             />
           </Flex>
         </Modal>
