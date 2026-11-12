@@ -7,6 +7,7 @@ import {
   LinkOutlined,
   LoadingOutlined,
   PlusOutlined,
+  ProfileOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
@@ -43,6 +44,7 @@ import { FONT_SIZES } from "../../theme/font-sizes";
 import { Developer } from "../../types/developer";
 import { ColumnSearch } from "../common/column-search";
 import { DeletePopconfirm } from "../common/delete-popconfirm";
+import { ReraDetailsModal } from "../rera-projects/rera-details-modal";
 import { ReraDocumentsModal } from "../rera-projects/rera-documents-modal";
 import { DeveloperDetailsDrawer } from "./developer-details-drawer";
 import { DeveloperForm } from "./developer-form";
@@ -78,6 +80,9 @@ export function DevelopersList() {
     number | undefined
   >();
   const [reraDocsModal, setReraDocsModal] = useState<
+    { reraNumber: string; projectName?: string } | undefined
+  >();
+  const [reraDetailsModal, setReraDetailsModal] = useState<
     { reraNumber: string; projectName?: string } | undefined
   >();
   const [scoreModalDeveloper, setScoreModalDeveloper] = useState<
@@ -179,6 +184,26 @@ export function DevelopersList() {
               disabled={!record.reraNumber}
               onClick={() =>
                 setReraDocsModal({
+                  reraNumber: record.reraNumber!,
+                  projectName: record.name,
+                })
+              }
+            />
+          </Tooltip>
+          <Tooltip
+            title={
+              record.reraNumber
+                ? "View RERA Project Details"
+                : "No RERA number on this project"
+            }
+          >
+            <Button
+              type="default"
+              shape="default"
+              icon={<ProfileOutlined />}
+              disabled={!record.reraNumber}
+              onClick={() =>
+                setReraDetailsModal({
                   reraNumber: record.reraNumber!,
                   projectName: record.name,
                 })
@@ -484,6 +509,13 @@ export function DevelopersList() {
         onClose={() => setReraDocsModal(undefined)}
         reraNumber={reraDocsModal?.reraNumber}
         projectName={reraDocsModal?.projectName}
+      />
+
+      <ReraDetailsModal
+        open={!!reraDetailsModal}
+        onClose={() => setReraDetailsModal(undefined)}
+        reraNumber={reraDetailsModal?.reraNumber}
+        projectName={reraDetailsModal?.projectName}
       />
 
       <DeveloperScoreModal
