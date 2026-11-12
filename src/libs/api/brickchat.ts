@@ -8,6 +8,7 @@ import {
 import {
   BrickchatFeedback,
   BrickchatFeedbackAssessment,
+  FactoryRepo,
 } from "../../types/brickchat-feedback";
 import { BrickchatPrompt } from "../../types/brickchat-prompt";
 import {
@@ -119,6 +120,19 @@ export const updateBrickchatFeedbackAssessment = async (
   const { data } = await axiosApiInstance.patch<BrickchatFeedback>(
     `/brickchat-feedback/${id}/assessment`,
     update,
+  );
+  return data;
+};
+
+// Files the feedback as a GitHub issue that Mastra Factory picks up -
+// returns the existing issue if it was already sent
+export const sendFeedbackToFactory = async (
+  id: string,
+  body: { repo: FactoryRepo; requestedBy?: string },
+): Promise<BrickchatFeedback> => {
+  const { data } = await axiosApiInstance.post<BrickchatFeedback>(
+    `/brickchat-feedback/${id}/github-issue`,
+    body,
   );
   return data;
 };

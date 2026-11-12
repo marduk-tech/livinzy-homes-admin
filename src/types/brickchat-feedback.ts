@@ -110,6 +110,23 @@ export interface BrickchatFeedbackAssessment {
   confirmedAt?: string;
 }
 
+// repos linked to the brickfi Factory - the agent can change all of them,
+// this only picks where the issue is filed
+export const FACTORY_REPOS = [
+  "livinzy-homes-services",
+  "livinzy-homes-admin",
+  "brickfi-app",
+] as const;
+export type FactoryRepo = (typeof FACTORY_REPOS)[number];
+
+export interface BrickchatFeedbackGithubIssue {
+  repo: string;
+  number: number;
+  url: string;
+  createdAt: string;
+  createdBy?: string;
+}
+
 export interface BrickchatFeedback {
   _id: string;
   threadId: string;
@@ -127,6 +144,8 @@ export interface BrickchatFeedback {
   revisionIds?: string[];
   status?: BrickchatFeedbackStatus;
   resolutionComment?: string;
+  // issue filed for Mastra Factory, once sent
+  githubIssue?: BrickchatFeedbackGithubIssue;
   createdAt: string;
   updatedAt: string;
 }

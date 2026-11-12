@@ -14,6 +14,7 @@ import {
   getRecentBrickchatLogs,
   updateBrickchatFeedback,
   updateBrickchatFeedbackAssessment,
+  sendFeedbackToFactory,
   generateRevision,
   getRevisionGroups,
   getRevisions,
@@ -35,7 +36,7 @@ import { BrickchatRevisionStatus } from "../types/brickchat-revision";
 import { errorMessage } from "../libs/api-error";
 import { queryKeys } from "../libs/constants";
 import { queryClient } from "../libs/query-client";
-import { BrickchatFeedback } from "../types/brickchat-feedback";
+import { BrickchatFeedback, FactoryRepo } from "../types/brickchat-feedback";
 
 export function useGetBrickchatLog(threadId: string | null | undefined) {
   return useQuery({
@@ -127,6 +128,30 @@ export function useUpdateBrickchatFeedbackAssessmentMutation() {
     onError: (error) => {
       notification.error({
         message: errorMessage(error, "Failed to update assessment"),
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getBrickchatFeedback],
+      });
+    },
+  });
+}
+
+export function useSendFeedbackToFactoryMutation() {
+  return useMutation({
+    mutationFn: ({
+      id,
+      repo,
+      requestedBy,
+    }: {
+      id: string;
+      repo: FactoryRepo;
+      requestedBy?: string;
+    }) => sendFeedbackToFactory(id, { repo, requestedBy }),
+    onError: (error) => {
+      notification.error({
+        message: errorMessage(error, "Failed to send to Factory"),
       });
     },
     onSettled: () => {

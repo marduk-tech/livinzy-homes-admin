@@ -49,6 +49,7 @@ import {
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 import { FeedbackAssessmentDrawer } from "./feedback-assessment-drawer";
 import { langsmithThreadUrl, ThreadLinksButton } from "./thread-id-link";
+import { SendToFactoryButton } from "./send-to-factory-button";
 
 const STATUS_COLORS: Record<BrickchatFeedbackStatus, string> = {
   new: "blue",
@@ -214,6 +215,7 @@ function FeedbackEntryModal({
           >
             See conversation
           </Button>
+          <SendToFactoryButton feedback={feedback} />
         </Flex>
         {!!feedback.imageUrls?.length && (
           <Image.PreviewGroup>
@@ -382,7 +384,7 @@ const getColumns = (
   {
     title: "Actions",
     key: "actions",
-    width: 220,
+    width: 260,
     render: (_, record) => (
       <Flex align="center" gap={4}>
         <Tooltip title="View entry">
@@ -410,6 +412,7 @@ const getColumns = (
             onClick={() => onAssess(record)}
           />
         </Tooltip>
+        <SendToFactoryButton feedback={record} compact />
         <Button
           type="link"
           icon={<EditOutlined />}

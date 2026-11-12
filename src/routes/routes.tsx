@@ -17,9 +17,9 @@ import ChromaDocsPage from "../pages/chroma-docs";
 import { EncyclopediaPage } from "../pages/encyclopedia-page";
 import { LivIndexScorePage } from "../pages/liveindexscores-page";
 import { ManageScriptsPage } from "../pages/manage-scripts/manage-scripts-page";
-import { PortalGatewayPage } from "../pages/portal-gateway/portal-gateway-page";
 import { MarketingPage } from "../pages/marketing/marketing-page";
 import { MicroPocketScore } from "../pages/micro-pockets/micro-pocket-score";
+import { PortalGatewayPage } from "../pages/portal-gateway/portal-gateway-page";
 import { CreateProjectPage } from "../pages/projects/create-project-page";
 import { EditProjectPage } from "../pages/projects/edit-project-page";
 import { ProjectsListPage } from "../pages/projects/projects-list";
@@ -31,7 +31,7 @@ export const Router = () => {
     <Routes>
       <Route path="/auth-callback" element={<AuthCallback />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route element={<AuthenticationGuard component={DashboardLayout} />}>
+      <Route element={<DashboardLayout />}>
         <Route path="/" element={<Navigate to="/projects" />} />
         <Route path="/projects" element={<ProjectsListPage />} />
 
