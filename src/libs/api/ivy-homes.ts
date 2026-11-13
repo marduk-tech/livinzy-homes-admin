@@ -80,6 +80,19 @@ export const getIvyListings = async (): Promise<IvyListing[]> => {
 // Project mapping lives in services (/third-party/ivy-homes/mappings); the
 // mapping itself is stored on the Brickfi project's inventoryStatus.
 
+export interface IvyListingSummary {
+  id: number;
+  title: string;
+  url?: string;
+  status?: string;
+  config?: string;
+  bedrooms?: number;
+  floor?: number;
+  price?: number;
+  area?: number;
+  areaType?: string;
+}
+
 export interface IvyProjectSummary {
   id: number;
   name: string;
@@ -90,6 +103,7 @@ export interface IvyProjectSummary {
   lng?: number;
   listingCount?: number;
   statuses?: string[];
+  listings?: IvyListingSummary[]; // missing for stale rows (no longer on Ivy)
 }
 
 export interface IvyProjectMatch {
@@ -100,13 +114,18 @@ export interface IvyProjectMatch {
   confident?: boolean; // would be auto-mapped by "Run matching"
 }
 
-// mapped: already in the DB, matched: auto-mapped by this run,
-// stale: mapped in the DB but Ivy no longer lists the project
-export type IvyMappingOutcome = "mapped" | "matched" | "suggested" | "unmatched" | "error" | "stale";
+// a Brickfi project mapped to the Ivy project: listingIds null = every listing
+export interface IvyProjectMappedTo extends IvyProjectMatch {
+  listingIds: number[] | null;
+}
+
+// mapped: already in the DB (whole project or every listing), matched: auto-mapped by this run,
+// partial: only some listings mapped, stale: mapped in the DB but Ivy no longer lists the project
+export type IvyMappingOutcome = "mapped" | "matched" | "partial" | "suggested" | "unmatched" | "error" | "stale";
 
 export interface IvyProjectMapping {
   ivyProject: IvyProjectSummary;
-  mappedProject: IvyProjectMatch | null;
+  mappings: IvyProjectMappedTo[];
   suggestion: IvyProjectMatch | null;
   outcome: IvyMappingOutcome;
   error?: string;
@@ -119,7 +138,8 @@ export interface IvyMappingsResponse {
 
 export interface IvyMappingUpdate {
   ivyProjectId: number;
-  mappedProject: IvyProjectMatch | null;
+  mappings: IvyProjectMappedTo[];
+  outcome: "mapped" | "partial" | "stale" | null; // null = nothing mapped any more
   removedFrom: string[];
 }
 
@@ -133,16 +153,20 @@ export const runIvyMatching = async (): Promise<IvyMappingsResponse> => {
   return response.data;
 };
 
-// projectId null removes the mapping
+// projectId null removes the mapping. With ivyListingIds only those listings are
+// (un)mapped, otherwise the whole Ivy project is.
 export const updateIvyMapping = async ({
   ivyProjectId,
   projectId,
+  ivyListingIds,
 }: {
   ivyProjectId: number;
   projectId: string | null;
+  ivyListingIds?: number[];
 }): Promise<IvyMappingUpdate> => {
   const response = await axiosApiInstance.put<IvyMappingUpdate>(`/third-party/ivy-homes/mappings/${ivyProjectId}`, {
     projectId,
+    ...(ivyListingIds?.length ? { ivyListingIds } : {}),
   });
   return response.data;
 };

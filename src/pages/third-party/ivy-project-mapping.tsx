@@ -1,4 +1,4 @@
-import { EditOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import { EditOutlined, LinkOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import {
   Alert,
@@ -23,26 +23,44 @@ import { Link } from "react-router-dom";
 import { useIvyMappings, useRunIvyMatching, useUpdateIvyMapping } from "../../hooks/third-party-hooks";
 import { useDebouncedValue } from "../../hooks/use-debounced-value";
 import { errorMessage } from "../../libs/api-error";
-import type { IvyMappingOutcome, IvyProjectMapping as IvyMappingRow, IvyProjectMatch } from "../../libs/api/ivy-homes";
+import type {
+  IvyListingSummary,
+  IvyMappingOutcome,
+  IvyProjectMappedTo,
+  IvyProjectMapping as IvyMappingRow,
+  IvyProjectMatch,
+} from "../../libs/api/ivy-homes";
 import { getAllProjects } from "../../libs/api/projects";
 import { queryKeys } from "../../libs/constants";
 
 const OUTCOMES: Record<IvyMappingOutcome, { label: string; color: string }> = {
   mapped: { label: "Mapped", color: "green" },
   matched: { label: "Matched now", color: "blue" },
+  partial: { label: "Partially mapped", color: "cyan" },
   suggested: { label: "Suggested", color: "gold" },
   unmatched: { label: "Unmatched", color: "default" },
   error: { label: "Error", color: "red" },
   stale: { label: "No longer on Ivy", color: "volcano" },
 };
 
-type Filter = "all" | "mapped" | "suggested" | "unmatched" | "stale" | "error";
+type Filter = "all" | "mapped" | "partial" | "suggested" | "unmatched" | "stale" | "error";
 
-// mapped + matched both mean "has a mapping in the DB"
+// mapped + matched both mean "fully mapped in the DB"
 const matchesFilter = (row: IvyMappingRow, filter: Filter) => {
   if (filter === "all") return true;
   if (filter === "mapped") return row.outcome === "mapped" || row.outcome === "matched";
   return row.outcome === filter;
+};
+
+const formatPrice = (price?: number) => (price ? `₹${price.toLocaleString("en-IN")}` : "-");
+
+// listing id -> the Brickfi project it's mapped to (a whole-project mapping covers every listing)
+const listingOwners = (row: IvyMappingRow) => {
+  const owners = new Map<number, IvyProjectMappedTo>();
+  const whole = row.mappings.find((m) => m.listingIds === null);
+  if (whole) for (const l of row.ivyProject.listings ?? []) owners.set(l.id, whole);
+  for (const m of row.mappings) for (const id of m.listingIds ?? []) owners.set(id, m);
+  return owners;
 };
 
 function MatchTags({ match }: { match: IvyProjectMatch }) {
@@ -64,15 +82,42 @@ function MatchTags({ match }: { match: IvyProjectMatch }) {
   );
 }
 
+// stops a click on a link inside a row from also expanding/collapsing it
+const ProjectLink = ({ match }: { match: IvyProjectMatch }) => (
+  <Link to={`/projects/${match._id}/edit`} target="_blank" onClick={(e) => e.stopPropagation()}>
+    {match.name}
+  </Link>
+);
+
 const projectOption = (p: { _id: string; info?: { name?: string } }) => ({
   value: p._id,
   label: `${p.info?.name ?? "(unnamed)"} · …${p._id.slice(-6)}`,
 });
 
-function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => void }) {
+// listingIds undefined maps the whole Ivy project; otherwise just those listings
+function MappingDialog({
+  row,
+  listingIds,
+  onClose,
+}: {
+  row: IvyMappingRow;
+  listingIds?: number[];
+  onClose: () => void;
+}) {
   const updateMapping = useUpdateIvyMapping();
-  const [projectId, setProjectId] = useState<string | undefined>(row.mappedProject?._id);
-  const [search, setSearch] = useState(row.mappedProject ? "" : row.ivyProject.name);
+  const owners = useMemo(() => listingOwners(row), [row]);
+  const wholeMapping = row.mappings.find((m) => m.listingIds === null);
+
+  // preselect the project these listings (or the whole Ivy project) are already on, if there's just one
+  const initialProjectId = useMemo(() => {
+    if (!listingIds) return wholeMapping?._id ?? (row.mappings.length === 1 ? row.mappings[0]._id : undefined);
+    const current = new Set(listingIds.map((id) => owners.get(id)?._id));
+    return current.size === 1 ? [...current][0] : undefined;
+  }, [listingIds, owners, row.mappings, wholeMapping]);
+  const mappedSelected = listingIds ? listingIds.filter((id) => owners.has(id)).length : row.mappings.length;
+
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
+  const [search, setSearch] = useState(initialProjectId ? "" : row.ivyProject.name);
   const debouncedSearch = useDebouncedValue(search);
 
   const projects = useQuery({
@@ -84,15 +129,15 @@ function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => vo
   const options = useMemo(() => {
     const found = (projects.data ?? []).map(projectOption);
     const seen = new Set(found.map((o) => o.value));
-    const pinned = [row.mappedProject, row.suggestion]
-      .filter((m): m is IvyProjectMatch => !!m && !seen.has(m._id))
+    const pinned = [...row.mappings, row.suggestion]
+      .filter((m): m is IvyProjectMatch => !!m && !seen.has(m._id) && !!seen.add(m._id))
       .map((m) => projectOption({ _id: m._id, info: { name: m.name } }));
     return [...pinned, ...found];
-  }, [projects.data, row.mappedProject, row.suggestion]);
+  }, [projects.data, row.mappings, row.suggestion]);
 
   const save = (nextProjectId: string | null) =>
     updateMapping.mutate(
-      { ivyProjectId: row.ivyProject.id, projectId: nextProjectId },
+      { ivyProjectId: row.ivyProject.id, projectId: nextProjectId, ivyListingIds: listingIds },
       {
         onSuccess: () => {
           message.success(nextProjectId ? "Mapping saved" : "Mapping removed");
@@ -102,23 +147,31 @@ function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => vo
       },
     );
 
+  const unchanged = listingIds
+    ? listingIds.every((id) => owners.get(id)?._id === projectId)
+    : row.mappings.length === 1 && wholeMapping?._id === projectId;
+
   return (
     <Modal
       open
-      title={`Map "${row.ivyProject.name}"`}
+      title={
+        listingIds
+          ? `Map ${listingIds.length} listing(s) of "${row.ivyProject.name}"`
+          : `Map "${row.ivyProject.name}"`
+      }
       onCancel={onClose}
       destroyOnClose
       footer={
         <Flex justify="space-between">
           <div>
-            {row.mappedProject && (
+            {mappedSelected > 0 && (
               <Popconfirm
-                title="Remove this mapping?"
-                description="The Ivy inventory status will be removed from the project."
+                title={listingIds ? "Unmap these listings?" : "Remove every mapping of this Ivy project?"}
+                description="The Ivy inventory status will be removed from the project(s) left without listings."
                 onConfirm={() => save(null)}
               >
                 <Button danger loading={updateMapping.isPending}>
-                  Remove mapping
+                  {listingIds ? "Unmap listings" : "Remove mapping"}
                 </Button>
               </Popconfirm>
             )}
@@ -128,7 +181,7 @@ function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => vo
             <Button
               type="primary"
               loading={updateMapping.isPending}
-              disabled={!projectId || projectId === row.mappedProject?._id}
+              disabled={!projectId || unchanged}
               onClick={() => projectId && save(projectId)}
             >
               Save
@@ -141,9 +194,30 @@ function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => vo
         <Typography.Text type="secondary">
           {[row.ivyProject.locality, row.ivyProject.salesArea].filter(Boolean).join(", ") || "-"}
         </Typography.Text>
-        {row.mappedProject && (
+        {listingIds && (
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
+            {(row.ivyProject.listings ?? [])
+              .filter((l) => listingIds.includes(l.id))
+              .map((l) => (
+                <li key={l.id}>
+                  <Typography.Text>{l.title}</Typography.Text>
+                  {owners.get(l.id) && (
+                    <Typography.Text type="secondary"> · on {owners.get(l.id)?.name}</Typography.Text>
+                  )}
+                </li>
+              ))}
+          </ul>
+        )}
+        {!listingIds && row.mappings.length > 0 && (
           <Typography.Text>
-            Currently mapped to <strong>{row.mappedProject.name}</strong>
+            Currently mapped to{" "}
+            {row.mappings.map((m, i) => (
+              <span key={m._id}>
+                {i > 0 && ", "}
+                <strong>{m.name}</strong>
+                {m.listingIds && ` (${m.listingIds.length} listing(s))`}
+              </span>
+            ))}
           </Typography.Text>
         )}
         {row.suggestion && row.suggestion._id !== projectId && (
@@ -176,11 +250,89 @@ function MappingDialog({ row, onClose }: { row: IvyMappingRow; onClose: () => vo
           style={{ width: "100%" }}
         />
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          Saving links this Ivy project to the selected Brickfi project and removes the link from any project it was
-          mapped to before.
+          {listingIds
+            ? "Saving maps the selected listings to this Brickfi project and takes them off any project they were on. Other listings keep their mapping."
+            : "Saving maps every listing of this Ivy project to the selected Brickfi project and removes it from any other project."}
         </Typography.Text>
       </Space>
     </Modal>
+  );
+}
+
+function ListingsPanel({ row, onMap }: { row: IvyMappingRow; onMap: (listingIds: number[]) => void }) {
+  const updateMapping = useUpdateIvyMapping();
+  const [selected, setSelected] = useState<number[]>([]);
+  const owners = useMemo(() => listingOwners(row), [row]);
+  const listings = row.ivyProject.listings ?? [];
+  const selectedMapped = selected.filter((id) => owners.has(id));
+
+  const unmap = () =>
+    updateMapping.mutate(
+      { ivyProjectId: row.ivyProject.id, projectId: null, ivyListingIds: selectedMapped },
+      {
+        onSuccess: () => {
+          message.success("Listings unmapped");
+          setSelected([]);
+        },
+        onError: (error) => message.error(errorMessage(error, "Failed to unmap listings")),
+      },
+    );
+
+  const columns: ColumnsType<IvyListingSummary> = [
+    {
+      title: "Listing",
+      key: "title",
+      render: (_, l) => (
+        <Space size={4}>
+          <Typography.Text>{l.title}</Typography.Text>
+          {l.url && (
+            <a href={l.url} target="_blank" rel="noopener noreferrer">
+              <LinkOutlined />
+            </a>
+          )}
+        </Space>
+      ),
+    },
+    { title: "Config", key: "config", render: (_, l) => l.config || (l.bedrooms ? `${l.bedrooms} BHK` : "-") },
+    { title: "Floor", dataIndex: "floor", width: 70 },
+    { title: "Area", key: "area", render: (_, l) => (l.area ? `${l.area} sqft` : "-") },
+    { title: "Price", key: "price", render: (_, l) => formatPrice(l.price) },
+    { title: "Status", key: "status", render: (_, l) => (l.status ? <Tag>{l.status}</Tag> : "-") },
+    {
+      title: "Mapped to",
+      key: "mapped",
+      render: (_, l) => {
+        const owner = owners.get(l.id);
+        return owner ? <ProjectLink match={owner} /> : <Typography.Text type="secondary">-</Typography.Text>;
+      },
+    },
+  ];
+
+  return (
+    <Space direction="vertical" style={{ width: "100%" }}>
+      <Space>
+        <Button type="primary" size="small" disabled={!selected.length} onClick={() => onMap(selected)}>
+          Map selected{selected.length ? ` (${selected.length})` : ""}
+        </Button>
+        <Popconfirm
+          title={`Unmap ${selectedMapped.length} listing(s)?`}
+          disabled={!selectedMapped.length}
+          onConfirm={unmap}
+        >
+          <Button size="small" danger disabled={!selectedMapped.length} loading={updateMapping.isPending}>
+            Unmap selected{selectedMapped.length ? ` (${selectedMapped.length})` : ""}
+          </Button>
+        </Popconfirm>
+      </Space>
+      <Table
+        rowKey="id"
+        size="small"
+        columns={columns}
+        dataSource={listings}
+        pagination={false}
+        rowSelection={{ selectedRowKeys: selected, onChange: (keys) => setSelected(keys as number[]) }}
+      />
+    </Space>
   );
 }
 
@@ -189,13 +341,21 @@ export function IvyProjectMapping() {
   const runMatching = useRunIvyMatching();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<IvyMappingRow | null>(null);
+  const [editing, setEditing] = useState<{ row: IvyMappingRow; listingIds?: number[] } | null>(null);
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: rows.length, mapped: 0, suggested: 0, unmatched: 0, stale: 0, error: 0 };
+    const c: Record<Filter, number> = {
+      all: rows.length,
+      mapped: 0,
+      partial: 0,
+      suggested: 0,
+      unmatched: 0,
+      stale: 0,
+      error: 0,
+    };
     for (const row of rows) {
-      for (const f of ["mapped", "suggested", "unmatched", "stale", "error"] as const) {
+      for (const f of ["mapped", "partial", "suggested", "unmatched", "stale", "error"] as const) {
         if (matchesFilter(row, f)) c[f]++;
       }
     }
@@ -209,7 +369,7 @@ export function IvyProjectMapping() {
         matchesFilter(row, filter) &&
         (!q ||
           row.ivyProject.name.toLowerCase().includes(q) ||
-          row.mappedProject?.name.toLowerCase().includes(q) ||
+          row.mappings.some((m) => m.name.toLowerCase().includes(q)) ||
           row.suggestion?.name.toLowerCase().includes(q)),
     );
   }, [rows, filter, search]);
@@ -238,15 +398,18 @@ export function IvyProjectMapping() {
       title: "Brickfi project",
       key: "brickfi",
       sorter: (a, b) =>
-        (a.mappedProject?.score ?? a.suggestion?.score ?? -1) - (b.mappedProject?.score ?? b.suggestion?.score ?? -1),
+        (a.mappings[0]?.score ?? a.suggestion?.score ?? -1) - (b.mappings[0]?.score ?? b.suggestion?.score ?? -1),
       render: (_, row) => {
-        if (row.mappedProject)
+        if (row.mappings.length)
           return (
-            <Space size={4} wrap>
-              <Link to={`/projects/${row.mappedProject._id}/edit`} target="_blank">
-                {row.mappedProject.name}
-              </Link>
-              <MatchTags match={row.mappedProject} />
+            <Space direction="vertical" size={2}>
+              {row.mappings.map((m) => (
+                <Space key={m._id} size={4} wrap>
+                  <ProjectLink match={m} />
+                  <MatchTags match={m} />
+                  {m.listingIds && <Tag color="cyan">{m.listingIds.length} listing(s)</Tag>}
+                </Space>
+              ))}
             </Space>
           );
         if (row.suggestion)
@@ -279,9 +442,18 @@ export function IvyProjectMapping() {
       key: "actions",
       width: 90,
       render: (_, row) => (
-        <Button size="small" icon={<EditOutlined />} onClick={() => setEditing(row)}>
-          Edit
-        </Button>
+        <Tooltip title="Map the whole Ivy project">
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditing({ row });
+            }}
+          >
+            Edit
+          </Button>
+        </Tooltip>
       ),
     },
   ];
@@ -309,6 +481,7 @@ export function IvyProjectMapping() {
             options={[
               { value: "all", label: `All (${counts.all})` },
               { value: "mapped", label: `Mapped (${counts.mapped})` },
+              { value: "partial", label: `Partially mapped (${counts.partial})` },
               { value: "suggested", label: `Suggested (${counts.suggested})` },
               { value: "unmatched", label: `Unmatched (${counts.unmatched})` },
               ...(counts.stale ? [{ value: "stale" as const, label: `Not on Ivy (${counts.stale})` }] : []),
@@ -324,7 +497,7 @@ export function IvyProjectMapping() {
         </Space>
         <Popconfirm
           title="Run matching?"
-          description="Confident matches get the Ivy inventory status written to the Brickfi project. Existing mappings are kept."
+          description="Confident matches get the Ivy inventory status written to the Brickfi project. Existing (and partial) mappings are kept."
           onConfirm={run}
         >
           <Button type="primary" icon={<ThunderboltOutlined />} loading={runMatching.isPending}>
@@ -339,8 +512,10 @@ export function IvyProjectMapping() {
           showIcon
           closable
           message={`Matching done: ${summary.matched ?? 0} newly mapped, ${summary.mapped ?? 0} already mapped, ${
-            summary.suggested ?? 0
-          } suggested, ${summary.unmatched ?? 0} unmatched${summary.error ? `, ${summary.error} failed` : ""}`}
+            summary.partial ?? 0
+          } partially mapped, ${summary.suggested ?? 0} suggested, ${summary.unmatched ?? 0} unmatched${
+            summary.error ? `, ${summary.error} failed` : ""
+          }`}
         />
       )}
 
@@ -351,9 +526,23 @@ export function IvyProjectMapping() {
         columns={columns}
         dataSource={visible}
         pagination={{ defaultPageSize: 50, showSizeChanger: true }}
+        expandable={{
+          expandRowByClick: true,
+          rowExpandable: (row) => !!row.ivyProject.listings?.length,
+          expandedRowRender: (row) => (
+            <ListingsPanel row={row} onMap={(listingIds) => setEditing({ row, listingIds })} />
+          ),
+        }}
       />
 
-      {editing && <MappingDialog key={editing.ivyProject.id} row={editing} onClose={() => setEditing(null)} />}
+      {editing && (
+        <MappingDialog
+          key={`${editing.row.ivyProject.id}-${editing.listingIds?.join(",") ?? "all"}`}
+          row={editing.row}
+          listingIds={editing.listingIds}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </Space>
   );
 }

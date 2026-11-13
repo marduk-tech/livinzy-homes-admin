@@ -1,5 +1,22 @@
 import { PlayCircleFilled } from "@ant-design/icons";
-import { Alert, Avatar, Card, Col, Descriptions, Empty, Flex, Image, List, Modal, Row, Select, Tabs, Tag, Typography } from "antd";
+import {
+  Alert,
+  Avatar,
+  Card,
+  Col,
+  Descriptions,
+  Empty,
+  Flex,
+  Image,
+  InputNumber,
+  List,
+  Modal,
+  Row,
+  Select,
+  Tabs,
+  Tag,
+  Typography,
+} from "antd";
 import { useMemo, useState } from "react";
 import { useIvyListings } from "../../hooks/third-party-hooks";
 import type { IvyListing, IvyStagingGroup, IvyVideo } from "../../libs/api/ivy-homes";
@@ -8,6 +25,36 @@ import { HlsVideo } from "./hls-video";
 import { IvyProjectMapping } from "./ivy-project-mapping";
 
 const formatPrice = (price: number) => `₹${price.toLocaleString("en-IN")}`;
+
+const LAKH = 1e5;
+const CRORE = 1e7;
+
+// Matched on the leading number of property_config, so "2.5 BHK" counts as 2 BHK.
+const CONFIG_OPTIONS = [
+  { value: "studio", label: "Studio" },
+  { value: "2", label: "2 BHK" },
+  { value: "3", label: "3 BHK" },
+  { value: "4", label: "4 BHK" },
+];
+
+const configKey = (listing: IvyListing) => {
+  const config = listing.property_config?.toLowerCase() ?? "";
+  if (config.includes("studio")) return "studio";
+  const bhk = parseInt(config, 10);
+  return String(Number.isNaN(bhk) ? listing.bedrooms : bhk);
+};
+
+// [min, max) in rupees
+const PRICE_BUCKETS: { value: string; label: string; min: number; max: number }[] = [
+  { value: "lt50l", label: "Less than 50 Lacs", min: 0, max: 50 * LAKH },
+  { value: "50l-1cr", label: "50 Lacs - 1 Cr", min: 50 * LAKH, max: 1 * CRORE },
+  { value: "1-1.5cr", label: "1 - 1.5 Cr", min: 1 * CRORE, max: 1.5 * CRORE },
+  { value: "1.5-2cr", label: "1.5 - 2 Cr", min: 1.5 * CRORE, max: 2 * CRORE },
+  { value: "2-2.5cr", label: "2 - 2.5 Cr", min: 2 * CRORE, max: 2.5 * CRORE },
+  { value: "2.5-3cr", label: "2.5 - 3 Cr", min: 2.5 * CRORE, max: 3 * CRORE },
+  { value: "3-4cr", label: "3 - 4 Cr", min: 3 * CRORE, max: 4 * CRORE },
+  { value: "gt4cr", label: "Above 4 Cr", min: 4 * CRORE, max: Infinity },
+];
 
 function ListingDetails({ listing }: { listing: IvyListing }) {
   return (
@@ -136,6 +183,10 @@ function IvyListingsView() {
   const { data: listings = [], isLoading, error } = useIvyListings();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [projectId, setProjectId] = useState<number | undefined>();
+  const [configs, setConfigs] = useState<string[]>([]);
+  const [priceBuckets, setPriceBuckets] = useState<string[]>([]);
+  const [minArea, setMinArea] = useState<number | null>(null);
+  const [localities, setLocalities] = useState<string[]>([]);
 
   // Unique projects by project.id, with listing counts, sorted by name.
   const projectOptions = useMemo(() => {
@@ -151,7 +202,28 @@ function IvyListingsView() {
       .map(([id, { name, count }]) => ({ value: id, label: `${name} (${count})` }));
   }, [listings]);
 
-  const filtered = projectId === undefined ? listings : listings.filter((l) => l.project?.id === projectId);
+  const localityOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of listings) {
+      const locality = l.project?.locality;
+      if (locality) counts.set(locality, (counts.get(locality) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([locality, count]) => ({ value: locality, label: `${locality} (${count})` }));
+  }, [listings]);
+
+  const filtered = useMemo(() => {
+    const buckets = PRICE_BUCKETS.filter((b) => priceBuckets.includes(b.value));
+    return listings.filter(
+      (l) =>
+        (projectId === undefined || l.project?.id === projectId) &&
+        (configs.length === 0 || configs.includes(configKey(l))) &&
+        (buckets.length === 0 || buckets.some((b) => l.price >= b.min && l.price < b.max)) &&
+        (minArea == null || l.area >= minArea) &&
+        (localities.length === 0 || (!!l.project?.locality && localities.includes(l.project.locality))),
+    );
+  }, [listings, projectId, configs, priceBuckets, minArea, localities]);
   const selected = listings.find((l) => l.id === selectedId);
 
   if (error)
@@ -178,6 +250,50 @@ function IvyListingsView() {
           onChange={setProjectId}
           style={{ width: 360 }}
         />
+      </Col>
+      <Col span={24}>
+        <Flex gap={8} wrap="wrap">
+          <Select
+            mode="multiple"
+            allowClear
+            maxTagCount="responsive"
+            placeholder="Config"
+            options={CONFIG_OPTIONS}
+            value={configs}
+            onChange={setConfigs}
+            style={{ width: 220 }}
+          />
+          <Select
+            mode="multiple"
+            allowClear
+            maxTagCount="responsive"
+            placeholder="Price"
+            options={PRICE_BUCKETS.map(({ value, label }) => ({ value, label }))}
+            value={priceBuckets}
+            onChange={setPriceBuckets}
+            style={{ width: 260 }}
+          />
+          <InputNumber
+            min={0}
+            placeholder="Min area (sqft)"
+            value={minArea}
+            onChange={setMinArea}
+            style={{ width: 160 }}
+          />
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            maxTagCount="responsive"
+            loading={isLoading}
+            placeholder="Locality"
+            options={localityOptions}
+            value={localities}
+            onChange={setLocalities}
+            style={{ width: 300 }}
+          />
+        </Flex>
       </Col>
       <Col xs={24} md={9}>
         <List

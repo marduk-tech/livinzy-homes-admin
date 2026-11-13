@@ -38,17 +38,17 @@ export function useUpdateIvyMapping() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateIvyMapping,
-    onSuccess: ({ ivyProjectId, mappedProject }) =>
+    onSuccess: ({ ivyProjectId, mappings, outcome }) =>
       queryClient.setQueryData<IvyMappingsResponse>([queryKeys.ivyMappings], (prev) => {
         if (!prev) return prev;
         const rows = prev.rows
-          .filter((row) => !(row.ivyProject.id === ivyProjectId && row.outcome === "stale" && !mappedProject))
+          .filter((row) => !(row.ivyProject.id === ivyProjectId && row.outcome === "stale" && !outcome))
           .map((row) => {
             if (row.ivyProject.id !== ivyProjectId) return row;
-            if (mappedProject) return { ...row, mappedProject, outcome: "mapped" as const, error: undefined };
+            if (outcome) return { ...row, mappings, outcome, error: undefined };
             return {
               ...row,
-              mappedProject: null,
+              mappings: [],
               outcome: row.suggestion ? ("suggested" as const) : ("unmatched" as const),
               error: undefined,
             };
