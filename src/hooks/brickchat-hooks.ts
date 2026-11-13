@@ -15,6 +15,7 @@ import {
   updateBrickchatFeedback,
   updateBrickchatFeedbackAssessment,
   sendFeedbackToFactory,
+  getFactoryStatuses,
   generateRevision,
   getRevisionGroups,
   getRevisions,
@@ -135,6 +136,18 @@ export function useUpdateBrickchatFeedbackAssessmentMutation() {
         queryKey: [queryKeys.getBrickchatFeedback],
       });
     },
+  });
+}
+
+// Polls every minute while the feedback tab is open, so stage changes and
+// questions from Factory show up without a reload
+export function useFactoryStatuses(ids: string[]) {
+  const key = [...ids].sort().join(",");
+  return useQuery({
+    queryKey: [queryKeys.getFactoryStatuses, key],
+    queryFn: () => getFactoryStatuses(ids),
+    enabled: ids.length > 0,
+    refetchInterval: 60 * 1000,
   });
 }
 

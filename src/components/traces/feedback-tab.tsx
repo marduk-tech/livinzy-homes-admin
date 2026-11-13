@@ -26,13 +26,16 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  useFactoryStatuses,
   useGetBrickchatFeedback,
   useUpdateBrickchatFeedbackMutation,
 } from "../../hooks/brickchat-hooks";
 import { errorMessage } from "../../libs/api-error";
+import { queryKeys } from "../../libs/constants";
+import { queryClient } from "../../libs/query-client";
 import { FONT_SIZES } from "../../theme/font-sizes";
 import {
   BRICKCHAT_FEEDBACK_CATEGORY_OPTIONS,
@@ -47,7 +50,10 @@ import {
 } from "../../types/brickchat-feedback";
 import { BRICKFI_LOGGER_PATHS } from "./brickfi-logger-paths";
 import { FeedbackAssessmentDrawer } from "./feedback-assessment-drawer";
-import { SendToFactoryButton } from "./send-to-factory-button";
+import {
+  FactoryStatusContext,
+  SendToFactoryButton,
+} from "./send-to-factory-button";
 import {
   brickchatConversationUrl,
   langsmithThreadUrl,
@@ -385,9 +391,15 @@ const getColumns = (
       ),
   },
   {
+    title: "Factory",
+    key: "factory",
+    width: 150,
+    render: (_, record) => <SendToFactoryButton feedback={record} compact />,
+  },
+  {
     title: "Actions",
     key: "actions",
-    width: 260,
+    width: 220,
     render: (_, record) => (
       <Flex align="center" gap={4}>
         <Tooltip title="View entry">
@@ -415,7 +427,6 @@ const getColumns = (
             onClick={() => onAssess(record)}
           />
         </Tooltip>
-        <SendToFactoryButton feedback={record} compact />
         <Button
           type="link"
           icon={<EditOutlined />}
@@ -452,6 +463,19 @@ export function FeedbackTab() {
       },
       { replace: true },
     );
+  const sentIds = useMemo(
+    () => (data ?? []).filter((f) => f.githubIssue).map((f) => f._id),
+    [data],
+  );
+  const { data: factoryStatuses } = useFactoryStatuses(sentIds);
+  // a merged fix completes the feedback server-side - refetch to show it
+  useEffect(() => {
+    if (Object.values(factoryStatuses ?? {}).some((s) => s.feedbackUpdated)) {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getBrickchatFeedback],
+      });
+    }
+  }, [factoryStatuses]);
   const [form] = Form.useForm<EditFormValues>();
   const editStatus = Form.useWatch("status", form);
   const showResolutionComment =
@@ -493,7 +517,7 @@ export function FeedbackTab() {
   }
 
   return (
-    <>
+    <FactoryStatusContext.Provider value={factoryStatuses}>
       <Table
         dataSource={data}
         columns={getColumns(
@@ -537,6 +561,6 @@ export function FeedbackTab() {
         isLoading={isLoading}
         onClose={() => setViewingId(null)}
       />
-    </>
+    </FactoryStatusContext.Provider>
   );
 }

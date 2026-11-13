@@ -9,6 +9,7 @@ import {
   BrickchatFeedback,
   BrickchatFeedbackAssessment,
   FactoryRepo,
+  FactoryStatus,
 } from "../../types/brickchat-feedback";
 import { BrickchatPrompt } from "../../types/brickchat-prompt";
 import {
@@ -133,6 +134,17 @@ export const sendFeedbackToFactory = async (
   const { data } = await axiosApiInstance.post<BrickchatFeedback>(
     `/brickchat-feedback/${id}/github-issue`,
     body,
+  );
+  return data;
+};
+
+// Factory status for sent feedback, keyed by feedback id
+export const getFactoryStatuses = async (
+  ids: string[],
+): Promise<Record<string, FactoryStatus>> => {
+  const { data } = await axiosApiInstance.get<Record<string, FactoryStatus>>(
+    `/brickchat-feedback/factory-status`,
+    { params: { ids: ids.join(",") } },
   );
   return data;
 };

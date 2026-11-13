@@ -127,6 +127,37 @@ export interface BrickchatFeedbackGithubIssue {
   createdBy?: string;
 }
 
+// Where Factory is with a sent feedback, read from its GitHub issue
+export type FactoryStage =
+  | "triaging"
+  | "needs-input"
+  | "in-progress"
+  | "pr-open"
+  | "done"
+  | "closed"
+  | "unknown";
+
+export interface FactoryPullRequest {
+  repo: string;
+  number: number;
+  url: string;
+  title: string;
+  state: "open" | "closed" | "merged";
+}
+
+export interface FactoryStatus {
+  stage: FactoryStage;
+  issueUrl?: string;
+  issueState?: "open" | "closed";
+  closedReason?: string;
+  triageCommentUrl?: string;
+  pullRequests?: FactoryPullRequest[];
+  checkedAt?: string;
+  // the server just marked the feedback completed (its fix merged)
+  feedbackUpdated?: boolean;
+  error?: string;
+}
+
 export interface BrickchatFeedback {
   _id: string;
   threadId: string;

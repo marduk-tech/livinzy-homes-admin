@@ -50,6 +50,7 @@ export const queryKeys = {
   getBrickchatThreadUser: "getBrickchatThreadUser",
   getLlmCallsForRun: "getLlmCallsForRun",
   getBrickchatFeedback: "getBrickchatFeedback",
+  getFactoryStatuses: "getFactoryStatuses",
   getBrickchatPrompts: "getBrickchatPrompts",
   getBrickfiOfferings: "getBrickfiOfferings",
   getBrickfiOfferingTickets: "getBrickfiOfferingTickets",
