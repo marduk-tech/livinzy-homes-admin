@@ -31,7 +31,7 @@ export const Router = () => {
     <Routes>
       <Route path="/auth-callback" element={<AuthCallback />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route element={<DashboardLayout />}>
+      <Route element={<AuthenticationGuard component={DashboardLayout} />}>
         <Route path="/" element={<Navigate to="/projects" />} />
         <Route path="/projects" element={<ProjectsListPage />} />
 
