@@ -97,6 +97,9 @@ export function FeedbackAssessmentDrawer({
   if (!feedback) return null;
 
   const busy = assess.isPending || updateAssessment.isPending;
+  // not every Auth0 connection returns an email claim - fall back so the
+  // reviewer can still confirm
+  const reviewer = user?.email || user?.name || user?.nickname || user?.sub;
 
   const toUpdate = (
     values: AssessmentFormValues,
@@ -118,7 +121,7 @@ export function FeedbackAssessmentDrawer({
         id: feedback._id,
         update: {
           ...(touched ? toUpdate(values) : {}),
-          ...(confirm !== undefined ? { confirm, reviewer: user?.email } : {}),
+          ...(confirm !== undefined ? { confirm, reviewer } : {}),
         },
       });
     } catch {
@@ -368,7 +371,8 @@ export function FeedbackAssessmentDrawer({
             </Button>
             <Button
               type="primary"
-              disabled={busy || !user?.email}
+              disabled={busy || !reviewer}
+              title={!reviewer ? "Couldn't identify you - try logging in again" : undefined}
               loading={updateAssessment.isPending}
               onClick={() => save(true)}
             >
