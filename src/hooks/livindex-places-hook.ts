@@ -32,7 +32,11 @@ export function useUpdateLivindexPlaceMutation({
   enableToasts?: boolean;
 }) {
   return useMutation({
-    mutationFn: ({ placeData }: { placeData: Partial<ILivIndexPlaces> }) => {
+    mutationFn: ({
+      placeData,
+    }: {
+      placeData: Partial<ILivIndexPlaces> | Record<string, unknown>;
+    }) => {
       return updateLivIndexPlace(placeId, placeData);
     },
 

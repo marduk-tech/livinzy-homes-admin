@@ -197,6 +197,13 @@ export function FeedbackAssessmentDrawer({
               {typeof snapshot.intent?.intent === "string" ? (
                 <Tag>{snapshot.intent.intent}</Tag>
               ) : null}
+              {snapshot.intent?.showAdditional === true ? (
+                <Tag>more results</Tag>
+              ) : null}
+              {typeof snapshot.intent?.locationType === "string" ? (
+                <Tag>{snapshot.intent.locationType}</Tag>
+              ) : null}
+              {/* feedback captured before showAdditional/locationType */}
               {typeof snapshot.intent?.subIntent === "string" ? (
                 <Tag>{snapshot.intent.subIntent}</Tag>
               ) : null}

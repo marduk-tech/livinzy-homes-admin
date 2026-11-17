@@ -22,11 +22,25 @@ import {
 } from "antd";
 import { useEffect } from "react";
 import { useSaveEvalCaseMutation } from "../../hooks/brickchat-hooks";
-import { EvalCaseInput, EvalTurnSpec } from "../../types/brickchat-eval";
+import {
+  EvalCaseInput,
+  EvalLocationType,
+  EvalTurnSpec,
+} from "../../types/brickchat-eval";
 
 // saved as expectTools: [] ("plans nothing"), unlike an empty select
 const NO_TOOLS = "__none__";
 // rarer per-turn checks, edited as JSON
+const SHOW_ADDITIONAL_OPTIONS = [
+  { value: true, label: "Yes - more of the same results" },
+  { value: false, label: "No - a new or refined search" },
+];
+const LOCATION_TYPE_OPTIONS: { value: EvalLocationType; label: string }[] = [
+  { value: "area", label: "area - named area(s)" },
+  { value: "city", label: "city - Bangalore-wide" },
+  { value: "infra", label: "infra - an infrastructure project" },
+];
+
 const EXTRA_TURN_KEYS = [
   "expectIntentArgs",
   "expectMetadata",
@@ -41,7 +55,8 @@ const EXTRA_JSON_PLACEHOLDER = `{
 interface TurnForm {
   q: string;
   expectIntent?: string;
-  expectSubIntent?: string;
+  expectShowAdditional?: boolean;
+  expectLocationType?: EvalLocationType;
   expectTools?: string[];
   expectNonEmpty?: string[];
   minProjects?: number | null;
@@ -90,7 +105,8 @@ const toForm = (c: EvalCaseInput): CaseForm => ({
     return {
       q: t.q,
       expectIntent: t.expectIntent,
-      expectSubIntent: t.expectSubIntent,
+      expectShowAdditional: t.expectShowAdditional,
+      expectLocationType: t.expectLocationType,
       expectTools: toolsToForm(t.expectTools),
       expectNonEmpty: t.expectNonEmpty,
       minProjects: t.minProjects,
@@ -120,12 +136,17 @@ const fromForm = (f: CaseForm): EvalCaseInput => {
       ...compact({
         q: t.q.trim(),
         expectIntent: t.expectIntent,
-        expectSubIntent: t.expectSubIntent?.trim(),
+        expectLocationType: t.expectLocationType,
         expectNonEmpty: t.expectNonEmpty,
         minProjects: t.minProjects,
         expectPrompt: t.expectPrompt,
         ...extra,
       }),
+      // false ("a new search, not more results") is a real expectation, so
+      // it skips compact too
+      ...(t.expectShowAdditional != null
+        ? { expectShowAdditional: t.expectShowAdditional }
+        : {}),
       // [] means "plans no tools", so it skips compact
       ...(toolsFromForm(t.expectTools)
         ? { expectTools: toolsFromForm(t.expectTools) }
@@ -377,11 +398,28 @@ export function EvalCaseDrawer({
                       />
                     </Form.Item>
                     <Form.Item
-                      name={[field.name, "expectSubIntent"]}
-                      label="Expected subIntent"
+                      name={[field.name, "expectShowAdditional"]}
+                      label="Show more results"
+                      tooltip="projectsDiscover only - whether the planner should page the search already run ('show me more') rather than run a new one"
                       style={{ flex: 1 }}
                     >
-                      <Input placeholder="e.g. discoveryMore" />
+                      <Select
+                        allowClear
+                        options={SHOW_ADDITIONAL_OPTIONS}
+                        placeholder="not checked"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name={[field.name, "expectLocationType"]}
+                      label="Location type"
+                      tooltip="locationAnalysis only - a named area, Bangalore as a whole, or a named infrastructure project"
+                      style={{ flex: 1 }}
+                    >
+                      <Select
+                        allowClear
+                        options={LOCATION_TYPE_OPTIONS}
+                        placeholder="not checked"
+                      />
                     </Form.Item>
                   </Flex>
                   <Flex gap={12}>

@@ -19,12 +19,21 @@ export interface ILivIndexPlaces {
     description?: string;
     oneLiner?: string;
     footfall?: number;
+    updates?: ILivIndexPlaceUpdatesEntry[];
   };
   corridors?: Array<{
     _id: string;
     corridorId: string;
     haversineDistance: number;
   }>;
+}
+
+// one batch of updates found for a place (details.updates[]) - written by the
+// driver-info script, or added by hand from the admin
+export interface ILivIndexPlaceUpdatesEntry {
+  _id?: string;
+  updatedAt?: string;
+  updates: { _id?: string; summary: string; links?: string[] }[];
 }
 
 export interface IGlobalKnowledge {
@@ -94,7 +103,13 @@ export interface IFeedback {
   type: string;
   content: {
     feedback: { question: string; answer: string }[];
-    contact: { name: string; contact: string; mobile?: string; email?: string; userId?: string };
+    contact: {
+      name: string;
+      contact: string;
+      mobile?: string;
+      email?: string;
+      userId?: string;
+    };
   };
   createdAt: string;
   updatedAt: string;

@@ -29,6 +29,9 @@ function TurnResult({
 }) {
   const intentFailed =
     turnCheckFailed(result, "intent", index) ||
+    turnCheckFailed(result, "showAdditional", index) ||
+    turnCheckFailed(result, "locationType", index) ||
+    // runs saved before showAdditional/locationType
     turnCheckFailed(result, "subIntent", index);
   const toolsFailed = turnCheckFailed(result, "tools", index);
 
@@ -46,6 +49,8 @@ function TurnResult({
         <Flex gap={6} wrap align="center">
           <Tag color={intentFailed ? "red" : "blue"}>
             {turn.intent ?? "no intent"}
+            {turn.showAdditional ? " / more results" : ""}
+            {turn.locationType ? ` / ${turn.locationType}` : ""}
             {turn.subIntent ? ` / ${turn.subIntent}` : ""}
           </Tag>
           <Typography.Text type="secondary">plan</Typography.Text>

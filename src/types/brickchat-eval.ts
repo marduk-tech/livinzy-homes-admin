@@ -1,3 +1,6 @@
+// locationAnalysis's locationType (see the planner's intent schema)
+export type EvalLocationType = "area" | "city" | "infra";
+
 // Shapes from services/src/scripts/evals
 
 export type EvalStatus = "PASS" | "FAIL" | "KNOWN-FAIL" | "CRASH";
@@ -13,7 +16,9 @@ export type EvalRunStatus =
 export interface EvalTurnSpec {
   q: string;
   expectIntent?: string;
-  expectSubIntent?: string;
+  // projectsDiscover: true = page the search already run ("show me more")
+  expectShowAdditional?: boolean;
+  expectLocationType?: EvalLocationType;
   expectTools?: string[];
   expectNonEmpty?: string[];
   expectIntentArgs?: Record<string, unknown>;
@@ -95,7 +100,11 @@ export interface EvalToolRun {
 export interface EvalTurnResult {
   q: string;
   intent: string | null;
-  subIntent: string | null;
+  // projectsDiscover's "show me more" / locationAnalysis's scope. Runs saved
+  // before these existed have subIntent instead.
+  showAdditional?: boolean;
+  locationType?: EvalLocationType | null;
+  subIntent?: string | null;
   prompt: string | null;
   intentArgs?: Record<string, unknown>;
   metadata?: Record<string, unknown> | null;

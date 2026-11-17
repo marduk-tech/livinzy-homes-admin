@@ -9,24 +9,30 @@ export const getAllLivIndexPlaces = async (params?: {
 }) => {
   const endpoint = `/livindex-places`;
 
-  const driverTypes = params?.driverType && params.driverType !== 'all'
-    ? [params.driverType]
-    : [];
+  const driverTypes =
+    params?.driverType && params.driverType !== "all"
+      ? [params.driverType]
+      : [];
 
-  return axiosApiInstance.post(endpoint, {
-    driverIds: [],
-    driverTypes,
-    keyword: params?.keyword,
-    limit: params?.limit,
-    sort: params?.sort,
-  }).then((response) => {
-    return response.data as ILivIndexPlaces[];
-  });
+  return axiosApiInstance
+    .post(endpoint, {
+      driverIds: [],
+      driverTypes,
+      keyword: params?.keyword,
+      limit: params?.limit,
+      sort: params?.sort,
+    })
+    .then((response) => {
+      return response.data as ILivIndexPlaces[];
+    });
 };
 
+// placeData can use dotted paths ("details.oneLiner") to set one nested field -
+// the backend passes the body to findByIdAndUpdate, so `{ details: {...} }`
+// replaces the whole details object
 export const updateLivIndexPlace = async (
   id: string,
-  placeData: Partial<ILivIndexPlaces>
+  placeData: Partial<ILivIndexPlaces> | Record<string, unknown>,
 ) => {
   const endpoint = `/livindex-places/${id}`;
   return axiosApiInstance.put(endpoint, placeData).then((response) => {
