@@ -95,6 +95,24 @@ function Field({
   if (hint?.type === "number" && hint.nullable) {
     return <NullableNumber value={value as number | null} disabled={disabled} onChange={onChange} />;
   }
+  // string lists like exitCountries; empty = null when the field allows it
+  const stringList = value === null || (Array.isArray(value) && value.every((x) => typeof x === "string"));
+  if (hint?.type === "list" && stringList) {
+    return (
+      <Select
+        size="small"
+        mode="tags"
+        style={{ minWidth: 260 }}
+        disabled={disabled}
+        placeholder={hint.nullable ? "empty = any" : undefined}
+        value={(value as string[] | null) ?? []}
+        onChange={(v: string[]) => {
+          const list = v.map((s) => s.trim()).filter(Boolean);
+          onChange(list.length || !hint.nullable ? list : null);
+        }}
+      />
+    );
+  }
   if (typeof original === "boolean") {
     return <Switch size="small" checked={value as boolean} disabled={disabled} onChange={onChange} />;
   }
