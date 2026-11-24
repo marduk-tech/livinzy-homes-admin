@@ -320,6 +320,23 @@ const getColumns = (
       category ? <Tag>{categoryLabel(category)}</Tag> : noneText,
   },
   {
+    title: "Source",
+    key: "source",
+    width: 120,
+    filters: [
+      { text: "User", value: "user" },
+      { text: "Reviewer", value: "reviewer" },
+      { text: "LLM judge", value: "llm-judge" },
+    ],
+    onFilter: (value, record) => (record.source ?? "user") === value,
+    render: (_, record) =>
+      record.source === "llm-judge" ? (
+        <Tag color="purple">LLM judge</Tag>
+      ) : (
+        <Tag>{record.source === "reviewer" ? "Reviewer" : "User"}</Tag>
+      ),
+  },
+  {
     title: "Assessment",
     key: "assessment",
     width: 170,

@@ -164,7 +164,8 @@ export interface BrickchatFeedback {
   // absent for thread-level feedback
   turnId?: string;
   userId: string;
-  source?: "user" | "reviewer";
+  // "llm-judge" = raised by the thread judge
+  source?: "user" | "reviewer" | "llm-judge";
   rating?: BrickchatFeedbackRating;
   category?: BrickchatFeedbackCategory;
   // optional - a rating or category alone is valid feedback
