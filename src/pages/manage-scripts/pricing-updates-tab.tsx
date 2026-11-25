@@ -8,6 +8,7 @@ import {
   Table,
   TableColumnType,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import { useMemo, useState } from "react";
@@ -20,6 +21,17 @@ const OPERATION_TAG: Record<string, { color: string; label: string }> = {
   flagRaised: { color: "orange", label: "Flag raised" },
   none: { color: "default", label: "No change" },
 };
+
+// A raised flag whose internal check no longer exists has been cleared, so
+// show it as resolved rather than "—"
+function sqftPricingIssueStatus(
+  record: PriceCheckRun,
+): PriceCheckRun["sqftPricingIssue"] {
+  if (!record.sqftPricingIssue && record.operation === "flagRaised") {
+    return "resolved";
+  }
+  return record.sqftPricingIssue ?? null;
+}
 
 interface PricingUpdatesTabProps {
   // opens the run on the Runs tab
@@ -106,6 +118,61 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
         date ? new Date(date).toLocaleString() : "—",
     },
     {
+      title: "Consensus ₹/sqft",
+      dataIndex: "consensusPerSqft",
+      width: 150,
+      align: "right",
+      sorter: (a, b) => (a.consensusPerSqft ?? 0) - (b.consensusPerSqft ?? 0),
+      render: (value: number | null | undefined, record) => {
+        const text =
+          typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "—";
+        return record.perSite ? (
+          <Typography.Link onClick={() => setPerSiteRow(record)}>
+            {text}
+          </Typography.Link>
+        ) : (
+          text
+        );
+      },
+    },
+    {
+      title: "Current ₹/sqft",
+      dataIndex: "currentPerSqft",
+      width: 150,
+      align: "right",
+      sorter: (a, b) => (a.currentPerSqft ?? 0) - (b.currentPerSqft ?? 0),
+      render: (value: number | null | undefined, record) => {
+        if (typeof value !== "number")
+          return <Typography.Text type="secondary">NA</Typography.Text>;
+        const consensus = record.consensusPerSqft;
+        // % difference from the run's consensus: under 5% (or no consensus)
+        // -> plain, 5-10% -> yellow, over 10% -> red
+        const diffPct =
+          typeof consensus === "number" && consensus > 0
+            ? (Math.abs(value - consensus) / consensus) * 100
+            : null;
+        const color =
+          diffPct == null || diffPct < 5
+            ? "default"
+            : diffPct > 10
+              ? "red"
+              : "gold";
+        return (
+          <Tooltip
+            title={
+              diffPct == null
+                ? "No consensus to compare"
+                : `${diffPct.toFixed(1)}% from consensus`
+            }
+          >
+            <Tag color={color} bordered={false}>
+              ₹{value.toLocaleString("en-IN")}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: "Operation",
       dataIndex: "operation",
       width: 150,
@@ -125,44 +192,11 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
       onFilter: (value, record) => record.operation === value,
     },
     {
-      title: "Consensus ₹/sqft",
-      dataIndex: "consensusPerSqft",
-      width: 150,
-      align: "right",
-      sorter: (a, b) => (a.consensusPerSqft ?? 0) - (b.consensusPerSqft ?? 0),
-      render: (value: number | null | undefined, record) => {
-        const text =
-          typeof value === "number" ? `₹${value.toLocaleString("en-IN")}` : "—";
-        return record.perSite ? (
-          <Typography.Link onClick={() => setPerSiteRow(record)}>
-            {text}
-          </Typography.Link>
-        ) : (
-          text
-        );
-      },
-    },
-    {
-      title: "Sqft Price Update",
-      key: "sqftPriceUpdate",
-      width: 190,
-      render: (_, record) => {
-        const update = record.sqftPriceUpdate;
-        if (!update) return <Typography.Text type="secondary">NA</Typography.Text>;
-        const fmt = (v: number | null) =>
-          typeof v === "number" ? `₹${v.toLocaleString("en-IN")}` : "NA";
-        return (
-          <span style={{ whiteSpace: "nowrap" }}>
-            {fmt(update.oldPerSqft)} &gt; {fmt(update.newPerSqft)}
-          </span>
-        );
-      },
-    },
-    {
       title: "Sqft Pricing Issue",
       dataIndex: "sqftPricingIssue",
       width: 150,
-      render: (issue?: PriceCheckRun["sqftPricingIssue"]) => {
+      render: (_: unknown, record: PriceCheckRun) => {
+        const issue = sqftPricingIssueStatus(record);
         if (!issue) return <Typography.Text type="secondary">—</Typography.Text>;
         return issue === "open" ? (
           <Tag color="red" bordered={false}>
@@ -178,7 +212,7 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
         { text: "Open", value: "open" },
         { text: "Resolved", value: "resolved" },
       ],
-      onFilter: (value, record) => record.sqftPricingIssue === value,
+      onFilter: (value, record) => sqftPricingIssueStatus(record) === value,
     },
   ];
 

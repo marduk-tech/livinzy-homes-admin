@@ -330,12 +330,9 @@ export interface PriceCheckRun {
   // the project's severity-5 "Sqft Pricing" internal check(s): "open" if any
   // is unresolved, "resolved" if all are, null when there are none
   sqftPricingIssue?: "open" | "resolved" | null;
-  // from the info.rateVersions entry this run wrote (updatedBy.id = runId) and
-  // the one before it; null when no entry matches
-  sqftPriceUpdate?: {
-    oldPerSqft: number | null;
-    newPerSqft: number | null;
-  } | null;
+  // the project's current ₹/sqft, from the last info.rateVersions entry;
+  // null when there is none
+  currentPerSqft?: number | null;
 }
 
 export const getPriceCheckRuns = async (
