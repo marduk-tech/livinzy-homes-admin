@@ -154,7 +154,7 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
         const color =
           diffPct == null || diffPct < 5
             ? "default"
-            : diffPct > 10
+            : diffPct > 15
               ? "red"
               : "gold";
         return (
