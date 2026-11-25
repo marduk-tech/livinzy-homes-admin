@@ -22,6 +22,8 @@ const OPERATION_TAG: Record<string, { color: string; label: string }> = {
   none: { color: "default", label: "No change" },
 };
 
+const formatPerSqft = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+
 // A raised flag whose internal check no longer exists has been cleared, so
 // show it as resolved rather than "—"
 function sqftPricingIssueStatus(
@@ -175,14 +177,26 @@ export function PricingUpdatesTab({ onOpenRun }: PricingUpdatesTabProps) {
     {
       title: "Operation",
       dataIndex: "operation",
-      width: 150,
-      render: (operation?: string) => {
+      width: 220,
+      render: (operation: string | undefined, record) => {
         if (!operation) return <Tag>—</Tag>;
         const tag = OPERATION_TAG[operation];
+        const { previousPerSqft: from, updatedPerSqft: to } = record;
+        const repriced =
+          operation === "projectUpdated" &&
+          typeof from === "number" &&
+          typeof to === "number";
         return (
-          <Tag color={tag?.color ?? "default"} bordered={false}>
-            {tag?.label ?? operation}
-          </Tag>
+          <Flex vertical gap={2} align="flex-start">
+            <Tag color={tag?.color ?? "default"} bordered={false}>
+              {tag?.label ?? operation}
+            </Tag>
+            {repriced && (
+              <Typography.Text style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                {formatPerSqft(from)} → {formatPerSqft(to)}
+              </Typography.Text>
+            )}
+          </Flex>
         );
       },
       filters: Object.entries(OPERATION_TAG).map(([value, { label }]) => ({

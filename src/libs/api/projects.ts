@@ -333,6 +333,10 @@ export interface PriceCheckRun {
   // the project's current ₹/sqft, from the last info.rateVersions entry;
   // null when there is none
   currentPerSqft?: number | null;
+  // projectUpdated only: ₹/sqft before and after this run's reprice - the
+  // rateVersions entry the run wrote and the one before it
+  previousPerSqft?: number | null;
+  updatedPerSqft?: number | null;
 }
 
 export const getPriceCheckRuns = async (
