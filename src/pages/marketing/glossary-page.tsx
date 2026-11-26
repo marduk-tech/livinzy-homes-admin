@@ -1,4 +1,4 @@
-import { Button, Flex, Modal } from "antd";
+  import { Button, Flex, Modal } from "antd";
 import { useState } from "react";
 import { GlossaryForm } from "../../components/marketing/glossary-form";
 import { GlossaryList } from "../../components/marketing/glossary-list";

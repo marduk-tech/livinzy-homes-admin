@@ -1,5 +1,51 @@
-import { IEmailReachout, IFeedback, IGhostPage, IGlossary } from "../../types";
+import {
+  IEmailReachout,
+  IEmailTemplate,
+  IFeedback,
+  IGhostPage,
+  IGlossary,
+} from "../../types";
 import { axiosApiInstance } from "../axios-api-Instance";
+
+export const getAllEmailTemplates = async () => {
+  const endpoint = `/marketing/email-templates`;
+  return axiosApiInstance.get(endpoint).then((response) => {
+    return response.data as IEmailTemplate[];
+  });
+};
+
+export const createEmailTemplate = async (data: {
+  name: string;
+  subject?: string;
+  html: string;
+}) => {
+  const endpoint = `/marketing/email-templates`;
+  return axiosApiInstance.post(endpoint, data).then((response) => {
+    return response.data as IEmailTemplate;
+  });
+};
+
+export const sendTestEmailTemplate = async (
+  id: string,
+  data: {
+    email: string;
+    html?: string;
+    subject?: string;
+    variables?: Record<string, string>;
+  }
+) => {
+  const endpoint = `/marketing/email-templates/${id}/test`;
+  return axiosApiInstance.post(endpoint, data).then((response) => {
+    return response.data as { success: boolean; id?: string };
+  });
+};
+
+export const updateEmailTemplate = async (id: string, html: string) => {
+  const endpoint = `/marketing/email-templates/${id}`;
+  return axiosApiInstance.put(endpoint, { html }).then((response) => {
+    return response.data as IEmailTemplate;
+  });
+};
 
 export const getAllGlossary = async () => {
   const endpoint = `/marketing?type=glossary`;

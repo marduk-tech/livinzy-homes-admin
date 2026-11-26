@@ -6,7 +6,11 @@ import {
   deleteGlossary,
   getAllEmailReachouts,
   getAllFeedbacks,
+  createEmailTemplate,
+  getAllEmailTemplates,
   getAllGlossary,
+  sendTestEmailTemplate,
+  updateEmailTemplate,
   updateGlossary,
 } from "../libs/api/marketing";
 import { queryKeys } from "../libs/constants";
@@ -24,6 +28,92 @@ export function useFetchEmailReachouts() {
   return useQuery({
     queryKey: [queryKeys.getAllEmailReachouts],
     queryFn: () => getAllEmailReachouts(),
+  });
+}
+
+export function useFetchEmailTemplates() {
+  return useQuery({
+    queryKey: [queryKeys.getAllEmailTemplates],
+    queryFn: () => getAllEmailTemplates(),
+  });
+}
+
+export function useCreateEmailTemplateMutation() {
+  return useMutation({
+    mutationFn: (data: { name: string; subject?: string; html: string }) =>
+      createEmailTemplate(data),
+
+    onSuccess: () => {
+      notification.success({ message: `Email template created!` });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message ||
+          `An unexpected error occurred. Please try again later.`,
+      });
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllEmailTemplates],
+      });
+    },
+  });
+}
+
+export function useSendTestEmailTemplateMutation() {
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...data
+    }: {
+      id: string;
+      email: string;
+      html?: string;
+      subject?: string;
+      variables?: Record<string, string>;
+    }) => sendTestEmailTemplate(id, data),
+
+    onSuccess: (_, { email }) => {
+      notification.success({ message: `Test email sent to ${email}` });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message: "Failed to send test email",
+        description: error.response?.data?.message || error.message,
+      });
+      console.log(error);
+    },
+  });
+}
+
+export function useUpdateEmailTemplateMutation() {
+  return useMutation({
+    mutationFn: ({ id, html }: { id: string; html: string }) =>
+      updateEmailTemplate(id, html),
+
+    onSuccess: () => {
+      notification.success({ message: `Email template saved!` });
+    },
+
+    onError: (error: AxiosError<any>) => {
+      notification.error({
+        message:
+          error.response?.data?.message ||
+          `An unexpected error occurred. Please try again later.`,
+      });
+      console.log(error);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.getAllEmailTemplates],
+      });
+    },
   });
 }
 

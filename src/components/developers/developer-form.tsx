@@ -64,6 +64,7 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
         files: data.files || [],
         brkfiScore: { score: data.brkfiScore?.score },
         brkfiStatus: { isPartner: data.brkfiStatus?.isPartner || false },
+        expertInfo: data.expertInfo || "",
       });
       setIsModalVisible(true);
     }
@@ -164,6 +165,15 @@ export function DeveloperForm({ data, onClose }: DeveloperFormProps) {
                 <Switch />
               </Form.Item>
             </Space>
+          )}
+
+          {data && (
+            <Form.Item name="expertInfo" label="Expert Info">
+              <Input.TextArea
+                rows={4}
+                placeholder="Brickfi's expert notes on this developer"
+              />
+            </Form.Item>
           )}
 
           <Form.List name="externalWebsites">

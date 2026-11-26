@@ -77,6 +77,7 @@ export interface Developer {
   slug?: string;
   genDetails?: DeveloperGenDetails;
   info?: DeveloperInfo;
+  expertInfo?: string;
   developerProjects: DeveloperProject[];
   externalWebsites?: string[];
   files?: DeveloperFile[];

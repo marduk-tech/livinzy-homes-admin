@@ -81,6 +81,16 @@ export interface IGlossary {
   updatedAt: string;
 }
 
+// Marketing doc of type "email", normalised by the services API
+export interface IEmailTemplate {
+  _id: string;
+  name: string | null;
+  subject: string | null;
+  html: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IEmailReachout {
   _id: string;
   type: string;
